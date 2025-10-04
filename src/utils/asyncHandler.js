@@ -1,10 +1,15 @@
-const asyncHandler=(requestHandler)=>{
-    (req,res,next)=>{
-        Promise.resolve(requestHandler(req,res,next)).catch((err)=>next(err))
+/**
+ * ASYNC HANDLER WRAPPER
+ * Wraps async route handlers to automatically catch errors
+ * This prevents unhandled promise rejections that would crash the app
+ */
+const asyncHandler = (requestHandler) => {
+    return (req, res, next) => {  // ← FIXED: Added 'return' statement
+        Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err))
     }
 }
 
-export {asyncHandler}
+export { asyncHandler }
 
 
 // const asyncHandler=(fn)=> async (req,res,next)=>{
