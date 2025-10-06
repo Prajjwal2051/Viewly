@@ -43,7 +43,11 @@ const registerUser = asyncHandler(async (req, res) => {
     // STEP 4: Extract local file paths for uploaded images
     // Multer middleware stores uploaded files temporarily on the server
     const avatarLocalPath = req.files?.avatar[0]?.path
-    const coverImgLocalPath = req.files?.coverimage[0]?.path
+    // const coverImgLocalPath = req.files?.coverimage[0]?.path
+    let coverImgLocalPath;
+    if(req.files && Array.isArray(req.files.coverimage) && req.files.coverimage.length>0){
+        coverImgLocalPath=req.files.coverimage[0].path
+    }
     console.log(avatarLocalPath)
     console.log(coverImgLocalPath)
 
