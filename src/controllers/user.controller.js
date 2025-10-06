@@ -33,7 +33,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // STEP 3: Check if user already exists with the same username or email
     // This prevents duplicate accounts and maintains data integrity
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
     if(existedUser){

@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
     },
     
     // User's cover image URL (like banner image)
-    coverImag: {
+    coverimage: {
         type: String            // Stores the URL of the cover image
     }
 }, { 
