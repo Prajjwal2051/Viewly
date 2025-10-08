@@ -226,7 +226,32 @@ const loginUser = asyncHandler(async (req, res) => {
  * @access Private (requires authentication middleware)
  */
 const logoutUser = asyncHandler(async (req, res) => {
+    // STEP 1: Remove refresh token from database
+    // This invalidates the user's session on the server side
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                refreshToken: undefined  // Clear the refresh token
+            }
+        },
+        {
+            new: true  // Return the updated document
+        }
+    )
     
+    // STEP 2: Configure cookie options for clearing
+    const options = {
+        httpOnly: true,  // Prevent client-side JS access
+        secure: true     // Only send over HTTPS
+    }
+    
+    // STEP 3: Clear cookies and send success response
+    return res
+        .status(200)
+        .clearCookie("acessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User logged out successfully"))
 })
 
 // ============================================
