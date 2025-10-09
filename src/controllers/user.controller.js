@@ -6,7 +6,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudnary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-import { signedCookie } from "cookie-parser"
+import jwt from "jsonwebtoken"  // Fixed: jwt is a default export, not named export
 
 // ============================================
 // HELPER FUNCTIONS
@@ -26,16 +26,16 @@ const generateAcessAndRefreshToken = async (userId) => {
     try {
         // Find user in database by ID
         const user = await User.findById(userId)
-        
+
         // Generate access token (short-lived, contains user info)
         const acessToken = user.generateAcessToken()
-        
+
         // Generate refresh token (long-lived, contains only user ID)
         const refreshToken = user.generateRefreshToken()
-        
+
         // Save refresh token to database for session management
         user.refreshToken = refreshToken
-        
+
         // Save without running validation (password is already hashed)
         await user.save({ validateBeforeSave: false })
 
@@ -158,7 +158,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
     // STEP 1: Extract login credentials from request body
     const { email, username, password } = req.body
-    
+
     // STEP 2: Validate that at least username or email is provided
     // User can login with either username OR email
     if (!username && !email) {
@@ -170,7 +170,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const user = await User.findOne({
         $or: [{ username }, { email }]
     })
-    
+
     // STEP 4: Check if user exists in database
     if (!user) {
         throw new ApiError(404, "user does not exist")
@@ -188,7 +188,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // STEP 7: Retrieve user data without sensitive information
     const loggedUser = await User.findById(user._id).select("-password -refreshToken")
-    
+
     // STEP 8: Configure cookie options for security
     const options = {
         httpOnly: true,  // Prevents client-side JavaScript from accessing cookies (XSS protection)
@@ -239,13 +239,13 @@ const logoutUser = asyncHandler(async (req, res) => {
             new: true  // Return the updated document
         }
     )
-    
+
     // STEP 2: Configure cookie options for clearing
     const options = {
         httpOnly: true,  // Prevent client-side JS access
         secure: true     // Only send over HTTPS
     }
-    
+
     // STEP 3: Clear cookies and send success response
     return res
         .status(200)
@@ -254,7 +254,90 @@ const logoutUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "User logged out successfully"))
 })
 
+/**
+ * REFRESH ACCESS TOKEN CONTROLLER
+ * Generates a new access token using a valid refresh token
+ * 
+ * Purpose:
+ * When access token expires, client can use refresh token to get a new access token
+ * without requiring user to login again. This provides seamless user experience.
+ * 
+ * Process:
+ * 1. Extract refresh token from cookies or request body
+ * 2. Verify refresh token is valid and not expired
+ * 3. Decode token to get user ID
+ * 4. Find user in database
+ * 5. Compare incoming token with stored token (prevent token reuse)
+ * 6. Generate new access and refresh tokens
+ * 7. Update tokens in database and cookies
+ * 8. Return new tokens to client
+ * 
+ * @route POST /api/v1/users/refreshToken
+ * @access Public (but requires valid refresh token)
+ */
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    try {
+        // STEP 1: Extract refresh token from cookies (web) or body (mobile)
+        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+        // STEP 2: Validate refresh token is provided
+        if (!incomingRefreshToken) {
+            throw new ApiError(401, "Unauthorized request - Refresh token required")
+        }
+
+        // STEP 3: Verify and decode the refresh token
+        // This checks signature, expiry, and decodes the payload
+        const decodedToken = jwt.verify(
+            incomingRefreshToken, 
+            process.env.REFRESH_TOKEN_SECRET
+        )
+
+        // STEP 4: Find user in database using decoded user ID
+        const user = await User.findById(decodedToken?._id)
+
+        // STEP 5: Validate user exists
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token - User not found")
+        }
+
+        // STEP 6: Compare incoming token with stored token in database
+        // This prevents reuse of old/stolen refresh tokens (token rotation)
+        if (incomingRefreshToken !== user?.refreshToken) {
+            throw new ApiError(401, "Refresh token is expired or already used")
+        }
+
+        // STEP 7: Configure secure cookie options
+        const options = {
+            httpOnly: true,  // Prevent XSS attacks
+            secure: true     // Only send over HTTPS
+        }
+
+        // STEP 8: Generate new access and refresh tokens
+        const { acessToken, refreshToken: newRefreshToken } = await generateAcessAndRefreshToken(user._id)
+
+        // STEP 9: Send new tokens in cookies and response body
+        return res
+            .status(200)
+            .cookie("acessToken", acessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    { 
+                        acessToken, 
+                        refreshToken: newRefreshToken 
+                    },
+                    "Access token refreshed successfully"
+                )
+            )
+            
+    } catch (error) {
+        // Handle JWT errors (expired, invalid signature, malformed, etc.)
+        throw new ApiError(401, error?.message || "Invalid refresh token")
+    }
+})
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
-export { registerUser, loginUser, logoutUser }
+export { registerUser, loginUser, logoutUser,refreshAccessToken }

@@ -2,7 +2,7 @@
 // IMPORT DEPENDENCIES
 // ============================================
 import { Router } from "express";
-import { loginUser, logoutUser, registerUser } from "../controllers/user.controller.js";
+import { loginUser, logoutUser, refreshAccessToken, registerUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -64,7 +64,17 @@ router.route("/login").post(loginUser)
  * @route POST /api/v1/users/logout
  * @access Private
  */
-router.route("/logout").post(verifyJWT, logoutUser)  // Fixed: Changed 'route' to 'router'
+router.route("/logout").post(verifyJWT, logoutUser)
+
+/**
+ * REFRESH ACCESS TOKEN ROUTE
+ * Generates new access token using valid refresh token
+ * Allows users to stay logged in without re-entering credentials
+ * 
+ * @route POST /api/v1/users/refreshToken
+ * @access Public (requires valid refresh token in cookie or body)
+ */
+router.route("/refreshToken").post(refreshAccessToken)
 
 // ============================================
 // EXPORT ROUTER
