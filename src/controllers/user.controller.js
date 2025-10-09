@@ -337,9 +337,254 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 })
 
+/**
+ * CHANGE CURRENT PASSWORD CONTROLLER
+ * Allows authenticated users to change their password
+ * 
+ * Security Features:
+ * - Requires old password verification (prevents unauthorized changes)
+ * - Password is automatically hashed by pre-save middleware
+ * - Requires authentication (user must be logged in)
+ * 
+ * Process:
+ * 1. Extract old and new passwords from request
+ * 2. Validate old password is correct
+ * 3. Update password in database (auto-hashed)
+ * 4. Return success response
+ * 
+ * @route POST /api/v1/users/change-password
+ * @access Private (requires authentication)
+ */
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    // STEP 1: Extract passwords from request body
+    const { oldPassword, newPassword } = req.body
 
+    // STEP 2: Validate both passwords are provided
+    if (!oldPassword || !newPassword) {
+        throw new ApiError(400, "Both old and new passwords are required")
+    }
+
+    // STEP 3: Find user in database (req.user added by auth middleware)
+    const user = await User.findById(req.user?._id)
+
+    // STEP 4: Verify old password is correct using bcrypt comparison
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password")
+    }
+
+    // STEP 5: Set new password (will be hashed by pre-save middleware)
+    user.password = newPassword
+
+    // STEP 6: Save user with new password
+    // validateBeforeSave: false skips validation since we're only updating password
+    await user.save({ validateBeforeSave: false })
+
+    // STEP 7: Send success response
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password changed successfully"))
+})
+
+/**
+ * GET CURRENT USER CONTROLLER
+ * Returns the currently authenticated user's information
+ * 
+ * Use Case:
+ * - Frontend needs to display user profile
+ * - Verify user is still authenticated
+ * - Refresh user data after updates
+ * 
+ * Note: req.user is populated by verifyJWT middleware
+ * and already excludes password and refreshToken fields
+ * 
+ * @route GET /api/v1/users/current-user
+ * @access Private (requires authentication)
+ */
+const getCurrentUser = asyncHandler(async (req, res) => {
+    // STEP 1: Return authenticated user data from request
+    // No database query needed - data comes from middleware
+    return res
+        .status(200)
+        .json(new ApiResponse(200, req.user, "Current user fetched successfully"))
+})
+
+/**
+ * UPDATE ACCOUNT DETAILS CONTROLLER
+ * Updates user's basic account information (fullName, email)
+ * 
+ * Design Pattern:
+ * - Separate endpoint for text updates vs file updates
+ * - This prevents unnecessary file uploads when only updating text
+ * - Avatar and cover image have their own dedicated endpoints
+ * 
+ * Process:
+ * 1. Extract updated fields from request
+ * 2. Validate required fields are provided
+ * 3. Update user in database
+ * 4. Return updated user data
+ * 
+ * @route PATCH /api/v1/users/update-account
+ * @access Private (requires authentication)
+ */
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    // STEP 1: Extract fields to update from request body
+    const { fullName, email } = req.body
+
+    // STEP 2: Validate both fields are provided
+    // If only updating one field, consider making this more flexible
+    if (!fullName || !email) {
+        throw new ApiError(400, "All fields are required")
+    }
+
+    // STEP 3: Update user in database
+    // findByIdAndUpdate is more efficient than find + save for simple updates
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullName,  // Shorthand for fullName: fullName
+                email      // Shorthand for email: email
+            }
+        },
+        { new: true }  // Return updated document instead of original
+    ).select("-password")  // Exclude password from response
+
+    // STEP 4: Send success response with updated user data
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Account details updated successfully"))
+})
+
+/**
+ * UPDATE USER AVATAR CONTROLLER
+ * Updates user's profile picture (avatar)
+ * 
+ * Features:
+ * - Uploads new avatar to Cloudinary
+ * - Updates database with new URL
+ * - Old avatar remains on Cloudinary (consider cleanup in production)
+ * 
+ * Process:
+ * 1. Extract uploaded file path from multer middleware
+ * 2. Validate file was uploaded
+ * 3. Upload to Cloudinary cloud storage
+ * 4. Update user's avatar URL in database
+ * 5. Return updated user data
+ * 
+ * Note: Uses req.file (single file) not req.files (multiple files)
+ * Route should use upload.single('avatar') middleware
+ * 
+ * @route PATCH /api/v1/users/avatar
+ * @access Private (requires authentication + multer middleware)
+ */
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    // STEP 1: Extract local file path from multer middleware
+    // req.file is populated by upload.single('avatar') middleware
+    const localAvatarPath = req.file?.path
+
+    // STEP 2: Validate file was uploaded
+    if (!localAvatarPath) {
+        throw new ApiError(400, "Avatar file is missing")
+    }
+
+    // STEP 3: Upload file to Cloudinary
+    // File is temporarily stored locally by multer, then uploaded to cloud
+    const avatar = await uploadOnCloudinary(localAvatarPath)
+
+    // STEP 4: Verify Cloudinary upload was successful
+    if (!avatar.url) {
+        throw new ApiError(400, "Error while uploading avatar to cloud storage")
+    }
+
+    // STEP 5: Update user's avatar URL in database
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: avatar.url  // Store Cloudinary URL
+            }
+        },
+        { new: true }  // Return updated document
+    ).select("-password")
+
+    // STEP 6: Send success response with updated user data
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Avatar updated successfully"))
+})
+
+/**
+ * UPDATE USER COVER IMAGE CONTROLLER
+ * Updates user's cover/banner image
+ * 
+ * Features:
+ * - Uploads new cover image to Cloudinary
+ * - Updates database with new URL
+ * - Similar to avatar update but for cover image
+ * 
+ * Process:
+ * 1. Extract uploaded file path from multer middleware
+ * 2. Validate file was uploaded
+ * 3. Upload to Cloudinary cloud storage
+ * 4. Update user's cover image URL in database
+ * 5. Return updated user data
+ * 
+ * Note: Uses req.file (single file) not req.files (multiple files)
+ * Route should use upload.single('coverImage') middleware
+ * 
+ * @route PATCH /api/v1/users/cover-image
+ * @access Private (requires authentication + multer middleware)
+ */
+const updateUserCoverImg = asyncHandler(async (req, res) => {
+    // STEP 1: Extract local file path from multer middleware
+    // req.file is populated by upload.single('coverImage') middleware
+    const localCoverImgPath = req.file?.path
+
+    // STEP 2: Validate file was uploaded
+    if (!localCoverImgPath) {
+        throw new ApiError(400, "Cover image file is missing")
+    }
+
+    // STEP 3: Upload file to Cloudinary
+    const coverImg = await uploadOnCloudinary(localCoverImgPath)
+
+    // STEP 4: Verify Cloudinary upload was successful
+    if (!coverImg.url) {
+        throw new ApiError(400, "Error while uploading cover image to cloud storage")
+    }
+
+    // STEP 5: Update user's cover image URL in database
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                coverimage: coverImg.url  // Fixed: Store URL string, not entire object
+            }
+        },
+        { new: true }  // Return updated document
+    ).select("-password")
+
+    // STEP 6: Send success response with updated user data
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Cover image updated successfully"))
+})
 
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
-export { registerUser, loginUser, logoutUser,refreshAccessToken }
+export { 
+    // Authentication Controllers
+    registerUser,           // POST /register - Create new user account
+    loginUser,              // POST /login - Authenticate and get tokens
+    logoutUser,             // POST /logout - Clear tokens and session
+    refreshAccessToken,     // POST /refreshToken - Get new access token
+    
+    // User Profile Controllers
+    getCurrentUser,         // GET /current-user - Get authenticated user info
+    changeCurrentPassword,  // POST /change-password - Update user password
+    updateAccountDetails,   // PATCH /update-account - Update name/email
+    updateUserAvatar,       // PATCH /avatar - Update profile picture
+    updateUserCoverImg      // PATCH /cover-image - Update cover/banner image
+}
