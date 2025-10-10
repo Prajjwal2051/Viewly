@@ -7,6 +7,7 @@ import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudnary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"  // Fixed: jwt is a default export, not named export
+import mongoose from "mongoose"
 
 // ============================================
 // HELPER FUNCTIONS
@@ -696,6 +697,111 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         )
 })
 
+/**
+ * GET WATCH HISTORY CONTROLLER
+ * Fetches authenticated user's video watch history with complete video and owner details
+ * 
+ * Purpose:
+ * - Display user's recently watched videos
+ * - Show video details along with channel/owner information
+ * - Uses nested aggregation pipeline (sub-pipeline) for efficient data fetching
+ * 
+ * Features:
+ * - Fetches all videos from watch history array
+ * - Includes video owner details (channel name, avatar)
+ * - Uses sub-pipeline to populate nested references
+ * - Returns complete video objects with owner information
+ * 
+ * Aggregation Pipeline Architecture:
+ * Main Pipeline → Match User → Lookup Videos
+ *                                    ↓
+ *                         Sub-Pipeline → Lookup Video Owner → Project Owner Fields
+ * 
+ * Process:
+ * 1. Match current authenticated user
+ * 2. Lookup videos from watchHistory array (with sub-pipeline)
+ *    2a. For each video, lookup its owner (channel)
+ *    2b. Project only required owner fields
+ *    2c. Convert owner array to object
+ * 3. Return watch history with complete video and owner data
+ * 
+ * @route GET /api/v1/users/watch-history
+ * @access Private (requires authentication)
+ */
+const getWatchHistory = asyncHandler(async (req, res) => {
+    // STEP 1: MongoDB Aggregation Pipeline with nested lookups
+    const user = await User.aggregate([
+        // STAGE 1: Match current authenticated user
+        // Convert string ID to MongoDB ObjectId for matching
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        
+        // STAGE 2: Lookup videos from watch history
+        // This is the MAIN LOOKUP - gets all videos user has watched
+        {
+            $lookup: {
+                from: "videos",              // Videos collection
+                localField: "watchHistory",  // Array of video IDs in user document
+                foreignField: "_id",         // Match with video's _id
+                as: "watchHistory",          // Replace watchHistory array with full video documents
+                
+                // SUB-PIPELINE: Executes for EACH video in watch history
+                // This is a nested aggregation that runs on the video documents
+                pipeline: [
+                    // SUB-STAGE 1: Lookup video owner (channel) details
+                    // For each video, find who uploaded it
+                    {
+                        $lookup: {
+                            from: "users",           // Users collection
+                            localField: "owner",     // Video's owner field (user ID who uploaded)
+                            foreignField: "_id",     // Match with user's _id
+                            as: "owner",             // Store owner details in 'owner' array
+                            
+                            // NESTED SUB-PIPELINE: Executes for the owner
+                            // Controls what owner data to include
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,     // Include channel full name
+                                        username: 1,     // Include channel username
+                                        avatar: 1        // Include channel avatar
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    
+                    // SUB-STAGE 2: Convert owner array to single object
+                    // $lookup returns array, but we want single owner object
+                    {
+                        $addFields: {
+                            owner: {
+                                $first: "$owner"  // Get first (and only) element from owner array
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    // STEP 2: Send watch history data
+    // user[0] because aggregation returns array with single user document
+    // Access watchHistory field which now contains full video objects with owner details
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200, 
+                user[0].watchHistory,  // Fixed: was user[0].getWatchHistory (typo)
+                "Watch history fetched successfully"
+            )
+        )
+})
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
@@ -712,5 +818,8 @@ export {
     updateAccountDetails,   // PATCH /update-account - Update name/email
     updateUserAvatar,       // PATCH /avatar - Update profile picture
     updateUserCoverImg,     // PATCH /cover-image - Update cover/banner image
-    getUserChannelProfile
+    
+    // Channel & History Controllers
+    getUserChannelProfile,  // GET /c/:username - Get channel profile with subscriber stats
+    getWatchHistory         // GET /watch-history - Get user's watched videos with owner details
 }
