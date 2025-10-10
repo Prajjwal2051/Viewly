@@ -571,6 +571,131 @@ const updateUserCoverImg = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "Cover image updated successfully"))
 })
 
+
+/**
+ * GET USER CHANNEL PROFILE CONTROLLER
+ * Fetches comprehensive channel information including subscriber stats
+ * 
+ * Purpose:
+ * - Display channel page with subscriber count and subscription status
+ * - Shows if current user is subscribed to this channel
+ * - Uses MongoDB aggregation pipeline for efficient data fetching
+ * 
+ * Features:
+ * - Subscriber count (how many people subscribe to this channel)
+ * - Subscribed-to count (how many channels this user subscribes to)
+ * - Subscription status (is current user subscribed to this channel?)
+ * 
+ * Process:
+ * 1. Extract username from URL parameters
+ * 2. Use aggregation pipeline to:
+ *    - Match user by username
+ *    - Lookup subscribers (people who subscribed to this channel)
+ *    - Lookup subscribed-to channels (channels this user subscribes to)
+ *    - Calculate counts and subscription status
+ *    - Project only required fields
+ * 3. Return channel profile with all stats
+ * 
+ * @route GET /api/v1/users/c/:username
+ * @access Public (can view any channel, but subscription status requires auth)
+ */
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    // STEP 1: Extract username from URL parameters
+    const { username } = req.params
+    
+    // STEP 2: Validate username is provided and not empty
+    if (!username?.trim()) {
+        throw new ApiError(400, "Username is missing")
+    }
+
+    // STEP 3: MongoDB Aggregation Pipeline to fetch channel data with stats
+    const channel = await User.aggregate([
+        // STAGE 1: Match the user by username
+        // Filter documents to find the specific user/channel
+        {
+            $match: {
+                username: username?.toLowerCase()  // Match username (case-insensitive)
+            }
+        },
+        
+        // STAGE 2: Lookup subscribers
+        // Find all users who subscribed TO this channel
+        {
+            $lookup: {
+                from: "subscriptions",        // Collection name (lowercase + 's')
+                localField: "_id",            // User's ID
+                foreignField: "channel",      // Match with channel field in subscriptions
+                as: "subscribers"             // Store results in 'subscribers' array
+            }
+        },
+        
+        // STAGE 3: Lookup subscribed-to channels
+        // Find all channels this user has subscribed TO
+        {
+            $lookup: {
+                from: "subscriptions",        // Same collection, different relationship
+                localField: "_id",            // User's ID
+                foreignField: "subscriber",   // Match with subscriber field
+                as: "subscribedTo"            // Store results in 'subscribedTo' array
+            }
+        },
+        
+        // STAGE 4: Add computed fields
+        // Calculate subscriber counts and subscription status
+        {
+            $addFields: {
+                // Count total subscribers (people who subscribed to this channel)
+                subscribersCount: {
+                    $size: "$subscribers"
+                },
+                
+                // Count how many channels this user subscribes to
+                channelsSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                
+                // Check if current logged-in user is subscribed to this channel
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        
+        // STAGE 5: Project only required fields
+        // Select which fields to include in final output
+        {
+            $project: {
+                fullName: 1,                        // Include
+                username: 1,                        // Include
+                subscribersCount: 1,                // Include (computed)
+                channelsSubscribedToCount: 1,       // Include (computed)
+                isSubscribed: 1,                    // Include (computed)
+                avatar: 1,                          // Include
+                coverimage: 1,                      // Include (note: field name from model)
+                email: 1                            // Include
+            }
+        }
+    ])
+
+    // STEP 4: Validate channel exists
+    // Aggregation returns array, check if it has results
+    if (!channel?.length) {
+        throw new ApiError(404, "Channel does not exist")
+    }
+
+    // STEP 5: Send channel profile data
+    // channel[0] because aggregation returns array
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, channel[0], "User channel fetched successfully")
+        )
+})
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
@@ -586,5 +711,6 @@ export {
     changeCurrentPassword,  // POST /change-password - Update user password
     updateAccountDetails,   // PATCH /update-account - Update name/email
     updateUserAvatar,       // PATCH /avatar - Update profile picture
-    updateUserCoverImg      // PATCH /cover-image - Update cover/banner image
+    updateUserCoverImg,     // PATCH /cover-image - Update cover/banner image
+    getUserChannelProfile
 }
