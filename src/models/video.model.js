@@ -40,7 +40,26 @@ const videoSchema = new mongoose.Schema({
         type: Boolean,
         require: true,
         default:true
+    },
+    tags:{
+        type:String,
+        index:true,
+    },
+    category:{
+        type:String,
+        required:true,
+        index:true,
+    },
+    likes:{
+        type:Number,
+        default:0,
+    },
+    dislikes:{
+        type:Number,
+        default:0
     }
+    
+    
 }, {
     timestamps: true
 })
