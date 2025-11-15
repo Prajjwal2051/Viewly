@@ -4,7 +4,7 @@
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
-import { uploadOnCloudinary } from "../utils/cloudnary";
+import { uploadOnCloudinary,getPublicId,deleteFromCloudinary } from "../utils/cloudnary";
 import { video } from "../models/video.model.js";
 import mongoose, { mongo } from "mongoose";
 
@@ -15,12 +15,8 @@ import mongoose, { mongo } from "mongoose";
 /**
  * Upload Video Controller
  * 
- * Handles the complete video upload workflow:
- * - Validates video metadata (title, description, category, tags)
- * - Processes video and thumbnail files via Multer
- * - Uploads files to Cloudinary storage
- * - Saves video details to MongoDB
- * - Returns uploaded video with populated owner information
+ * Handles complete video upload workflow including file upload to Cloudinary
+ * and saving metadata to MongoDB.
  * 
  * @route   POST /api/v1/videos
  * @access  Protected (requires authentication)
@@ -35,9 +31,8 @@ import mongoose, { mongo } from "mongoose";
 const uploadVideo = asyncHandler(async (req, res) => {
     // Extract video metadata from request body
     const { title, description, category, tags } = req.body;
-    console.log("Received:", { title, description, tags, category });
 
-    // Validate required fields
+    // Validate required fields (title and category are mandatory)
     if (!title || title.trim() === "") {
         throw new ApiError(400, "Title is required");
     }
@@ -45,12 +40,11 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Category is required");
     }
 
-    // Get file paths from Multer middleware
-    // Files are temporarily stored locally before Cloudinary upload
+    // Get file paths from Multer middleware (files stored temporarily)
     const videoFileLocalPath = req.files?.video?.[0]?.path;
     const thumbnailFileLocalPath = req.files?.thumbnail?.[0]?.path;
 
-    // Validate file uploads
+    // Validate that both files were uploaded
     if (!videoFileLocalPath) {
         throw new ApiError(400, "Video file is required");
     }
@@ -58,8 +52,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Thumbnail file is required");
     }
 
-    // Upload files to Cloudinary
-    // Returns URL, duration, format, and other metadata
+    // Upload files to Cloudinary and get URLs
     const videoFile = await uploadOnCloudinary(videoFileLocalPath);
     if (!videoFile) {
         throw new ApiError(500, "Video upload to Cloudinary failed");
@@ -70,20 +63,17 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Thumbnail upload to Cloudinary failed");
     }
 
-    console.log("Video URL:", videoFile.url);
-    console.log("Thumbnail URL:", thumbnailFile.url);
-
-    // Extract video duration from Cloudinary response
+    // Extract video duration from Cloudinary response (in seconds)
     const duration = videoFile.duration || 0;
 
-    // Create video document in MongoDB
+    // Create video document in MongoDB with all metadata
     const newVideo = await video.create({
         videoFile: videoFile.url,
         thumbNail: thumbnailFile.url,
         title: title.trim(),
         description: description?.trim(),
         duration: duration,
-        owner: req.user._id,
+        owner: req.user._id,        // From auth middleware
         category: category.trim(),
         tags: tags?.trim() || "",
         isPublished: true,
@@ -96,7 +86,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Failed to save video to database");
     }
 
-    // Fetch created video with populated owner details
+    // Fetch created video with populated owner details for response
     const uploadedVideo = await video.findById(newVideo._id).populate(
         "owner",
         "username fullName avatar"
@@ -117,18 +107,15 @@ const uploadVideo = asyncHandler(async (req, res) => {
 /**
  * Get All Videos Controller
  * 
- * Retrieves videos with advanced filtering, sorting, and pagination:
- * - Pagination: Splits results into pages for performance
- * - Filtering: Filter by category, tags, owner, or search term
- * - Sorting: Sort by views, date, likes (ascending/descending)
- * - Search: Full-text search in title and description
+ * Retrieves videos with filtering, sorting, and pagination.
+ * Supports category filter, tag search, owner filter, and text search.
  * 
  * @route   GET /api/v1/videos
  * @access  Public
  * @query   {number} page - Page number (default: 1)
  * @query   {number} limit - Videos per page (default: 10)
  * @query   {string} category - Filter by category
- * @query   {string} tags - Filter by tags (case-insensitive regex)
+ * @query   {string} tags - Filter by tags (case-insensitive)
  * @query   {string} owner - Filter by owner ID
  * @query   {string} search - Search in title and description
  * @query   {string} sortBy - Sort field: views, createdAt, likes (default: createdAt)
@@ -136,7 +123,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
  * @returns {Object} ApiResponse with paginated video list
  */
 const getAllVideos = asyncHandler(async (req, res) => {
-    // Extract and set default values for query parameters
+    // Extract query parameters with default values
     const {
         page = 1,
         limit = 10,
@@ -148,58 +135,43 @@ const getAllVideos = asyncHandler(async (req, res) => {
         sortOrder = "desc"
     } = req.query;
 
-    console.log("Query params:", {
-        page, limit, category, tags, owner, search, sortBy, sortOrder
-    });
-
-    // Build dynamic filter object
-    // Only published videos are shown by default
+    // Build filter object (only show published videos by default)
     const filter = { isPublished: true };
 
     // Add category filter if provided
     if (category) {
         filter.category = category;
-        console.log("Filtering by category:", category);
     }
 
-    // Add tags filter with case-insensitive regex
+    // Add tags filter with case-insensitive regex search
     if (tags) {
         filter.tags = { $regex: tags, $options: 'i' };
-        console.log("Filtering by tags:", tags);
     }
 
-    // Add owner filter if provided (validate ObjectId format)
+    // Add owner filter with ID validation
     if (owner) {
         if (!mongoose.isValidObjectId(owner)) {
             throw new ApiError(400, "Invalid Owner ID");
         }
         filter.owner = owner;
-        console.log("Filtering by owner:", owner);
     }
 
     // Add search filter for title and description
+    // $or matches if either condition is true
     if (search) {
         filter.$or = [
             { title: { $regex: search, $options: 'i' } },
             { description: { $regex: search, $options: 'i' } }
         ];
-        console.log("Searching for:", search);
     }
 
-    console.log("Final filter:", filter);
-
-    // Build sort object
-    // sortOrder: "asc" = 1 (ascending), "desc" = -1 (descending)
+    // Build sort object (1 = ascending, -1 = descending)
     const sort = {};
     sort[sortBy] = sortOrder === "asc" ? 1 : -1;
-    console.log("Sorting by:", sort);
 
     // TODO: Implement MongoDB aggregation pipeline with pagination
-    // - Apply filter to match videos
-    // - Sort results based on sortBy and sortOrder
-    // - Skip and limit for pagination
-    // - Populate owner details
-    // - Return paginated results with metadata
+    // Use $match for filtering, $sort for ordering, $skip and $limit for pagination
+    // Populate owner details and return paginated results with metadata
 });
 
 /**
@@ -257,11 +229,110 @@ const getVideoById = asyncHandler(async (req, res) => {
     )
 })
 
+/**
+ * Update Video Controller
+ * 
+ * Allows video owner to update title, description, and/or thumbnail.
+ * Old thumbnail is automatically deleted from Cloudinary when replaced.
+ * 
+ * @route   PATCH /api/v1/videos/:videoId
+ * @access  Protected (owner only)
+ * @param   {string} videoId - MongoDB ObjectId of the video
+ * @body    {string} title - New video title (optional)
+ * @body    {string} description - New description (optional)
+ * @file    thumbnail - New thumbnail image (optional)
+ * @returns {Object} ApiResponse with updated video details
+ */
+const updateVideo = asyncHandler(async (req, res) => {
+    // Extract video ID from URL and update fields from request
+    const { videoId } = req.params
+    const { title, description } = req.body 
+    const thumbnailFileLocalPath = req.file?.path
 
+    // Validate video ID format
+    if (!mongoose.isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid video ID")
+    }
+
+    // Find video in database
+    const foundVideo = await video.findById(videoId)
+
+    if (!foundVideo) {
+        throw new ApiError(404, "Video not found")
+    }
+
+    // Authorization: Only video owner can update
+    // Prevents unauthorized users from modifying others' videos
+    if (foundVideo.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to update this video")
+    }
+
+    // Validation: At least one field must be provided for update
+    if (!title && !description && !thumbnailFileLocalPath) {
+        throw new ApiError(400, "Provide at least one field: title, description, or thumbnail")
+    }
+
+    // Validation: Title cannot be empty string (if provided)
+    if (title && title.trim() === "") {
+        throw new ApiError(400, "Title cannot be empty")
+    }
+
+    // Upload new thumbnail to Cloudinary (if provided)
+    let thumbNailUrlFromCloudinary;
+    if (thumbnailFileLocalPath) {
+        const thumbNailFile = await uploadOnCloudinary(thumbnailFileLocalPath)
+        if (!thumbNailFile) {
+            throw new ApiError(500, "Thumbnail upload failed")
+        }
+        thumbNailUrlFromCloudinary = thumbNailFile.url
+
+        // Delete old thumbnail from Cloudinary to save storage space
+        // Extract public_id from old thumbnail URL and delete it
+        const oldThumbnailPublicId = await getPublicId(foundVideo.thumbNail)
+        if (oldThumbnailPublicId) {
+            await deleteFromCloudinary(oldThumbnailPublicId, "image")
+        }
+    }
+
+    // Build update object with only provided fields
+    // This allows partial updates (update only what's needed)
+    const updateData = {};
+    if (title) {
+        updateData.title = title.trim()
+    }
+    if (description !== undefined) {
+        updateData.description = description.trim()
+    }
+    if (thumbNailUrlFromCloudinary) {
+        updateData.thumbNail = thumbNailUrlFromCloudinary
+    }
+
+    // Update video in database with new data
+    // $set: updates only specified fields
+    // new: true - returns updated document
+    // runValidators: true - runs schema validation on update
+    const updatedVideo = await video.findByIdAndUpdate(
+        videoId,
+        { $set: updateData },
+        { new: true, runValidators: true }
+    ).populate('owner', 'username fullName avatar')
+
+    // Send success response with updated video
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, updatedVideo, "Video updated successfully")
+        )
+})
 
 // ============================================
 // EXPORTS
 // ============================================
-export { uploadVideo };
+export { 
+    uploadVideo,      // POST /api/v1/videos - Upload new video
+    getAllVideos,     // GET /api/v1/videos - List videos with filters
+    getVideoById,     // GET /api/v1/videos/:videoId - Get single video
+    updateVideo       // PATCH /api/v1/videos/:videoId - Update video
+};
 
 
