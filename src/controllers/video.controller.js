@@ -6,7 +6,7 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { uploadOnCloudinary } from "../utils/cloudnary";
 import { video } from "../models/video.model.js";
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 
 // ============================================
 // CONTROLLERS
@@ -201,6 +201,63 @@ const getAllVideos = asyncHandler(async (req, res) => {
     // - Populate owner details
     // - Return paginated results with metadata
 });
+
+/**
+ * Get Video By ID Controller
+ * 
+ * Retrieves a single video by its ID, populates owner information,
+ * and increments the view count.
+ * 
+ * @route   GET /api/v1/videos/:videoId
+ * @access  Public
+ * @param   {string} videoId - MongoDB ObjectId of the video
+ * @returns {Object} ApiResponse with video details and owner info
+ */
+const getVideoById = asyncHandler(async (req, res) => {
+    // Extract video ID from URL parameters
+    const { videoId } = req.params;   
+
+    // Check if video ID is provided
+    if (!videoId) {
+        throw new ApiError(500, "Video Not found !!!")
+    }
+
+    // Validate if it's a valid MongoDB ObjectId format
+    if (!mongoose.isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid object ID")
+    }
+
+    // Find video by ID and populate owner details
+    const foundVideo = await video.findById(videoId).populate('owner', 'username fullName avatar');
+
+    // Check if video exists
+    if (!foundVideo) {
+        throw new ApiError(404, "Video not found")
+    }
+
+    // Check if video is private (only owner can access unpublished videos)
+    if (!foundVideo.isPublished && foundVideo.owner._id.toString() !== req.user?._id.toString()) {
+        throw new ApiError(403, "This video is private");
+    }
+
+    // Increment view count using $inc operator and return updated video
+    const updatedVideo = await video.findByIdAndUpdate(
+        videoId,
+        { $inc: { views: 1 } },  // Increment views by 1
+        { new: true }            // Return updated document
+    ).populate('owner', 'username fullName avatar')
+
+    // Send success response with video data
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            updatedVideo,
+            "Video fetched successfully"
+        )
+    )
+})
+
+
 
 // ============================================
 // EXPORTS
