@@ -66,7 +66,8 @@ const generateAcessAndRefreshToken = async (userId) => {
 const registerUser = asyncHandler(async (req, res) => {
     // STEP 1: Extract user data from request body
     const { fullName, email, username, password } = req.body
-    console.log("email ", email)
+    console.log("👤 [USER REGISTRATION] Request received");
+    console.log("📧 Email:", email, "| Username:", username);
 
     // STEP 2: Validate input fields - ensure no field is empty or contains only whitespace
     if (
@@ -79,10 +80,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // STEP 3: Check if user already exists with the same username or email
     // This prevents duplicate accounts and maintains data integrity
+    console.log("🔍 Checking for existing user...");
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
     if (existedUser) {
+        console.log("❌ User already exists");
         throw new ApiError(409, "user already exists")
     }
 
@@ -94,8 +97,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (req.files && Array.isArray(req.files.coverimage) && req.files.coverimage.length > 0) {
         coverImgLocalPath = req.files.coverimage[0].path
     }
-    console.log(avatarLocalPath)
-    console.log(coverImgLocalPath)
+    console.log("📂 Files received - Avatar:", avatarLocalPath ? "✓" : "✗", "| Cover Image:", coverImgLocalPath ? "✓" : "✗");
 
     // STEP 5: Validate avatar is provided (mandatory field)
     if (!avatarLocalPath) {
@@ -104,6 +106,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // STEP 6: Upload images to Cloudinary cloud storage
     // Avatar is mandatory, cover image is optional
+    console.log("☁️  Uploading avatar to Cloudinary...");
     const avatar = await uploadOnCloudinary(avatarLocalPath)
     const coverImg = await uploadOnCloudinary(coverImgLocalPath)
 
@@ -111,9 +114,11 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!avatar) {
         throw new ApiError(400, "avatar upload failed")
     }
+    console.log("✅ Images uploaded successfully");
 
     // STEP 8: Create user entry in database with all validated data
     // Password will be automatically hashed by the pre-save middleware in user model
+    console.log("💾 Creating user in database...");
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -133,6 +138,8 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!createdUser) {
         throw new ApiError(500, "something went wrong while registering the user")
     }
+
+    console.log(`✅ User @${username} registered successfully (ID: ${user._id})`);
 
     // STEP 11: Send success response with user data (without sensitive information)
     return res.status(201).json(
@@ -159,6 +166,8 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
     // STEP 1: Extract login credentials from request body
     const { email, username, password } = req.body
+    console.log("🔐 [USER LOGIN] Request received");
+    console.log("📧 Credential:", username || email);
 
     // STEP 2: Validate that at least username or email is provided
     // User can login with either username OR email
@@ -168,23 +177,32 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // STEP 3: Find user in database by username OR email
     // $or operator allows matching either field
+    console.log("🔍 Searching for user...");
     const user = await User.findOne({
         $or: [{ username }, { email }]
     })
 
     // STEP 4: Check if user exists in database
     if (!user) {
+        console.log("❌ User not found");
         throw new ApiError(404, "user does not exist")
     }
 
+    console.log(`✅ User found: @${user.username}`);
+
     // STEP 5: Verify password using bcrypt comparison
     // isPasswordCorrect is a custom method defined in user model
+    console.log("🔑 Verifying password...");
     const isPasswordValid = await user.isPasswordCorrect(password)
     if (!isPasswordValid) {
+        console.log("❌ Invalid password");
         throw new ApiError(401, "invalid user credentials")
     }
 
+    console.log("✅ Password verified");
+
     // STEP 6: Generate access and refresh tokens for the user
+    console.log("🎫 Generating tokens...");
     const { acessToken, refreshToken } = await generateAcessAndRefreshToken(user._id)
 
     // STEP 7: Retrieve user data without sensitive information
@@ -195,6 +213,8 @@ const loginUser = asyncHandler(async (req, res) => {
         httpOnly: true,  // Prevents client-side JavaScript from accessing cookies (XSS protection)
         secure: true     // Ensures cookies are only sent over HTTPS in production
     }
+
+    console.log(`✅ User @${user.username} logged in successfully`);
 
     // STEP 9: Send response with cookies and user data
     return res.status(200)
@@ -227,8 +247,12 @@ const loginUser = asyncHandler(async (req, res) => {
  * @access Private (requires authentication middleware)
  */
 const logoutUser = asyncHandler(async (req, res) => {
+    console.log("🚪 [USER LOGOUT] Request received");
+    console.log(`👤 User: @${req.user?.username} (ID: ${req.user?._id})`);
+
     // STEP 1: Remove refresh token from database
     // This invalidates the user's session on the server side
+    console.log("🗑️ Clearing refresh token from database...");
     await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -246,6 +270,8 @@ const logoutUser = asyncHandler(async (req, res) => {
         httpOnly: true,  // Prevent client-side JS access
         secure: true     // Only send over HTTPS
     }
+
+    console.log(`✅ User @${req.user?.username} logged out successfully`);
 
     // STEP 3: Clear cookies and send success response
     return res
@@ -278,13 +304,18 @@ const logoutUser = asyncHandler(async (req, res) => {
  */
 const refreshAccessToken = asyncHandler(async (req, res) => {
     try {
+        console.log("🔄 [TOKEN REFRESH] Request received");
+
         // STEP 1: Extract refresh token from cookies (web) or body (mobile)
         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
         // STEP 2: Validate refresh token is provided
         if (!incomingRefreshToken) {
+            console.log("❌ No refresh token provided");
             throw new ApiError(401, "Unauthorized request - Refresh token required")
         }
+
+        console.log("🔍 Verifying refresh token...");
 
         // STEP 3: Verify and decode the refresh token
         // This checks signature, expiry, and decodes the payload
@@ -298,12 +329,16 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         // STEP 5: Validate user exists
         if (!user) {
+            console.log("❌ User not found for token");
             throw new ApiError(401, "Invalid refresh token - User not found")
         }
+
+        console.log(`✅ Token verified for user: @${user.username}`);
 
         // STEP 6: Compare incoming token with stored token in database
         // This prevents reuse of old/stolen refresh tokens (token rotation)
         if (incomingRefreshToken !== user?.refreshToken) {
+            console.log("❌ Token mismatch - possible reuse detected");
             throw new ApiError(401, "Refresh token is expired or already used")
         }
 
@@ -314,7 +349,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         }
 
         // STEP 8: Generate new access and refresh tokens
+        console.log("🎫 Generating new tokens...");
         const { acessToken, refreshToken: newRefreshToken } = await generateAcessAndRefreshToken(user._id)
+
+        console.log(`✅ Tokens refreshed successfully for @${user.username}`);
 
         // STEP 9: Send new tokens in cookies and response body
         return res
@@ -334,6 +372,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             
     } catch (error) {
         // Handle JWT errors (expired, invalid signature, malformed, etc.)
+        console.log("❌ Token refresh failed:", error.message);
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
 })
@@ -357,11 +396,15 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
  * @access Private (requires authentication)
  */
 const changeCurrentPassword = asyncHandler(async (req, res) => {
+    console.log("🔒 [CHANGE PASSWORD] Request received");
+    console.log(`👤 User: @${req.user?.username}`);
+
     // STEP 1: Extract passwords from request body
     const { oldPassword, newPassword } = req.body
 
     // STEP 2: Validate both passwords are provided
     if (!oldPassword || !newPassword) {
+        console.log("❌ Missing password fields");
         throw new ApiError(400, "Both old and new passwords are required")
     }
 
@@ -369,17 +412,24 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user?._id)
 
     // STEP 4: Verify old password is correct using bcrypt comparison
+    console.log("🔑 Verifying old password...");
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
     if (!isPasswordCorrect) {
+        console.log("❌ Old password incorrect");
         throw new ApiError(400, "Invalid old password")
     }
+
+    console.log("✅ Old password verified");
 
     // STEP 5: Set new password (will be hashed by pre-save middleware)
     user.password = newPassword
 
     // STEP 6: Save user with new password
     // validateBeforeSave: false skips validation since we're only updating password
+    console.log("💾 Updating password in database...");
     await user.save({ validateBeforeSave: false })
+
+    console.log(`✅ Password changed successfully for @${user.username}`);
 
     // STEP 7: Send success response
     return res
@@ -403,6 +453,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
  * @access Private (requires authentication)
  */
 const getCurrentUser = asyncHandler(async (req, res) => {
+    console.log("👤 [GET CURRENT USER] Request received");
+    console.log(`📋 Fetching data for: @${req.user?.username}`);
+
     // STEP 1: Return authenticated user data from request
     // No database query needed - data comes from middleware
     return res
@@ -429,14 +482,20 @@ const getCurrentUser = asyncHandler(async (req, res) => {
  * @access Private (requires authentication)
  */
 const updateAccountDetails = asyncHandler(async (req, res) => {
+    console.log("✏️ [UPDATE ACCOUNT] Request received");
+    console.log(`👤 User: @${req.user?.username}`);
+
     // STEP 1: Extract fields to update from request body
     const { fullName, email } = req.body
 
     // STEP 2: Validate both fields are provided
     // If only updating one field, consider making this more flexible
     if (!fullName || !email) {
+        console.log("❌ Missing required fields");
         throw new ApiError(400, "All fields are required")
     }
+
+    console.log(`📝 Updating: Name="${fullName}", Email="${email}"`);
 
     // STEP 3: Update user in database
     // findByIdAndUpdate is more efficient than find + save for simple updates
@@ -450,6 +509,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         },
         { new: true }  // Return updated document instead of original
     ).select("-password")  // Exclude password from response
+
+    console.log(`✅ Account details updated for @${req.user?.username}`);
 
     // STEP 4: Send success response with updated user data
     return res
@@ -480,25 +541,36 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
  * @access Private (requires authentication + multer middleware)
  */
 const updateUserAvatar = asyncHandler(async (req, res) => {
+    console.log("🖼️ [UPDATE AVATAR] Request received");
+    console.log(`👤 User: @${req.user?.username}`);
+
     // STEP 1: Extract local file path from multer middleware
     // req.file is populated by upload.single('avatar') middleware
     const localAvatarPath = req.file?.path
 
     // STEP 2: Validate file was uploaded
     if (!localAvatarPath) {
+        console.log("❌ No avatar file uploaded");
         throw new ApiError(400, "Avatar file is missing")
     }
 
+    console.log("📁 Avatar file received:", req.file?.originalname);
+
     // STEP 3: Upload file to Cloudinary
     // File is temporarily stored locally by multer, then uploaded to cloud
+    console.log("☁️ Uploading avatar to Cloudinary...");
     const avatar = await uploadOnCloudinary(localAvatarPath)
 
     // STEP 4: Verify Cloudinary upload was successful
     if (!avatar.url) {
+        console.log("❌ Cloudinary upload failed");
         throw new ApiError(400, "Error while uploading avatar to cloud storage")
     }
 
+    console.log("✅ Avatar uploaded to cloud");
+
     // STEP 5: Update user's avatar URL in database
+    console.log("💾 Updating database...");
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -508,6 +580,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         },
         { new: true }  // Return updated document
     ).select("-password")
+
+    console.log(`✅ Avatar updated successfully for @${req.user?.username}`);
 
     // STEP 6: Send success response with updated user data
     return res
@@ -538,24 +612,35 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
  * @access Private (requires authentication + multer middleware)
  */
 const updateUserCoverImg = asyncHandler(async (req, res) => {
+    console.log("🖼️ [UPDATE COVER IMAGE] Request received");
+    console.log(`👤 User: @${req.user?.username}`);
+
     // STEP 1: Extract local file path from multer middleware
     // req.file is populated by upload.single('coverImage') middleware
     const localCoverImgPath = req.file?.path
 
     // STEP 2: Validate file was uploaded
     if (!localCoverImgPath) {
+        console.log("❌ No cover image file uploaded");
         throw new ApiError(400, "Cover image file is missing")
     }
 
+    console.log("📁 Cover image file received:", req.file?.originalname);
+
     // STEP 3: Upload file to Cloudinary
+    console.log("☁️ Uploading cover image to Cloudinary...");
     const coverImg = await uploadOnCloudinary(localCoverImgPath)
 
     // STEP 4: Verify Cloudinary upload was successful
     if (!coverImg.url) {
+        console.log("❌ Cloudinary upload failed");
         throw new ApiError(400, "Error while uploading cover image to cloud storage")
     }
 
+    console.log("✅ Cover image uploaded to cloud");
+
     // STEP 5: Update user's cover image URL in database
+    console.log("💾 Updating database...");
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -565,6 +650,8 @@ const updateUserCoverImg = asyncHandler(async (req, res) => {
         },
         { new: true }  // Return updated document
     ).select("-password")
+
+    console.log(`✅ Cover image updated successfully for @${req.user?.username}`);
 
     // STEP 6: Send success response with updated user data
     return res
@@ -601,13 +688,19 @@ const updateUserCoverImg = asyncHandler(async (req, res) => {
  * @access Public (can view any channel, but subscription status requires auth)
  */
 const getUserChannelProfile = asyncHandler(async (req, res) => {
+    console.log("📺 [GET CHANNEL PROFILE] Request received");
+
     // STEP 1: Extract username from URL parameters
     const { username } = req.params
+    console.log(`🔍 Looking for channel: @${username}`);
     
     // STEP 2: Validate username is provided and not empty
     if (!username?.trim()) {
+        console.log("❌ Username missing in request");
         throw new ApiError(400, "Username is missing")
     }
+
+    console.log("🔄 Running aggregation pipeline...");
 
     // STEP 3: MongoDB Aggregation Pipeline to fetch channel data with stats
     const channel = await User.aggregate([
@@ -685,8 +778,11 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     // STEP 4: Validate channel exists
     // Aggregation returns array, check if it has results
     if (!channel?.length) {
+        console.log(`❌ Channel @${username} not found`);
         throw new ApiError(404, "Channel does not exist")
     }
+
+    console.log(`✅ Channel @${username} profile fetched (${channel[0].subscribersCount} subscribers)`);
 
     // STEP 5: Send channel profile data
     // channel[0] because aggregation returns array
@@ -729,6 +825,10 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
  * @access Private (requires authentication)
  */
 const getWatchHistory = asyncHandler(async (req, res) => {
+    console.log("📜 [GET WATCH HISTORY] Request received");
+    console.log(`👤 User: @${req.user?.username}`);
+    console.log("🔄 Running nested aggregation pipeline...");
+
     // STEP 1: MongoDB Aggregation Pipeline with nested lookups
     const user = await User.aggregate([
         // STAGE 1: Match current authenticated user
@@ -787,6 +887,8 @@ const getWatchHistory = asyncHandler(async (req, res) => {
             }
         }
     ])
+
+    console.log(`✅ Watch history fetched (${user[0]?.watchHistory?.length || 0} videos)`);
 
     // STEP 2: Send watch history data
     // user[0] because aggregation returns array with single user document

@@ -31,6 +31,8 @@ import mongoose from "mongoose";
 const uploadVideo = asyncHandler(async (req, res) => {
     // Extract video metadata from request body
     const { title, description, category, tags } = req.body;
+    console.log("📹 [VIDEO UPLOAD] Request received");
+    console.log("📝 Metadata:", { title, category, tags: tags || "none", description: description ? "provided" : "none" });
 
     // Validate required fields (title and category are mandatory)
     if (!title || title.trim() === "") {
@@ -51,22 +53,29 @@ const uploadVideo = asyncHandler(async (req, res) => {
     if (!thumbnailFileLocalPath) {
         throw new ApiError(400, "Thumbnail file is required");
     }
+    console.log("📂 Files received - Video & Thumbnail ready for upload");
 
     // Upload files to Cloudinary and get URLs
+    console.log("☁️  Uploading video to Cloudinary...");
     const videoFile = await uploadOnCloudinary(videoFileLocalPath);
     if (!videoFile) {
         throw new ApiError(500, "Video upload to Cloudinary failed");
     }
+    console.log("✅ Video uploaded successfully");
 
+    console.log("☁️  Uploading thumbnail to Cloudinary...");
     const thumbnailFile = await uploadOnCloudinary(thumbnailFileLocalPath);
     if (!thumbnailFile) {
         throw new ApiError(500, "Thumbnail upload to Cloudinary failed");
     }
+    console.log("✅ Thumbnail uploaded successfully");
 
     // Extract video duration from Cloudinary response (in seconds)
     const duration = videoFile.duration || 0;
+    console.log(`⏱️  Video duration: ${duration} seconds`);
 
     // Create video document in MongoDB with all metadata
+    console.log("💾 Saving video to database...");
     const newVideo = await video.create({
         videoFile: videoFile.url,
         thumbNail: thumbnailFile.url,
@@ -91,6 +100,9 @@ const uploadVideo = asyncHandler(async (req, res) => {
         "owner",
         "username fullName avatar"
     );
+
+    console.log(`✅ Video "${title}" uploaded successfully by @${req.user.username}`);
+    console.log(`🆔 Video ID: ${newVideo._id}`);
 
     // Send success response
     return res
@@ -135,17 +147,23 @@ const getAllVideos = asyncHandler(async (req, res) => {
         sortOrder = "desc"
     } = req.query;
 
+    console.log("📋 [GET ALL VIDEOS] Request received");
+    console.log("📄 Pagination:", { page, limit });
+    
     // Build filter object (only show published videos by default)
     const filter = { isPublished: true };
+    const appliedFilters = [];
 
     // Add category filter if provided
     if (category) {
         filter.category = category;
+        appliedFilters.push(`category: ${category}`);
     }
 
     // Add tags filter with case-insensitive regex search
     if (tags) {
         filter.tags = { $regex: tags, $options: 'i' };
+        appliedFilters.push(`tags: ${tags}`);
     }
 
     // Add owner filter with ID validation
@@ -154,6 +172,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
             throw new ApiError(400, "Invalid Owner ID");
         }
         filter.owner = owner;
+        appliedFilters.push(`owner: ${owner}`);
     }
 
     // Add search filter for title and description
@@ -163,17 +182,22 @@ const getAllVideos = asyncHandler(async (req, res) => {
             { title: { $regex: search, $options: 'i' } },
             { description: { $regex: search, $options: 'i' } }
         ];
+        appliedFilters.push(`search: "${search}"`);
     }
+
+    console.log(`🔍 Filters applied: ${appliedFilters.length > 0 ? appliedFilters.join(', ') : 'none'}`);
 
     // Build sort object (1 = ascending, -1 = descending)
     const sort = {};
     sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+    console.log(`🔄 Sorting by: ${sortBy} (${sortOrder})`);
 
     // Get videos from database with filters, sorting, and pagination
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     const skip = (pageNumber - 1) * limitNumber;
 
+    console.log("💾 Fetching videos from database...");
     // Find videos with filters, sort, and pagination
     const videos = await video.find(filter)
         .sort(sort)
@@ -184,6 +208,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
     // Get total count for pagination metadata
     const totalVideos = await video.countDocuments(filter);
     const totalPages = Math.ceil(totalVideos / limitNumber);
+
+    console.log(`✅ Retrieved ${videos.length} videos (Total: ${totalVideos}, Page: ${pageNumber}/${totalPages})`);
 
     // Build response with pagination metadata
     const response = {
@@ -219,7 +245,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
  */
 const getVideoById = asyncHandler(async (req, res) => {
     // Extract video ID from URL parameters
-    const { videoId } = req.params;   
+    const { videoId } = req.params;
+    console.log(`🎬 [GET VIDEO BY ID] Request for video: ${videoId}`);
 
     // Check if video ID is provided
     if (!videoId) {
@@ -228,28 +255,37 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     // Validate if it's a valid MongoDB ObjectId format
     if (!mongoose.isValidObjectId(videoId)) {
+        console.log("❌ Invalid ObjectId format");
         throw new ApiError(400, "Invalid object ID")
     }
 
+    console.log("💾 Fetching video from database...");
     // Find video by ID and populate owner details
     const foundVideo = await video.findById(videoId).populate('owner', 'username fullName avatar');
 
     // Check if video exists
     if (!foundVideo) {
+        console.log("❌ Video not found in database");
         throw new ApiError(404, "Video not found")
     }
 
+    console.log(`✅ Found video: "${foundVideo.title}"`);
+
     // Check if video is private (only owner can access unpublished videos)
     if (!foundVideo.isPublished && foundVideo.owner._id.toString() !== req.user?._id.toString()) {
+        console.log("🔒 Unpublished video - access denied");
         throw new ApiError(403, "This video is private");
     }
 
+    console.log("👁️  Incrementing view count...");
     // Increment view count using $inc operator and return updated video
     const updatedVideo = await video.findByIdAndUpdate(
         videoId,
         { $inc: { views: 1 } },  // Increment views by 1
         { new: true }            // Return updated document
     ).populate('owner', 'username fullName avatar')
+
+    console.log(`✅ Video retrieved successfully (Views: ${updatedVideo.views})`);
 
     // Send success response with video data
     return res.status(200).json(
@@ -280,22 +316,31 @@ const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     const { title, description } = req.body 
     const thumbnailFileLocalPath = req.file?.path
+    
+    console.log(`✏️  [UPDATE VIDEO] Request for video: ${videoId}`);
+    console.log(`📝 Fields to update: ${title ? 'title' : ''} ${description !== undefined ? 'description' : ''} ${thumbnailFileLocalPath ? 'thumbnail' : ''}`.trim() || 'none');
 
     // Validate video ID format
     if (!mongoose.isValidObjectId(videoId)) {
+        console.log("❌ Invalid ObjectId format");
         throw new ApiError(400, "Invalid video ID")
     }
 
+    console.log("💾 Fetching video from database...");
     // Find video in database
     const foundVideo = await video.findById(videoId)
 
     if (!foundVideo) {
+        console.log("❌ Video not found in database");
         throw new ApiError(404, "Video not found")
     }
+
+    console.log(`✅ Found video: "${foundVideo.title}" by @${req.user.username}`);
 
     // Authorization: Only video owner can update
     // Prevents unauthorized users from modifying others' videos
     if (foundVideo.owner.toString() !== req.user._id.toString()) {
+        console.log("🔒 Authorization failed - not the owner");
         throw new ApiError(403, "You are not authorized to update this video")
     }
 
@@ -312,17 +357,21 @@ const updateVideo = asyncHandler(async (req, res) => {
     // Upload new thumbnail to Cloudinary (if provided)
     let thumbNailUrlFromCloudinary;
     if (thumbnailFileLocalPath) {
+        console.log("☁️  Uploading new thumbnail to Cloudinary...");
         const thumbNailFile = await uploadOnCloudinary(thumbnailFileLocalPath)
         if (!thumbNailFile) {
             throw new ApiError(500, "Thumbnail upload failed")
         }
         thumbNailUrlFromCloudinary = thumbNailFile.url
+        console.log("✅ New thumbnail uploaded successfully");
 
         // Delete old thumbnail from Cloudinary to save storage space
         // Extract public_id from old thumbnail URL and delete it
+        console.log("🗑️  Deleting old thumbnail from Cloudinary...");
         const oldThumbnailPublicId = await getPublicId(foundVideo.thumbNail)
         if (oldThumbnailPublicId) {
             await deleteFromCloudinary(oldThumbnailPublicId, "image")
+            console.log("✅ Old thumbnail deleted successfully");
         }
     }
 
@@ -339,6 +388,7 @@ const updateVideo = asyncHandler(async (req, res) => {
         updateData.thumbNail = thumbNailUrlFromCloudinary
     }
 
+    console.log("💾 Updating video in database...");
     // Update video in database with new data
     // $set: updates only specified fields
     // new: true - returns updated document
@@ -348,6 +398,8 @@ const updateVideo = asyncHandler(async (req, res) => {
         { $set: updateData },
         { new: true, runValidators: true }
     ).populate('owner', 'username fullName avatar')
+
+    console.log(`✅ Video "${updatedVideo.title}" updated successfully`);
 
     // Send success response with updated video
     return res
@@ -372,25 +424,34 @@ const deleteVideo = asyncHandler(async (req, res) => {
     // Extract and validate video ID from URL parameters
     const { videoId } = req.params
     
+    console.log(`🗑️  [DELETE VIDEO] Request for video: ${videoId}`);
+    
     if (!mongoose.isValidObjectId(videoId)) {
+        console.log("❌ Invalid ObjectId format");
         throw new ApiError(400, "Invalid video ID provided for deletion")
     }
     
+    console.log("💾 Fetching video from database...");
     // Find video in database
     const foundVideo = await video.findById(videoId)
     
     if (!foundVideo) {
+        console.log("❌ Video not found in database");
         throw new ApiError(404, "Video not found")
     }
+
+    console.log(`✅ Found video: "${foundVideo.title}"`);
 
     // Authorization: Only video owner can delete
     // Prevents unauthorized users from deleting others' videos
     if (foundVideo.owner.toString() !== req.user._id.toString()) {
+        console.log("🔒 Authorization failed - not the owner");
         throw new ApiError(403, "You are not authorized to delete this video")
     }
 
     // Delete video file from Cloudinary
     // Extract public_id from video URL and delete the file
+    console.log("☁️  Deleting video file from Cloudinary...");
     const videoPublicId = await getPublicId(foundVideo.videoFile)
     
     if (videoPublicId) {
@@ -400,10 +461,12 @@ const deleteVideo = asyncHandler(async (req, res) => {
         if (!videoDeleteResult || videoDeleteResult.result !== 'ok') {
             throw new ApiError(500, "Failed to delete video from cloud storage")
         }
+        console.log("✅ Video file deleted from Cloudinary");
     }
 
     // Delete thumbnail from Cloudinary
     // Extract public_id from thumbnail URL and delete the image
+    console.log("☁️  Deleting thumbnail from Cloudinary...");
     const thumbNailPublicId = await getPublicId(foundVideo.thumbNail)
     
     if (thumbNailPublicId) {
@@ -413,10 +476,14 @@ const deleteVideo = asyncHandler(async (req, res) => {
         if (!thumbnailDeleteResult || thumbnailDeleteResult.result !== "ok") {
             throw new ApiError(500, "Failed to delete thumbnail from cloud storage")
         }
+        console.log("✅ Thumbnail deleted from Cloudinary");
     }
 
     // Delete video document from MongoDB database
+    console.log("💾 Deleting video from database...");
     await video.findByIdAndDelete(videoId)
+    
+    console.log(`✅ Video "${foundVideo.title}" deleted successfully (ID: ${videoId})`);
 
     // Send success response with empty data object
     return res
