@@ -169,9 +169,41 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === "asc" ? 1 : -1;
 
-    // TODO: Implement MongoDB aggregation pipeline with pagination
-    // Use $match for filtering, $sort for ordering, $skip and $limit for pagination
-    // Populate owner details and return paginated results with metadata
+    // Get videos from database with filters, sorting, and pagination
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Find videos with filters, sort, and pagination
+    const videos = await video.find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNumber)
+        .populate('owner', 'username fullName avatar');
+
+    // Get total count for pagination metadata
+    const totalVideos = await video.countDocuments(filter);
+    const totalPages = Math.ceil(totalVideos / limitNumber);
+
+    // Build response with pagination metadata
+    const response = {
+        videos: videos,
+        pagination: {
+            currentPage: pageNumber,
+            totalPages: totalPages,
+            totalVideos: totalVideos,
+            videosPerPage: limitNumber,
+            hasNextPage: pageNumber < totalPages,
+            hasPrevPage: pageNumber > 1
+        }
+    };
+
+    // Return success response
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, response, `Successfully retrieved ${videos.length} videos`)
+        );
 });
 
 /**

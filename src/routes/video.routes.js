@@ -33,14 +33,14 @@ const router = Router()
  * Get all videos with optional filters (category, tags, search, sorting, pagination)
  * Anyone can view the video list
  */
-router.route('/').get(getAllVideos)
+router.get('/', getAllVideos)
 
 /**
  * GET /api/v1/videos/:videoId
  * Get single video by ID and increment view count
  * Anyone can view a video (unless it's unpublished)
  */
-router.route('/:videoId').get(getVideoById)
+router.get('/:videoId', getVideoById)
 
 // ============================================
 // PROTECTED ROUTES (Authentication required)
@@ -52,7 +52,7 @@ router.route('/:videoId').get(getVideoById)
  * Requires: JWT token, video file, thumbnail file
  * Middleware chain: verifyJWT → upload files → uploadVideo controller
  */
-router.route('/').post(
+router.post('/',
     verifyJWT,                          // Verify user is logged in
     upload.fields([                     // Handle multipart form-data with 2 files
         { name: 'video', maxCount: 1 },      // Accept 1 video file
@@ -67,7 +67,7 @@ router.route('/').post(
  * Only video owner can update
  * Requires: JWT token
  */
-router.route('/:videoId').patch(
+router.patch('/:videoId',
     verifyJWT,                          // Verify user is logged in
     upload.single('thumbnail'),         // Optional: new thumbnail file
     updateVideo                         // Process update
@@ -79,7 +79,7 @@ router.route('/:videoId').patch(
  * Only video owner can delete
  * Requires: JWT token
  */
-router.route('/:videoId').delete(
+router.delete('/:videoId',
     verifyJWT,                          // Verify user is logged in
     deleteVideo                         // Process deletion
 )
