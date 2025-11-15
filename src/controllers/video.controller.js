@@ -325,6 +325,75 @@ const updateVideo = asyncHandler(async (req, res) => {
         )
 })
 
+/**
+ * Delete Video Controller
+ * 
+ * Permanently deletes a video and its associated files (video file and thumbnail)
+ * from both Cloudinary storage and MongoDB database.
+ * 
+ * @route   DELETE /api/v1/videos/:videoId
+ * @access  Protected (owner only)
+ * @param   {string} videoId - MongoDB ObjectId of the video
+ * @returns {Object} ApiResponse with deletion confirmation
+ */
+const deleteVideo = asyncHandler(async (req, res) => {
+    // Extract and validate video ID from URL parameters
+    const { videoId } = req.params
+    
+    if (!mongoose.isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid video ID provided for deletion")
+    }
+    
+    // Find video in database
+    const foundVideo = await video.findById(videoId)
+    
+    if (!foundVideo) {
+        throw new ApiError(404, "Video not found")
+    }
+
+    // Authorization: Only video owner can delete
+    // Prevents unauthorized users from deleting others' videos
+    if (foundVideo.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to delete this video")
+    }
+
+    // Delete video file from Cloudinary
+    // Extract public_id from video URL and delete the file
+    const videoPublicId = await getPublicId(foundVideo.videoFile)
+    
+    if (videoPublicId) {
+        const videoDeleteResult = await deleteFromCloudinary(videoPublicId, "video")
+        
+        // Check if video deletion was successful
+        if (!videoDeleteResult || videoDeleteResult.result !== 'ok') {
+            throw new ApiError(500, "Failed to delete video from cloud storage")
+        }
+    }
+
+    // Delete thumbnail from Cloudinary
+    // Extract public_id from thumbnail URL and delete the image
+    const thumbNailPublicId = await getPublicId(foundVideo.thumbNail)
+    
+    if (thumbNailPublicId) {
+        const thumbnailDeleteResult = await deleteFromCloudinary(thumbNailPublicId, "image")
+        
+        // Check if thumbnail deletion was successful
+        if (!thumbnailDeleteResult || thumbnailDeleteResult.result !== "ok") {
+            throw new ApiError(500, "Failed to delete thumbnail from cloud storage")
+        }
+    }
+
+    // Delete video document from MongoDB database
+    await video.findByIdAndDelete(videoId)
+
+    // Send success response with empty data object
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, "Video deleted successfully")
+        )
+})
+
 // ============================================
 // EXPORTS
 // ============================================
@@ -332,7 +401,8 @@ export {
     uploadVideo,      // POST /api/v1/videos - Upload new video
     getAllVideos,     // GET /api/v1/videos - List videos with filters
     getVideoById,     // GET /api/v1/videos/:videoId - Get single video
-    updateVideo       // PATCH /api/v1/videos/:videoId - Update video
+    updateVideo,      // PATCH /api/v1/videos/:videoId - Update video
+    deleteVideo       // DELETE /api/v1/videos/:videoId - Delete video
 };
 
 
