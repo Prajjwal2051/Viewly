@@ -1,12 +1,12 @@
 // ============================================
 // DEPENDENCIES
 // ============================================
-import { asyncHandler } from "../utils/asyncHandler";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
-import { uploadOnCloudinary,getPublicId,deleteFromCloudinary } from "../utils/cloudnary";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { uploadOnCloudinary, getPublicId, deleteFromCloudinary } from "../utils/cloudnary.js";
 import { video } from "../models/video.model.js";
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 // ============================================
 // CONTROLLERS
