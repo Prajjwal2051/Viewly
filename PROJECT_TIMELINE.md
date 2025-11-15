@@ -1,19 +1,173 @@
-# 📅 VidNest Project Timeline & Development Summary
+# 📅 VidNest Feature Timeline
 
-**Project**: VidNest - YouTube-like Video Sharing Platform Backend  
+**Project**: VidNest - Video Sharing Platform Backend  
 **Started**: October 2025  
-**Current Status**: Phase 1 Complete (User Management & Authentication System)  
-**Last Updated**: November 14, 2025
+**Last Updated**: November 15, 2025
 
 ---
 
-## 🎯 Project Overview
+# 📅 VidNest Feature Timeline
 
-VidNest is a comprehensive video sharing platform backend built with Node.js, Express.js, and MongoDB. The project demonstrates modern backend development practices including JWT authentication, file uploads, aggregation pipelines, and RESTful API design.
+**Project**: VidNest - Video Sharing Platform Backend  
+**Started**: October 2025  
+**Last Updated**: November 15, 2025
 
 ---
 
-## 📊 Timeline of Development
+## 📝 Feature Log
+
+> This document tracks all features added to VidNest with timestamps and brief descriptions.
+
+---
+
+### **October 10, 2025**
+
+#### ✅ User Registration
+- Users can create accounts with username, email, password, and fullName
+- Supports avatar and cover image upload during registration
+- Password is hashed with bcrypt before storing
+
+#### ✅ User Login
+- Login with email and password
+- Returns JWT access token (1 day) and refresh token (10 days)
+- Tokens stored in HTTP-only cookies for security
+
+#### ✅ File Upload System
+- Multer middleware for handling multipart form-data
+- Files uploaded to Cloudinary cloud storage
+- Supports images (avatar, cover image)
+- Temporary local storage before cloud upload
+
+#### ✅ Database Models
+- **User Model**: username, email, password, avatar, coverimage, watchHistory
+- **Video Model**: videoFile, thumbnail, title, description, duration, views, owner
+- **Subscription Model**: subscriber, channel relationship
+
+---
+
+### **October 11, 2025**
+
+#### ✅ User Logout
+- Clears refresh token from database
+- Removes cookies from browser
+- Secure session termination
+
+#### ✅ Token Refresh
+- Refresh access token using refresh token
+- Implements token rotation for security
+- Works without requiring login again
+
+#### ✅ JWT Authentication Middleware
+- Verifies JWT tokens on protected routes
+- Supports both cookies and Authorization header
+- Attaches user object to request
+
+---
+
+### **October 12, 2025**
+
+#### ✅ Update User Profile
+- Update fullName and email
+- Change password (requires old password verification)
+- Update avatar image
+- Update cover image
+
+#### ✅ Get Current User
+- Fetch authenticated user's profile data
+- Returns user info without sensitive fields
+
+---
+
+### **October 13, 2025**
+
+#### ✅ Channel Profile System
+- Get public channel profile by username
+- Shows subscriber count and subscribed channels count
+- Uses MongoDB aggregation pipeline
+- Shows if current user is subscribed to the channel
+
+#### ✅ Watch History
+- Track videos watched by user
+- Retrieve watch history with video details
+- Includes video owner information using nested aggregation
+
+---
+
+### **October 14-15, 2025**
+
+#### ✅ Complete API Routes
+- 11 user routes implemented (public and protected)
+- Proper middleware chains (auth, multer)
+- RESTful API structure
+
+#### ✅ Documentation
+- Complete README with API documentation
+- Development roadmap created
+- Inline code comments added
+
+---
+
+### **November 15, 2025**
+
+#### ✅ Video Upload
+- Upload video file and thumbnail to Cloudinary
+- Extract video duration automatically
+- Save video metadata to MongoDB
+- Set initial views, likes, dislikes to 0
+
+#### ✅ Get Video by ID
+- Fetch single video with owner details
+- Increment view count atomically using $inc
+- Privacy check: unpublished videos only visible to owner
+
+#### ✅ Update Video
+- Update video title, description, or thumbnail
+- Only video owner can update
+- Old thumbnail automatically deleted from Cloudinary when replaced
+
+#### ✅ Delete Video
+- Delete video and thumbnail from Cloudinary
+- Delete video document from MongoDB
+- Only video owner can delete
+- Complete cleanup of all associated files
+
+#### ✅ Get All Videos (Partial)
+- Filter videos by category, tags, owner
+- Search in title and description
+- Sort by views, date, or likes
+- TODO: Implement pagination with aggregation pipeline
+
+#### ✅ Cloudinary Utilities
+- `uploadOnCloudinary()` - Upload files with auto type detection
+- `getPublicId()` - Extract public_id from Cloudinary URL
+- `deleteFromCloudinary()` - Delete files with CDN cache invalidation
+
+---
+
+## 📊 Current Feature Count
+
+- **User Features**: 8 (register, login, logout, refresh token, profile updates, channel, watch history, current user)
+- **Video Features**: 5 (upload, get by ID, update, delete, list with filters)
+- **File Management**: 3 (upload to cloud, extract ID, delete from cloud)
+- **Authentication**: 2 (JWT middleware, token refresh)
+
+**Total Features**: 18
+
+---
+
+## 🎯 Next Features to Add
+
+- [ ] Video listing with pagination (complete getAllVideos aggregation)
+- [ ] Video routes setup
+- [ ] Comments on videos
+- [ ] Like/dislike videos
+- [ ] Subscribe to channels
+- [ ] Video playlists
+- [ ] Search functionality
+
+---
+
+**Note**: Update this file every time a feature is added or removed with date and brief description.
 
 ### **October 10, 2025 - Project Initialization**
 
@@ -201,6 +355,72 @@ VidNest is a comprehensive video sharing platform backend built with Node.js, Ex
 
 **Files Modified:**
 - `.vscode/settings.json` (VS Code user settings)
+
+---
+
+### **November 15, 2025 - Phase 2: Video Management System**
+
+#### Session 8: Video Controller Development & Documentation
+**What We Did:**
+
+1. **Enhanced Video Controller Functions**
+   - ✅ Improved commenting for `uploadVideo` function
+   - ✅ Added better documentation for `getAllVideos` function
+   - ✅ Enhanced `getVideoById` with clear, concise comments
+   - ✅ Documented `updateVideo` function with reasons for each step
+   - ✅ Created and documented `deleteVideo` function
+
+2. **Cloudinary Utility Enhancements**
+   - ✅ Documented `getPublicId()` function with examples
+   - ✅ Enhanced `deleteFromCloudinary()` with comprehensive comments
+   - ✅ Added result checking and better error messages
+   - ✅ Fixed missing return statement in `getPublicId()`
+   - ✅ Added function to exports list
+
+3. **Video Controller Functions Implemented:**
+   - **uploadVideo**: Complete workflow for video upload to Cloudinary and MongoDB
+   - **getAllVideos**: Filtering, sorting, and pagination (TODO: aggregation pipeline)
+   - **getVideoById**: Fetch single video with view count increment
+   - **updateVideo**: Update title, description, and thumbnail with old file cleanup
+   - **deleteVideo**: Complete deletion from Cloudinary and MongoDB
+
+4. **Code Quality Improvements:**
+   - Fixed variable naming conflicts (video → foundVideo, updatedVideo)
+   - Added null checks for Cloudinary public_id extraction
+   - Improved error messages throughout
+   - Fixed typos and formatting issues
+   - Added all functions to exports
+
+**Functions Documented (5 Total):**
+1. `uploadVideo` - Video and thumbnail upload with Cloudinary integration
+2. `getAllVideos` - Advanced filtering, sorting, pagination (aggregation TODO)
+3. `getVideoById` - Single video retrieval with atomic view increment
+4. `updateVideo` - Partial update with old thumbnail cleanup
+5. `deleteVideo` - Complete video deletion from cloud and database
+
+**Cloudinary Utilities Enhanced (3 Total):**
+1. `uploadOnCloudinary` - Upload files with auto resource type detection
+2. `getPublicId` - Extract public_id from Cloudinary URLs
+3. `deleteFromCloudinary` - Delete files with CDN cache invalidation
+
+**Files Modified:**
+- `src/controllers/video.controller.js` (multiple iterations)
+- `src/utils/cloudnary.js` (enhanced documentation)
+
+**Documentation Style:**
+- Concise, focused comments explaining "why" not just "what"
+- JSDoc headers with route, access, parameters, and returns
+- Inline comments with clear reasoning
+- Examples included where helpful
+- Professional, educational tone throughout
+
+**Bugs Fixed:**
+- ✅ Missing return statement in `getPublicId()`
+- ✅ Variable naming conflict in `getVideoById`
+- ✅ Privacy check moved after video fetch in `getVideoById`
+- ✅ Added null checks before Cloudinary deletion
+- ✅ Fixed exports to include all functions
+- ✅ Improved error messages consistency
 
 ---
 
@@ -447,11 +667,45 @@ VidNest is a comprehensive video sharing platform backend built with Node.js, Ex
 - Installation guide
 - Common issues troubleshooting
 - Code comments throughout the codebase
+- Video controller fully documented (Nov 15)
+- Cloudinary utilities enhanced documentation (Nov 15)
 
 **Files:**
 - `README.md`
 - `DEVELOPMENT_ROADMAP.md`
+- `PROJECT_TIMELINE.md`
 - Inline comments in all controller/middleware files
+
+---
+
+### **13. Video Management System** 🔄 (In Progress)
+
+**Features Implemented:**
+- Video upload with thumbnail to Cloudinary
+- Video metadata storage in MongoDB
+- Single video retrieval with view tracking
+- Video update (title, description, thumbnail)
+- Video deletion (cloud storage + database)
+- Filter and search preparation (TODO: aggregation)
+
+**Files:**
+- `src/controllers/video.controller.js` (5 functions implemented)
+- `src/utils/cloudnary.js` (enhanced with getPublicId and deleteFromCloudinary)
+
+**Functions:**
+- `uploadVideo()` - Upload video and thumbnail, save to DB
+- `getAllVideos()` - List videos with filters (TODO: implement aggregation)
+- `getVideoById()` - Fetch video with atomic view increment
+- `updateVideo()` - Update video metadata and thumbnail
+- `deleteVideo()` - Delete video from Cloudinary and MongoDB
+
+**Key Features:**
+- Cloudinary integration for video and thumbnail storage
+- Atomic view count increment using `$inc`
+- Old thumbnail cleanup when updating
+- Complete file deletion from cloud storage
+- Authorization checks (owner-only for update/delete)
+- Privacy checks (unpublished videos only for owner)
 
 ---
 
@@ -474,6 +728,7 @@ VidNest is a comprehensive video sharing platform backend built with Node.js, Ex
 ### **File Management:**
 - Multer v2.0.2
 - Cloudinary v2.7.0
+- cloudinary-build-url (for extracting public IDs)
 
 ### **Other:**
 - cors v2.8.5
@@ -486,27 +741,29 @@ VidNest is a comprehensive video sharing platform backend built with Node.js, Ex
 ## 🎯 Current Project Statistics
 
 ### **Lines of Code:**
-- Controllers: ~500 lines (user.controller.js)
+- Controllers: ~850 lines (user.controller.js + video.controller.js)
 - Models: ~200 lines (3 models)
 - Routes: ~100 lines
 - Middleware: ~100 lines
-- Utils: ~150 lines
-- **Total: ~1,050 lines of application code**
+- Utils: ~200 lines (cloudnary.js enhanced)
+- **Total: ~1,450 lines of application code**
 
 ### **Files Created:**
 - Total: 16 files
-- Controllers: 1
+- Controllers: 2 (user, video)
 - Models: 3
 - Routes: 1
 - Middleware: 2
 - Utils: 4
 - Config: 3
-- Documentation: 2
+- Documentation: 3
 
 ### **API Endpoints:**
-- Total: 11 endpoints
-- Public: 4 endpoints
-- Protected: 7 endpoints
+- Total: 16 endpoints (estimated)
+- User endpoints: 11 endpoints
+- Video endpoints: 5 endpoints (implemented, not routed yet)
+- Public: 6 endpoints
+- Protected: 10 endpoints
 
 ### **Features Completed:**
 - ✅ User Authentication (100%)
@@ -517,6 +774,9 @@ VidNest is a comprehensive video sharing platform backend built with Node.js, Ex
 - ✅ Token Management (100%)
 - ✅ Error Handling (100%)
 - ✅ API Documentation (100%)
+- 🔄 Video Upload System (90% - needs routes)
+- 🔄 Video CRUD Operations (80% - getAllVideos needs aggregation)
+- 🔄 Cloudinary Integration (100% - upload, get ID, delete)
 
 ---
 
@@ -555,6 +815,34 @@ VidNest is a comprehensive video sharing platform backend built with Node.js, Ex
 - **Severity**: Medium (reference errors)
 - **Root Cause**: Typos in variable names
 - **Solution**: Fixed all occurrences
+- **Status**: ✅ Fixed
+
+### **Bug #6: Missing Return in getPublicId**
+- **Date**: November 15, 2025
+- **Severity**: High (function not returning extracted ID)
+- **Root Cause**: Missing return statement
+- **Solution**: Added return statement
+- **Status**: ✅ Fixed
+
+### **Bug #7: Variable Naming Conflict in getVideoById**
+- **Date**: November 15, 2025
+- **Severity**: Medium (variable shadowing)
+- **Root Cause**: Using `video` for both model and instance
+- **Solution**: Renamed to `foundVideo` and `updatedVideo`
+- **Status**: ✅ Fixed
+
+### **Bug #8: Privacy Check Before Video Fetch**
+- **Date**: November 15, 2025
+- **Severity**: High (potential error when video doesn't exist)
+- **Root Cause**: Checking `video.isPublished` before fetching video
+- **Solution**: Moved privacy check after video fetch
+- **Status**: ✅ Fixed
+
+### **Bug #9: Missing Null Checks in deleteVideo**
+- **Date**: November 15, 2025
+- **Severity**: Medium (potential errors on null public_id)
+- **Root Cause**: Attempting deletion without checking if public_id exists
+- **Solution**: Added null checks before Cloudinary deletion
 - **Status**: ✅ Fixed
 
 ---
