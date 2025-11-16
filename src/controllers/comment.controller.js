@@ -197,7 +197,101 @@ const getAllComment = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, comments, "Comments fetched successfully"))
 })
 
+/**
+ * UPDATE COMMENT CONTROLLER
+ * Allows authenticated users to update their own comments
+ * 
+ * Purpose:
+ * - Enable users to edit comment content after posting
+ * - Maintain comment ownership security
+ * - Preserve comment metadata (likes, timestamps)
+ * 
+ * Features:
+ * - Validates comment content (1-500 characters)
+ * - Verifies comment ownership (only author can edit)
+ * - Updates content while preserving other fields
+ * - Returns updated comment with owner details
+ * 
+ * Security:
+ * - Only comment owner can update their comment
+ * - Validates user authentication via middleware
+ * - Prevents unauthorized modifications
+ * 
+ * Process:
+ * 1. Extract comment ID from URL and new content from body
+ * 2. Validate comment ID format and content requirements
+ * 3. Verify comment exists in database
+ * 4. Check user owns the comment (authorization)
+ * 5. Update comment in database
+ * 6. Return updated comment with owner details
+ * 
+ * @route PATCH /api/v1/comments/:commentId
+ * @access Private (requires authentication and ownership)
+ */
+const updateComment = asyncHandler(async (req, res) => {
+    // STEP 1: Extract comment ID from URL parameters and new content from body
+    const { commentId } = req.params
+    const { content } = req.body
 
+    // STEP 2: Validate comment ID - must be provided and valid MongoDB ObjectId
+    if (!commentId || !mongoose.isValidObjectId(commentId)) {
+        throw new ApiError(400, "Valid Comment ID required")
+    }
+
+    // STEP 3: Validate new comment content - must not be empty and within character limit
+    if (!content || content.trim() === "") {
+        throw new ApiError(400, "Comment content required")
+    }
+    if (content.trim().length < 1) {
+        throw new ApiError(400, "Comment must have at least 1 character")
+    }
+    if (content.trim().length > 500) {
+        throw new ApiError(400, "Comment cannot exceed 500 characters")
+    }
+
+    // STEP 4: Verify comment exists in database
+    const existingComment = await comment.findById(commentId)
+    if (!existingComment) {
+        throw new ApiError(404, "Comment not found")
+    }
+
+    // STEP 5: Check comment ownership - only author can update their comment
+    // This prevents users from editing other people's comments
+    if (existingComment.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to update this comment")
+    }
+
+    // STEP 6: Update comment in database with new content
+    // Uses findByIdAndUpdate for atomic operation
+    const updatedComment = await comment.findByIdAndUpdate(
+        commentId,
+        {
+            $set: {
+                content: content.trim(),    // Update only the content field
+            },
+        },
+        {
+            new: true,              // Return updated document
+            runValidators: true,    // Run schema validations
+        }
+    )
+
+    // STEP 7: Validate update was successful
+    if (!updatedComment) {
+        throw new ApiError(500, "Failed to update comment")
+    }
+
+    // STEP 8: Fetch updated comment with populated owner details
+    // Populate owner field with username, fullname, and avatar for response
+    const commentWithOwner = await comment
+        .findById(updatedComment._id)
+        .populate("owner", "username fullname avatar")
+
+    // STEP 9: Send success response with updated comment data
+    return res
+        .status(200)
+        .json(new ApiResponse(200, commentWithOwner, "Comment updated successfully"))
+})
 
 // ============================================
 // EXPORT CONTROLLERS
@@ -205,4 +299,5 @@ const getAllComment = asyncHandler(async (req, res) => {
 export { 
     addComment,         // POST /comments - Add comment to a video
     getAllComment,      // GET /comments/:videoId - Get all comments for a video (paginated)
+    updateComment,      // PATCH /comments/:commentId - Update user's own comment
 }
