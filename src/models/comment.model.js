@@ -33,7 +33,7 @@ const commentSchema = new mongoose.Schema(
     {
         timestamps: true,
     }
-);
+)
 
 commentSchema.plugin(mongooseAggregatePaginate)
 
