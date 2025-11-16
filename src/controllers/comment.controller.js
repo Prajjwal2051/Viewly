@@ -8,172 +8,201 @@ import { comment } from "../models/comment.model.js"
 import { video } from "../models/video.model.js"
 import mongoose from "mongoose"
 
+// ============================================
+// CONTROLLER FUNCTIONS
+// ============================================
+
 /**
- * @desc    Add a comment to a video
- * @route   POST /api/v1/comments
- * @access  Private
+ * ADD COMMENT TO VIDEO CONTROLLER
+ * Allows authenticated users to add comments to published videos
+ * 
+ * Features:
+ * - Validates comment content (1-500 characters)
+ * - Verifies video exists and is published
+ * - Creates top-level comment (not a reply)
+ * - Returns comment with populated owner details
+ * 
+ * Process:
+ * 1. Extract and validate comment content
+ * 2. Validate video ID format
+ * 3. Verify video exists and is published
+ * 4. Create comment in database
+ * 5. Return comment with user information
+ * 
+ * @route POST /api/v1/comments
+ * @access Private (requires authentication)
  */
 const addComment = asyncHandler(async (req, res) => {
+    // STEP 1: Extract comment data from request body
     const { content, videoId } = req.body
 
-    // Validate comment content (1-500 characters)
+    // STEP 2: Validate comment content - must not be empty and within character limit
     if (!content || content.trim() === "") {
-        console.log("Comment not Provided")
         throw new ApiError(400, "Comment not Provided")
     }
-
-    if (content.trim().length < 1) {
-        console.log("comment cannot be empty")
-        throw new ApiError(400, "Comment cannot be empty")
-    }
-
     if (content.trim().length > 500) {
-        console.log("Comment is longer than 500 characters")
         throw new ApiError(400, "Comment cannot be longer than 500 characters")
     }
 
-    // Validate video ID format
-    if (!videoId) {
-        console.log("Video Id for commenting not Provided")
-        throw new ApiError(400, "Video ID for commenting not provided")
+    // STEP 3: Validate video ID - must be provided and valid MongoDB ObjectId
+    if (!videoId || !mongoose.isValidObjectId(videoId)) {
+        throw new ApiError(400, "Valid Video ID required")
     }
 
-    if (!mongoose.isValidObjectId(videoId)) {
-        console.log("Invalid Video ID provided for commenting")
-        throw new ApiError(400, "Video ID for commenting not provided")
-    }
-
-    console.log(" Comment recevied: ", { content, videoId })
-
-    // Check if video exists and is published
+    // STEP 4: Verify video exists in database and is published
+    // Users can only comment on published videos
     const videoExists = await video.findById(videoId)
     if (!videoExists) {
-        console.log("video does not exists for commenting")
-        throw new ApiError(404, "video not found")
+        throw new ApiError(404, "Video not found")
     }
-
     if (!videoExists.isPublished) {
-        console.log("Video is unpublished")
-        throw new ApiError(403, "cannot comment on a unpublished video")
+        throw new ApiError(403, "Cannot comment on unpublished video")
     }
 
-    // Create comment document
+    // STEP 5: Create comment document in database
+    // owner comes from req.user._id (added by auth middleware)
+    // parentComment is null for top-level comments (not replies)
     const newComment = await comment.create({
         content: content.trim(),
         video: videoId,
         owner: req.user._id,
         likes: 0,
-        parentComment: null, // Top-level comment
+        parentComment: null,
     })
 
+    // STEP 6: Validate comment creation was successful
     if (!newComment) {
-        console.log("failed to create new comment object")
-        throw new ApiError(500, "Failed to create a comment")
+        throw new ApiError(500, "Failed to create comment")
     }
 
-    // Fetch created comment with owner details
+    // STEP 7: Fetch created comment with populated owner details
+    // Populate owner field with username, fullname, and avatar for response
     const createdComment = await comment
         .findById(newComment._id)
         .populate("owner", "username fullname avatar")
 
+    // STEP 8: Send success response with comment data
     return res
         .status(201)
-        .json(new ApiResponse(201, createdComment, "comment added sucessfully"))
+        .json(new ApiResponse(201, createdComment, "Comment added successfully"))
 })
 
+/**
+ * GET ALL COMMENTS FOR VIDEO CONTROLLER
+ * Fetches paginated list of top-level comments for a specific video
+ * 
+ * Purpose:
+ * - Display comments section for video player
+ * - Show comment author details (username, avatar)
+ * - Supports pagination for better performance
+ * - Returns only top-level comments (excludes replies)
+ * 
+ * Features:
+ * - MongoDB aggregation pipeline for efficient querying
+ * - Joins comment and user collections
+ * - Sorted by newest comments first
+ * - Includes like count and timestamps
+ * 
+ * Aggregation Pipeline Architecture:
+ * Match Comments → Lookup Owner → Unwind → Project Fields → Sort → Paginate
+ * 
+ * Process:
+ * 1. Validate video ID from URL parameters
+ * 2. Verify video exists in database
+ * 3. Build aggregation pipeline to:
+ *    - Filter comments for this video (top-level only)
+ *    - Join with users collection for owner details
+ *    - Select specific fields to return
+ *    - Sort by creation date (newest first)
+ * 4. Apply pagination and return results
+ * 
+ * @route GET /api/v1/comments/:videoId
+ * @access Public
+ */
 const getAllComment = asyncHandler(async (req, res) => {
-    // okay first of all we will get the video id from the req url and validate it
+    // STEP 1: Extract video ID from URL parameters and pagination from query
     const { videoId } = req.params
-    console.log("fetching comments for the video: ", videoId)
-
-    // okay now lets set the partaamters how much comments do we want to extract per page
-    // for that  lets make an object which has all the parameters by default
     const { page = 1, limit = 10 } = req.query
 
-    console.log("pagination: ", { page, limit })
+    // STEP 2: Validate video ID - must be provided and valid MongoDB ObjectId
+    if (!videoId || !mongoose.isValidObjectId(videoId)) {
+        throw new ApiError(400, "Valid Video ID required")
+    }
 
-    // now lets find that video and befre that validate the vidoe id
-    if (!videoId) {
-        console.log("Video ID is not Provided")
-        throw new ApiError(400, "Video Id is required")
-    }
-    if (!mongoose.isValidObjectId(videoId)) {
-        console.log("Invalid Video ID")
-        throw new ApiError(400, "Invalid Video ID format")
-    }
-    // now check if that video exists or not
+    // STEP 3: Verify video exists in database
     const videoExists = await video.findById(videoId)
     if (!videoExists) {
-        console.log("Video not Found")
-        throw new ApiError(404, "Video Not Found")
+        throw new ApiError(404, "Video not found")
     }
-    console.log("Video exists: ", videoExists.title)
 
-    // okay now we will use the aggregation pipleline for filtering comments and populate the owner details of comment with their id and sort also...basically doing multiple operations together
-
+    // STEP 4: Build MongoDB aggregation pipeline
+    // This efficiently fetches comments with owner details in a single query
     const aggregate = comment.aggregate([
-        // first of all we will match the comments ar efor this video na
+        // Match only top-level comments for this specific video
+        // parentComment: null excludes nested replies
         {
             $match: {
-                // what it does is show me the only comments not replies of that video
                 video: new mongoose.Types.ObjectId(videoId),
                 parentComment: null,
             },
         },
+        // Join with users collection to get comment author information
         {
-            // now for each comment go fetch the user who wrote it
             $lookup: {
-                from: "users",
-                localField: "onwer", // from here we will match
-                foreignField: "_id", // and to here we will match
-                as: "ownerDetails",
+                from: "users",              // Collection to join with
+                localField: "onwer",        // Field from comments collection
+                foreignField: "_id",        // Field from users collection
+                as: "ownerDetails",         // Output array field name
             },
         },
-
-        // now we will convert the ownerDetials array to a object
+        // Convert ownerDetails from array to object
+        // $lookup returns an array, but we need single object
         {
             $unwind: "$onwerDetails",
         },
-
-        // now in the final we will format the output as we want means only shows this fields and hide everything
+        // Select only required fields for response
+        // This reduces payload size and improves performance
         {
             $project: {
-                content: 1,
-                likes: 1,
-                createdAt: 1,
-                updateAt: 1,
-                "ownerDetails.username": 1,
-                "ownerDetails.fullName": 1,
-                "ownerDetails.avatar": 1,
+                content: 1,                     // Comment text
+                likes: 1,                       // Like count
+                createdAt: 1,                   // When comment was created
+                updateAt: 1,                    // When comment was last updated
+                "ownerDetails.username": 1,     // Comment author's username
+                "ownerDetails.fullName": 1,     // Comment author's full name
+                "ownerDetails.avatar": 1,       // Comment author's profile picture
             },
         },
-        // now just sort our comments innewest first (optional)
+        // Sort comments by creation date in descending order (newest first)
         {
-            $sort: { createdAt: -1 }, // means in the descednign order
+            $sort: { createdAt: -1 },
         },
     ])
-    console.log("🔧 Aggregation pipeline built")
 
-    // now we have to do the pagination so first configure the global options
+    // STEP 5: Configure pagination options
     const options = {
-        page: parseInt(page), // this tells at which page number we are
-        limit: parseInt(limit), // this tells how many items are their per page
-        // then we have to rename our docs to comments and totaldocs to total comments
-        docs: "comments",
-        totalDocs: "totalComments",
+        page: parseInt(page),           // Current page number
+        limit: parseInt(limit),         // Comments per page
+        docs: "comments",               // Rename results array to "comments"
+        totalDocs: "totalComments",     // Rename total count to "totalComments"
     }
-    // now we will give this request to mongoDB and it will aggregate all the things based on our need and return it
-    const comments = await comment.aggregatePaginate(aggregate, options)
-    console.log(`✅ Found ${comments.totalComments} total comments`)
-    console.log(`📄 Returning page ${comments.page} of ${comments.totalPages}`)
 
-    // then after getting the comments we just return it
+    // STEP 6: Execute aggregation with pagination
+    // aggregatePaginate handles pagination logic automatically
+    const comments = await comment.aggregatePaginate(aggregate, options)
+
+    // STEP 7: Send success response with paginated comments
     return res
         .status(200)
         .json(new ApiResponse(200, comments, "Comments fetched successfully"))
 })
 
-export {
-    addComment, // this fucntion adds comment
-    getAllComment, // this function gets all the comment froma a particular video
+
+
+// ============================================
+// EXPORT CONTROLLERS
+// ============================================
+export { 
+    addComment,         // POST /comments - Add comment to a video
+    getAllComment,      // GET /comments/:videoId - Get all comments for a video (paginated)
 }
