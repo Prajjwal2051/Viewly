@@ -6,7 +6,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { comment } from "../models/comment.model.js"
 import { video } from "../models/video.model.js"
-import mongoose from "mongoose"
+import mongoose, { mongo } from "mongoose"
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -293,6 +293,81 @@ const updateComment = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, commentWithOwner, "Comment updated successfully"))
 })
 
+/**
+ * DELETE COMMENT CONTROLLER
+ * Allows authenticated users to delete their own comments
+ * 
+ * Purpose:
+ * - Enable users to remove their comments from videos
+ * - Maintain comment ownership security
+ * - Permanently remove comment from database
+ * 
+ * Features:
+ * - Validates comment ID format
+ * - Verifies comment ownership (only author can delete)
+ * - Removes comment permanently from database
+ * - Returns success confirmation with deleted comment ID
+ * 
+ * Security:
+ * - Only comment owner can delete their comment
+ * - Validates user authentication via middleware
+ * - Prevents unauthorized deletions
+ * 
+ * Process:
+ * 1. Extract comment ID from URL parameters
+ * 2. Validate comment ID format
+ * 3. Verify comment exists in database
+ * 4. Check user owns the comment (authorization)
+ * 5. Delete comment from database
+ * 6. Return success response
+ * 
+ * @route DELETE /api/v1/comments/:commentId
+ * @access Private (requires authentication and ownership)
+ */
+const deleteComment = asyncHandler(async (req,res)=>{
+    // STEP 1: Extract comment ID from URL parameters
+    const {commentId}=req.params
+    
+    // STEP 2: Validate comment ID is provided
+    if(!commentId){
+        console.log("comment id not provided")
+        throw new ApiError(400,"comment id is not provided")
+    }
+    
+    // STEP 3: Validate comment ID is a valid MongoDB ObjectId
+    if(!mongoose.isValidObjectId(commentId)){
+        console.log("please peovide a valid comment id")
+        throw new ApiError(400,"Provide a valid comment id")
+    }
+
+    // STEP 4: Verify comment exists in database
+    const existingComment=await comment.findById(commentId)
+    if(!existingComment){
+        console.log("comment does not exists")
+        throw new ApiError(404,"comment not found for deletion")
+    }
+    
+    // STEP 5: Check comment ownership - only author can delete their comment
+    // This prevents users from deleting other people's comments
+    if(existingComment.owner.toString() !== req.user._id.toString()){
+        throw new ApiError(403, "You are not authorized to delete this comment")
+    }
+    
+    // STEP 6: Delete comment from database
+    const deletedComment=await comment.findByIdAndDelete(commentId)
+    
+    // STEP 7: Validate deletion was successful
+    if(!deletedComment){
+        console.log("comment unable to delete")
+        throw new ApiError(500,"Comment unable to delete from DB")
+    }
+    
+    // STEP 8: Send success response with deleted comment ID
+     return res
+        .status(200)
+        .json(new ApiResponse(200,commentId,"Comment sucessfully deleted"))
+})
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
@@ -300,4 +375,5 @@ export {
     addComment,         // POST /comments - Add comment to a video
     getAllComment,      // GET /comments/:videoId - Get all comments for a video (paginated)
     updateComment,      // PATCH /comments/:commentId - Update user's own comment
+    deleteComment,      // DELETE /comments/:commentId - Delete user's own comment
 }
