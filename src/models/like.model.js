@@ -28,4 +28,4 @@ likeSchema.plugin(mongooseAggregatePaginate)
 likeSchema.index({ video: 1, likedBy: 1 }, { unique: true, sparse: true })
 likeSchema.index({ comment: 1, likedBy: 1 }, { unique: true, sparse: true })
 
-export const dislike = mongoose.model("Like", likeSchema)
+export const like = mongoose.model("Like", likeSchema)
