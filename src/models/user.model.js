@@ -56,6 +56,15 @@ const userSchema = new mongoose.Schema({
     // User's cover image URL (like banner image)
     coverimage: {
         type: String            // Stores the URL of the cover image
+    },
+    subscribersCount: {         // stores the subscriber count of a user
+        type: Number,
+        default: 0
+    },
+                                // Count of channels this user subscribes to
+    subscribedToCount: {
+        type: Number,
+        default: 0
     }
 }, { 
     timestamps: true            // Automatically adds createdAt and updatedAt fields
