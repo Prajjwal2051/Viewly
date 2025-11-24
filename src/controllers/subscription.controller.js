@@ -354,6 +354,185 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         )
 })
 
+/**
+ * GET SUBSCRIBED CHANNELS CONTROLLER
+ * Retrieves paginated list of channels that a user has subscribed to
+ * 
+ * Purpose:
+ * - Display all channels a user is following
+ * - Show channel details (username, avatar, full name)
+ * - Support pagination for users following many channels
+ * - Sort by most recent subscriptions first
+ * 
+ * Use Cases:
+ * - User's "Subscriptions" page showing all channels they follow
+ * - Creating a personalized feed from subscribed channels
+ * - Managing subscription list (unsubscribe, view channel)
+ * - Analytics showing subscription preferences
+ * 
+ * Features:
+ * - Pagination (default: 10 channels per page)
+ * - Sorted by subscription date (newest first)
+ * - Includes channel profile information
+ * - Returns total subscribed channel count
+ * 
+ * Difference from getUserChannelSubscribers:
+ * - getUserChannelSubscribers: Shows WHO subscribed to a channel
+ * - getSubscribedChannels: Shows WHICH channels a user subscribed to
+ * 
+ * Process Flow:
+ * 1. Extract user ID from authenticated request
+ * 2. Parse pagination parameters
+ * 3. Validate user ID
+ * 4. Build aggregation pipeline to fetch channel details
+ * 5. Execute paginated query
+ * 6. Return formatted channel list with metadata
+ * 
+ * @route GET /api/v1/subscriptions/u/:userId/subscribed
+ * @access Private (user can see their own subscriptions)
+ * @query {number} page - Page number for pagination (default: 1)
+ * @query {number} limit - Number of channels per page (default: 10)
+ * @returns {Object} ApiResponse with paginated subscribed channels list
+ */
+const getSubscribedChannels = asyncHandler(async (req, res) => {
+    // STEP 1: Extract user ID from authenticated request
+    // Comes from auth middleware which validates and attaches user to request
+    const userId = req.user._id
+    
+    // STEP 2: Extract pagination parameters from query string
+    // Default values: page 1, 10 channels per page
+    // Example: /api/v1/subscriptions/subscribed?page=2&limit=15
+    const { page = 1, limit = 10 } = req.query
+
+    // STEP 3: Validate user ID exists
+    // This should always pass due to auth middleware, but we check for safety
+    if (!userId) {
+        throw new ApiError(400, "User Id not provided")
+    }
+
+    // STEP 4: Validate user ID format
+    // Ensures it's a valid MongoDB ObjectId (24-character hex string)
+    if (!mongoose.isValidObjectId(userId)) {
+        throw new ApiError(400, "Provide a valid UserId")
+    }
+
+    // STEP 5: Build MongoDB Aggregation Pipeline
+    // WHY AGGREGATION?
+    // We need to:
+    // 1. Filter subscriptions where this user is the subscriber
+    // 2. Join with User collection to get CHANNEL details (not subscriber details)
+    // 3. Format the response with only needed fields
+    // 4. Sort by subscription date
+    // 
+    // Think of it as: "Find all channels THIS user has subscribed to"
+    const aggregationPipeline = [
+        // STAGE 1: $match - Filter subscriptions where user is the subscriber
+        // Finds all subscription documents where subscriber field = userId
+        // This gives us all channels the user has subscribed to
+        {
+            $match: {
+                subscriber: new mongoose.Types.ObjectId(userId)
+            }
+        },
+
+        // STAGE 2: $lookup - Join with User collection to get channel details
+        // IMPORTANT FIX: We join on "channel" field, not "subscriber"
+        // 
+        // Logic:
+        // - We have subscription docs with channel IDs (the channels user subscribed to)
+        // - We need to fetch details of those channels from User collection
+        // - localField: "channel" → the channel ID in subscription document
+        // - foreignField: "_id" → the user ID in users collection
+        // 
+        // Why "users" collection? Because channels ARE users in this system
+        {
+            $lookup: {
+                from: "users",                      // Collection to join with
+                localField: "channel",              // subscription.channel (the channel user subscribed to)
+                foreignField: "_id",                // users._id (the channel's user account)
+                as: "subscribedChannelDetails"      // Output array with channel info
+            }
+        },
+
+        // STAGE 3: $unwind - Convert array to object
+        // $lookup returns array even for single match
+        // $unwind deconstructs it into individual documents
+        // 
+        // Before: { subscribedChannelDetails: [{ username: "techChannel", ... }] }
+        // After:  { subscribedChannelDetails: { username: "techChannel", ... } }
+        {
+            $unwind: "$subscribedChannelDetails"
+        },
+
+        // STAGE 4: $project - Select specific fields to return
+        // Controls which fields appear in response (security & performance)
+        // 
+        // Field selection:
+        // - Channel username, avatar, fullName for display
+        // - subscribedAt timestamp to show when user subscribed
+        // - Excludes sensitive data (email, password, tokens)
+        {
+            $project: {
+                "subscribedChannelDetails._id": 1,        // Channel's user ID
+                "subscribedChannelDetails.username": 1,   // Channel's username
+                "subscribedChannelDetails.avatar": 1,     // Channel's profile picture
+                "subscribedChannelDetails.fullName": 1,   // Channel's full name
+                "subscribedAt": "$createdAt",             // When user subscribed (renamed from createdAt)
+                "_id": 1                                  // Subscription document ID
+            }
+        },
+
+        // STAGE 5: $sort - Order by subscription date
+        // -1 = descending (newest subscriptions first)
+        // This shows recently subscribed channels at the top
+        {
+            $sort: {
+                subscribedAt: -1    // Most recent subscriptions appear first
+            }
+        }
+    ]
+
+    // STEP 6: Create aggregation cursor
+    // Prepares the pipeline but doesn't execute yet
+    const aggregate = subscription.aggregate(aggregationPipeline)
+
+    // STEP 7: Configure pagination options
+    // Uses mongoose-aggregate-paginate-v2 plugin for automatic pagination
+    const options = {
+        page: parseInt(page),       // Current page number (convert string to number)
+        limit: parseInt(limit),     // Items per page (convert string to number)
+        customLabels: {
+            docs: "subscribedChannels",         // Rename default 'docs' field
+            totalDocs: "totalSubscribedChannels" // Rename default 'totalDocs' field
+        }
+    }
+
+    // STEP 8: Execute paginated aggregation query
+    // Returns comprehensive pagination object:
+    // {
+    //   subscribedChannels: [...],      // Array of channel documents
+    //   totalSubscribedChannels: 45,    // Total count across all pages
+    //   page: 1,                        // Current page
+    //   totalPages: 5,                  // Total pages available
+    //   hasNextPage: true,              // Boolean for navigation
+    //   hasPrevPage: false,             // Boolean for navigation
+    //   nextPage: 2,                    // Next page number (if exists)
+    //   prevPage: null                  // Previous page number (if exists)
+    // }
+    const result = await subscription.aggregatePaginate(aggregate, options)
+
+    // STEP 9: Send success response with subscribed channels data
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                result,
+                "Subscribed channels fetched successfully"
+            )
+        )
+})
+
 
 
 
@@ -361,9 +540,21 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
+// All subscription-related controller functions are exported here
+// These handlers manage the complete subscription lifecycle in the application
+
 export {
+    // Toggle subscribe/unsubscribe for a channel
+    // Used when user clicks subscribe/unsubscribe button
     toggleSubscription,
+
+    // Get list of subscribers for a specific channel
+    // Used to display "Subscribers" list on channel page
     getUserChannelSubscribers,
+
+    // Get list of channels that a user has subscribed to
+    // Used to display user's "Subscriptions" or "Following" page
+    getSubscribedChannels,
 }
 
 
