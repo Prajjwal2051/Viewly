@@ -178,6 +178,182 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     }
 })
 
+/**
+ * GET USER CHANNEL SUBSCRIBERS CONTROLLER
+ * Retrieves paginated list of subscribers for a specific channel
+ * 
+ * Purpose:
+ * - Display all users who have subscribed to a channel
+ * - Show subscriber details (username, avatar, full name)
+ * - Support pagination for channels with many subscribers
+ * - Sort by most recent subscriptions first
+ * 
+ * Use Cases:
+ * - Channel owner viewing their subscriber list
+ * - Analytics dashboard showing subscriber growth
+ * - Displaying "Subscribers" tab on channel page
+ * 
+ * Features:
+ * - Pagination (default: 10 subscribers per page)
+ * - Sorted by subscription date (newest first)
+ * - Includes subscriber profile information
+ * - Returns total subscriber count
+ * 
+ * Process Flow:
+ * 1. Extract and validate channel ID from URL
+ * 2. Parse pagination parameters (page, limit)
+ * 3. Verify channel exists in database
+ * 4. Build MongoDB aggregation pipeline to fetch subscriber details
+ * 5. Execute paginated query
+ * 6. Return formatted subscriber list with metadata
+ * 
+ * @route GET /api/v1/subscriptions/c/:channelId/subscribers
+ * @access Public (anyone can see channel subscribers)
+ * @param {string} channelId - MongoDB ObjectId of the channel
+ * @query {number} page - Page number for pagination (default: 1)
+ * @query {number} limit - Number of subscribers per page (default: 10)
+ * @returns {Object} ApiResponse with paginated subscriber list and metadata
+ */
+const getUserChannelSubscribers = asyncHandler(async (req, res) => {
+    // STEP 1: Extract channel ID from URL parameters
+    const { channelId } = req.params
+    
+    // STEP 2: Extract pagination parameters from query string
+    // Default values: page 1, 10 subscribers per page
+    // Users can override: ?page=2&limit=20
+    const { page = 1, limit = 10 } = req.query
+
+    // STEP 3: Validate channel ID is provided
+    if (!channelId) {
+        throw new ApiError(400, "Channel Id not provided")
+    }
+
+    // STEP 4: Validate channel ID format
+    // MongoDB ObjectIds must be 24-character hex strings
+    if (!mongoose.isValidObjectId(channelId)) {
+        throw new ApiError(400, "Channel Id is not valid")
+    }
+
+    // STEP 5: Verify channel exists in database
+    // Prevents querying subscribers for non-existent or deleted channels
+    const existingChannel = await User.findById(channelId)
+    if (!existingChannel) {
+        throw new ApiError(404, "Channel not found")
+    }
+
+    // STEP 6: Build MongoDB Aggregation Pipeline
+    // WHY AGGREGATION?
+    // We need to:
+    // 1. Filter subscriptions for this specific channel
+    // 2. Join with User collection to get subscriber details
+    // 3. Format the response with only needed fields
+    // 4. Sort by subscription date
+    // 
+    // Aggregation pipelines process data in stages (like Unix pipes)
+    const aggregationPipeline = [
+        // STAGE 1: $match - Filter subscriptions for this channel only
+        // Similar to WHERE clause in SQL
+        // Converts channelId string to MongoDB ObjectId for comparison
+        {
+            $match: {
+                channel: new mongoose.Types.ObjectId(channelId)
+            }
+        },
+
+        // STAGE 2: $lookup - Join with User collection (SQL JOIN equivalent)
+        // Fetches complete subscriber information from User collection
+        // 
+        // How it works:
+        // - from: "users" → which collection to join with
+        // - localField: "subscriber" → field in subscription document
+        // - foreignField: "_id" → matching field in users collection
+        // - as: "subscriberDetails" → name for the joined data array
+        {
+            $lookup: {
+                from: "users",              // Collection name (lowercase, pluralized)
+                localField: "subscriber",   // subscription.subscriber (ObjectId)
+                foreignField: "_id",        // users._id (ObjectId)
+                as: "subscriberDetails"     // Output array with matched user docs
+            }
+        },
+
+        // STAGE 3: $unwind - Convert array to object
+        // $lookup returns an array even for single matches
+        // $unwind deconstructs the array to make each subscriber a separate document
+        // 
+        // Before: { subscriberDetails: [{ username: "john", ... }] }
+        // After:  { subscriberDetails: { username: "john", ... } }
+        {
+            $unwind: "$subscriberDetails"
+        },
+
+        // STAGE 4: $project - Select specific fields to return
+        // Controls which fields appear in final output (like SQL SELECT)
+        // Value "1" means include the field, "0" would exclude it
+        // 
+        // Why project?
+        // - Reduces data transfer (only send needed fields)
+        // - Hides sensitive information (passwords, tokens, etc.)
+        // - Improves frontend performance (less data to parse)
+        {
+            $project: {
+                "subscriberDetails._id": 1,          // Subscriber's user ID
+                "subscriberDetails.username": 1,     // Subscriber's username
+                "subscriberDetails.fullName": 1,     // Subscriber's full name
+                "subscriberDetails.avatar": 1,       // Subscriber's profile picture
+                "subscribedAt": "$createdAt",        // When they subscribed (renamed)
+                "_id": 1                             // Subscription document ID
+            }
+        },
+
+        // STAGE 5: $sort - Order results by subscription date
+        // -1 = descending order (newest first)
+        // +1 = ascending order (oldest first)
+        // 
+        // Shows most recent subscribers at the top of the list
+        {
+            $sort: {
+                subscribedAt: -1    // Newest subscriptions first
+            }
+        }
+    ]
+
+    // STEP 7: Create aggregation cursor
+    // Doesn't execute yet - just prepares the pipeline
+    const aggregate = subscription.aggregate(aggregationPipeline)
+
+    // STEP 8: Configure pagination options
+    // Uses mongoose-aggregate-paginate-v2 plugin
+    const options = {
+        page: parseInt(page),       // Convert string to number
+        limit: parseInt(limit),     // Convert string to number
+        customLabels: {
+            docs: "subscribers",            // Rename 'docs' to 'subscribers'
+            totalDocs: "totalSubscribers"   // Rename 'totalDocs' to 'totalSubscribers'
+        }
+    }
+    
+    // STEP 9: Execute paginated aggregation query
+    // Returns object with:
+    // - subscribers: array of subscriber documents
+    // - totalSubscribers: total count across all pages
+    // - page: current page number
+    // - totalPages: number of pages available
+    // - hasNextPage, hasPrevPage: navigation helpers
+    const result = await subscription.aggregatePaginate(aggregate, options)
+
+    // STEP 10: Send success response with subscriber data
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                result,
+                "Channel subscribers fetched successfully"
+            )
+        )
+})
+
 
 
 
@@ -186,8 +362,8 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 // EXPORT CONTROLLERS
 // ============================================
 export {
-    toggleSubscription, 
-
+    toggleSubscription,
+    getUserChannelSubscribers,
 }
 
 
