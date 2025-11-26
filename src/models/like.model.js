@@ -1,6 +1,6 @@
 import mongoose, { Mongoose, mongo, Schema } from "mongoose"
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"
-import { comment } from "./comment.model"
+import { comment } from "./comment.model.js"
 
 const likeSchema = new mongoose.Schema(
     {
