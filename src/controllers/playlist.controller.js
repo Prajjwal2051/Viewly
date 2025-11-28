@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
 import { playlist } from "../models/playlist.model.js"
+import { video } from "../models/video.model.js"
 import mongoose, { mongo } from "mongoose"
 
 // ============================================
@@ -426,6 +427,103 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     )
 })
 
+/**
+ * ADD VIDEO TO PLAYLIST CONTROLLER
+ * Adds a video to an existing playlist with validation and permission checks
+ * 
+ * Purpose:
+ * - Allow users to add videos to their playlists
+ * - Validate video exists and is published
+ * - Prevent duplicate videos in same playlist
+ * - Enforce ownership permissions for private playlists
+ * 
+ * Process Flow:
+ * 1. Validate playlist ID and video ID
+ * 2. Verify playlist exists and check permissions
+ * 3. Verify video exists and is published
+ * 4. Check for duplicate videos
+ * 5. Add video to playlist
+ * 6. Return updated playlist
+ * 
+ * @route POST /api/v1/playlists/add
+ * @access Private (requires authentication)
+ * @body {string} playlistId - MongoDB ObjectId of the playlist
+ * @body {string} videoId - MongoDB ObjectId of the video to add
+ * @returns {Object} ApiResponse with updated playlist data
+ */
+const addVideoToPlaylist = asyncHandler(async(req, res) => {
+    // STEP 1: Extract playlist and video IDs from request body
+    const { playlistId, videoId } = req.body
+    const userId = req.user._id
+
+    // STEP 2: Validate playlist ID
+    if(!playlistId){
+        throw new ApiError(400, "Playlist ID not provided")
+    }
+    if(!mongoose.isValidObjectId(playlistId)){
+        throw new ApiError(400, "Invalid Playlist ID provided")
+    }
+    
+    // STEP 3: Validate video ID
+    if(!videoId){
+        throw new ApiError(400, "Video ID not provided")
+    }
+    if(!mongoose.isValidObjectId(videoId)){
+        throw new ApiError(400, "Invalid Video ID provided")
+    }
+    
+    // STEP 4: Fetch and verify playlist exists
+    const existsPlaylist = await playlist.findById(playlistId)
+    if(!existsPlaylist){
+        throw new ApiError(404, "Playlist not found")
+    }
+    
+    // STEP 5: Check permissions for private playlists
+    // Only owner can add videos to their private playlists
+    if(!existsPlaylist.isPublic){
+        if(!req.user){
+            throw new ApiError(401, "Authentication required to add video to this playlist")
+        }
+        if(existsPlaylist.owner.toString() !== req.user._id.toString()){
+            throw new ApiError(403, "You don't have permission to add video to this playlist")
+        }
+    }
+
+    // STEP 6: Fetch and verify video exists
+    const existingVideo = await video.findById(videoId)
+    if(!existingVideo){
+        throw new ApiError(404, "Video not found")
+    }
+    
+    // STEP 7: Check if video is published
+    // Only published videos can be added to playlists
+    if(!existingVideo.isPublished){
+        throw new ApiError(400, "Cannot add unpublished video to playlist")
+    }
+
+    // STEP 8: Check if video already exists in playlist
+    // Prevents duplicate entries
+    if(existsPlaylist.videos.includes(videoId)){
+        throw new ApiError(400, "Video already exists in playlist")
+    }
+
+    // STEP 9: Add video to playlist using $addToSet (prevents duplicates)
+    // Returns updated playlist with populated fields
+    const updatedPlaylist = await playlist.findByIdAndUpdate(
+        playlistId,
+        { $addToSet: { videos: videoId } },  // $addToSet ensures no duplicates
+        { new: true }                         // Return updated document
+    )
+    .populate('videos')                       // Populate video details
+    .populate('owner', 'username fullName avatar')  // Populate owner details
+
+    // STEP 10: Send success response
+    return res.status(200).json(
+        new ApiResponse(200, updatedPlaylist, "Video added to playlist successfully")
+    )
+})
+
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
@@ -444,4 +542,8 @@ export {
     // Get detailed information about a specific playlist by ID
     // Used to display playlist page with all videos and metadata
     getPlaylistById,
+    
+    // Add a video to an existing playlist
+    // Used when user adds a video from video player or library
+    addVideoToPlaylist,
 }
