@@ -523,27 +523,248 @@ const addVideoToPlaylist = asyncHandler(async(req, res) => {
     )
 })
 
+/**
+ * REMOVE VIDEO FROM PLAYLIST CONTROLLER
+ * Removes a specific video from an existing playlist
+ * 
+ * Purpose:
+ * - Allow users to remove videos from their playlists
+ * - Maintain playlist organization and relevance
+ * - Enforce ownership permissions
+ * 
+ * Process Flow:
+ * 1. Validate playlist ID and video ID
+ * 2. Verify playlist exists and check ownership
+ * 3. Check if video exists in playlist
+ * 4. Remove video from playlist
+ * 5. Return updated playlist
+ * 
+ * @route DELETE /api/v1/playlists/remove
+ * @access Private (requires authentication)
+ * @body {string} playlistId - MongoDB ObjectId of the playlist
+ * @body {string} videoId - MongoDB ObjectId of the video to remove
+ * @returns {Object} ApiResponse with updated playlist data
+ */
+const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
+    // STEP 1: Extract playlist and video IDs from request body
+    const { playlistId, videoId } = req.body
+    const userId = req.user._id
+
+    // STEP 2: Validate playlist ID
+    if (!playlistId) {
+        throw new ApiError(400, "Playlist ID not provided")
+    }
+    if (!mongoose.isValidObjectId(playlistId)) {
+        throw new ApiError(400, "Invalid Playlist ID provided")
+    }
+
+    // STEP 3: Validate video ID
+    if (!videoId) {
+        throw new ApiError(400, "Video ID not provided")
+    }
+    if (!mongoose.isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid Video ID provided")
+    }
+
+    // STEP 4: Fetch and verify playlist exists
+    const existsPlaylist = await playlist.findById(playlistId)
+    if (!existsPlaylist) {
+        throw new ApiError(404, "Playlist not found")
+    }
+
+    // STEP 5: Check ownership - only owner can remove videos
+    if (existsPlaylist.owner.toString() !== userId.toString()) {
+        throw new ApiError(403, "You don't have permission to modify this playlist")
+    }
+
+    // STEP 6: Check if video exists in playlist
+    if (!existsPlaylist.videos.includes(videoId)) {
+        throw new ApiError(400, "Video not found in playlist")
+    }
+
+    // STEP 7: Remove video from playlist using $pull operator
+    const updatedPlaylist = await playlist.findByIdAndUpdate(
+        playlistId,
+        { $pull: { videos: videoId } },  // $pull removes matching element
+        { new: true }                     // Return updated document
+    )
+    .populate('videos')
+    .populate('owner', 'username fullName avatar')
+
+    // STEP 8: Send success response
+    return res.status(200).json(
+        new ApiResponse(200, updatedPlaylist, "Video removed from playlist successfully")
+    )
+})
+
+/**
+ * UPDATE PLAYLIST CONTROLLER
+ * Updates playlist name, description, and privacy settings
+ * 
+ * Purpose:
+ * - Allow users to modify playlist metadata
+ * - Update visibility settings (public/private)
+ * - Keep playlist information current and relevant
+ * 
+ * Process Flow:
+ * 1. Validate playlist ID
+ * 2. Verify playlist exists and check ownership
+ * 3. Validate update fields
+ * 4. Update playlist with new data
+ * 5. Return updated playlist
+ * 
+ * @route PATCH /api/v1/playlists/:playlistId
+ * @access Private (requires authentication)
+ * @param {string} playlistId - MongoDB ObjectId of the playlist
+ * @body {string} name - New playlist name (optional, max 100 chars)
+ * @body {string} description - New description (optional, max 500 chars)
+ * @body {boolean} isPublic - New visibility setting (optional)
+ * @returns {Object} ApiResponse with updated playlist data
+ */
+const updatePlaylist = asyncHandler(async (req, res) => {
+    // STEP 1: Extract playlist ID and update data
+    const { playlistId } = req.params
+    const { name, description, isPublic } = req.body
+    const userId = req.user._id
+
+    // STEP 2: Validate playlist ID
+    if (!playlistId) {
+        throw new ApiError(400, "Playlist ID not provided")
+    }
+    if (!mongoose.isValidObjectId(playlistId)) {
+        throw new ApiError(400, "Invalid Playlist ID provided")
+    }
+
+    // STEP 3: Validate at least one field is provided for update
+    if (name === undefined && description === undefined && isPublic === undefined) {
+        throw new ApiError(400, "At least one field (name, description, or isPublic) must be provided")
+    }
+
+    // STEP 4: Fetch and verify playlist exists
+    const existsPlaylist = await playlist.findById(playlistId)
+    if (!existsPlaylist) {
+        throw new ApiError(404, "Playlist not found")
+    }
+
+    // STEP 5: Check ownership - only owner can update playlist
+    if (existsPlaylist.owner.toString() !== userId.toString()) {
+        throw new ApiError(403, "You don't have permission to update this playlist")
+    }
+
+    // STEP 6: Validate name if provided
+    if (name !== undefined) {
+        if (!name || name.trim() === "") {
+            throw new ApiError(400, "Playlist name cannot be empty")
+        }
+        if (name.trim().length > 100) {
+            throw new ApiError(400, "Name cannot be more than 100 characters")
+        }
+    }
+
+    // STEP 7: Validate description if provided
+    if (description !== undefined && description.trim().length > 500) {
+        throw new ApiError(400, "Description cannot exceed 500 characters")
+    }
+
+    // STEP 8: Build update object with only provided fields
+    const updateData = {}
+    if (name !== undefined) updateData.name = name.trim()
+    if (description !== undefined) updateData.description = description.trim()
+    if (isPublic !== undefined) updateData.isPublic = isPublic
+
+    // STEP 9: Update playlist in database
+    const updatedPlaylist = await playlist.findByIdAndUpdate(
+        playlistId,
+        { $set: updateData },
+        { new: true, runValidators: true }  // Return updated doc and run validators
+    )
+    .populate('owner', 'username fullName avatar')
+
+    // STEP 10: Send success response
+    return res.status(200).json(
+        new ApiResponse(200, updatedPlaylist, "Playlist updated successfully")
+    )
+})
+
+/**
+ * DELETE PLAYLIST CONTROLLER
+ * Permanently deletes a playlist from the database
+ * 
+ * Purpose:
+ * - Allow users to remove unwanted playlists
+ * - Clean up unused or obsolete playlists
+ * - Enforce ownership permissions
+ * 
+ * Process Flow:
+ * 1. Validate playlist ID
+ * 2. Verify playlist exists and check ownership
+ * 3. Delete playlist from database
+ * 4. Return success confirmation
+ * 
+ * @route DELETE /api/v1/playlists/:playlistId
+ * @access Private (requires authentication)
+ * @param {string} playlistId - MongoDB ObjectId of the playlist to delete
+ * @returns {Object} ApiResponse with deletion confirmation
+ */
+const deletePlaylist = asyncHandler(async (req, res) => {
+    // STEP 1: Extract playlist ID from URL parameters
+    const { playlistId } = req.params
+    const userId = req.user._id
+
+    // STEP 2: Validate playlist ID
+    if (!playlistId) {
+        throw new ApiError(400, "Playlist ID not provided")
+    }
+    if (!mongoose.isValidObjectId(playlistId)) {
+        throw new ApiError(400, "Invalid Playlist ID provided")
+    }
+
+    // STEP 3: Fetch and verify playlist exists
+    const existsPlaylist = await playlist.findById(playlistId)
+    if (!existsPlaylist) {
+        throw new ApiError(404, "Playlist not found")
+    }
+
+    // STEP 4: Check ownership - only owner can delete playlist
+    if (existsPlaylist.owner.toString() !== userId.toString()) {
+        throw new ApiError(403, "You don't have permission to delete this playlist")
+    }
+
+    // STEP 5: Delete playlist from database
+    await playlist.findByIdAndDelete(playlistId)
+
+    // STEP 6: Send success response
+    return res.status(200).json(
+        new ApiResponse(200, { deletedPlaylistId: playlistId }, "Playlist deleted successfully")
+    )
+})
+
 
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
 // All playlist-related controller functions are exported here
-// These handlers manage playlist creation and retrieval
+// These handlers manage complete playlist lifecycle
 
 export {
     // Create a new playlist for authenticated user
-    // Used when user clicks "Create Playlist" button
     createPlayList,
 
     // Get all playlists created by a specific user
-    // Used to display user's playlists on profile/channel page
     getUserPlaylist,
     
     // Get detailed information about a specific playlist by ID
-    // Used to display playlist page with all videos and metadata
     getPlaylistById,
     
     // Add a video to an existing playlist
-    // Used when user adds a video from video player or library
     addVideoToPlaylist,
+    
+    // Remove a video from an existing playlist
+    removeVideoFromPlaylist,
+    
+    // Update playlist name, description, or privacy settings
+    updatePlaylist,
+    
+    // Delete a playlist permanently
+    deletePlaylist,
 }
