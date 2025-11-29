@@ -224,20 +224,20 @@ const markAsRead = asyncHandler(async (req, res) => {
 /**
  * MARK ALL AS READ CONTROLLER
  * Marks all unread notifications as read for the authenticated user
- * 
+ *
  * Purpose:
  * - Bulk update all unread notifications to read status
  * - Provide "Mark all as read" functionality
  * - Track when notifications were read
  * - Return count of updated notifications
- * 
+ *
  * Process Flow:
  * 1. Validate user ID
  * 2. Build filter for unread notifications
  * 3. Update all matching notifications
  * 4. Verify update success
  * 5. Return count of updated notifications
- * 
+ *
  * @route PATCH /api/v1/notifications/read-all
  * @access Private (requires authentication)
  * @returns {Object} ApiResponse with update statistics
@@ -245,60 +245,121 @@ const markAsRead = asyncHandler(async (req, res) => {
 const markAllAsRead = asyncHandler(async (req, res) => {
     // STEP 1: Extract authenticated user ID
     const userId = req.user._id
-    
+
     // STEP 2: Validate user ID exists
     if (!userId) {
         throw new ApiError(400, "User ID not provided")
     }
-    
+
     // STEP 3: Validate user ID format
     if (!mongoose.isValidObjectId(userId)) {
         throw new ApiError(400, "Invalid User ID provided")
     }
-    
+
     // STEP 4: Build filter for unread notifications only
     // Only updates notifications that are currently unread
     const filter = {
         recepient: userId,
-        isRead: false
+        isRead: false,
     }
-    
+
     // STEP 5: Update all unread notifications to read status
     // Uses updateMany to bulk update all matching documents
-    const result = await notification.updateMany(
-        filter,
-        {
-            $set: {
-                isRead: true,
-                readAt: new Date()  // Track when they were read
-            }
-        }
-    )
+    const result = await notification.updateMany(filter, {
+        $set: {
+            isRead: true,
+            readAt: new Date(), // Track when they were read
+        },
+    })
 
     // STEP 6: Verify operation was acknowledged by database
     if (!result.acknowledged) {
         throw new ApiError(500, "Failed to mark all notifications as read")
     }
-    
+
     // STEP 7: Check if any notifications were found and updated
     if (result.modifiedCount === 0) {
         throw new ApiError(404, "No unread notifications found")
     }
-    
+
     // STEP 8: Build response with update statistics
     const updateStats = {
-        matchedCount: result.matchedCount,      // Number of notifications found
-        modifiedCount: result.modifiedCount,    // Number of notifications updated
+        matchedCount: result.matchedCount, // Number of notifications found
+        modifiedCount: result.modifiedCount, // Number of notifications updated
     }
-    
+
     // STEP 9: Send success response
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            updateStats,
-            "All notifications marked as read successfully"
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                updateStats,
+                "All notifications marked as read successfully"
+            )
         )
-    )
+})
+
+/**
+ * DELETE NOTIFICATION CONTROLLER
+ * Permanently deletes a specific notification for the authenticated user
+ * 
+ * Purpose:
+ * - Allow users to remove individual notifications
+ * - Clean up notification list
+ * - Enforce ownership permissions
+ * 
+ * Process Flow:
+ * 1. Validate notification ID
+ * 2. Verify notification exists
+ * 3. Check user ownership
+ * 4. Delete notification from database
+ * 5. Return success confirmation
+ * 
+ * @route DELETE /api/v1/notifications/:notificationId
+ * @access Private (requires authentication)
+ * @param {string} notificationId - MongoDB ObjectId of the notification
+ * @returns {Object} ApiResponse with deletion confirmation
+ */
+const deleteNotification = asyncHandler(async (req, res) => {
+    // STEP 1: Extract notification ID and user ID
+    const { notificationId } = req.params
+    const userId = req.user._id
+
+    // STEP 2: Validate notification ID is provided
+    if (!notificationId) {
+        throw new ApiError(400, "Notification ID not provided")
+    }
+
+    // STEP 3: Validate notification ID format
+    if (!mongoose.isValidObjectId(notificationId)) {
+        throw new ApiError(400, "Invalid Notification ID")
+    }
+
+    // STEP 4: Fetch and verify notification exists
+    const existingNotification = await notification.findById(notificationId)
+    if (!existingNotification) {
+        throw new ApiError(404, "Notification not found")
+    }
+
+    // STEP 5: Check ownership - only recipient can delete their notification
+    if (existingNotification.recepient.toString() !== userId.toString()) {
+        throw new ApiError(403, "You don't have permission to delete this notification")
+    }
+
+    // STEP 6: Delete the notification from database
+    await notification.findByIdAndDelete(notificationId)
+
+    // STEP 7: Send success response
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                { deletedNotificationId: notificationId },
+                "Notification deleted successfully"
+            )
+        )
 })
 
 // ============================================
@@ -307,5 +368,6 @@ const markAllAsRead = asyncHandler(async (req, res) => {
 export { 
     getNotifications,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    deleteNotification
 }
