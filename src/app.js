@@ -30,6 +30,7 @@ import commentRouter from "./routes/comment.routes.js"
 import LikeRouter from "./routes/likes.routes.js"
 import subscriptionRouter from "./routes/subscription.routes.js"
 import searchRouter from "./routes/search.routes.js"
+import notificationRouter from "./routes/notification.routes.js"
 
 
 // routes declaration
@@ -39,6 +40,7 @@ app.use("/api/v1/comments", commentRouter)
 app.use("/api/v1/like", LikeRouter)
 app.use("/api/v1/subscription", subscriptionRouter)
 app.use("/api/v1/search", searchRouter)
+app.use("/api/v1/notifications", notificationRouter)
 
 
 
