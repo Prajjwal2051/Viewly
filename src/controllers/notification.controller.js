@@ -126,7 +126,186 @@ const getNotifications = asyncHandler(async (req, res) => {
     )
 })
 
+/**
+ * MARK NOTIFICATION AS READ CONTROLLER
+ * Marks a specific notification as read for the authenticated user
+ *
+ * Purpose:
+ * - Update notification status from unread to read
+ * - Track when notification was read
+ * - Enforce privacy (users can only mark their own notifications)
+ *
+ * Process Flow:
+ * 1. Validate notification ID and user ID
+ * 2. Verify notification exists
+ * 3. Check user ownership
+ * 4. Check if already read
+ * 5. Update notification status
+ * 6. Return updated notification
+ *
+ * @route PATCH /api/v1/notifications/:notificationId/read
+ * @access Private (requires authentication)
+ * @param {string} notificationId - MongoDB ObjectId of the notification
+ * @returns {Object} ApiResponse with updated notification
+ */
+const markAsRead = asyncHandler(async (req, res) => {
+    // STEP 1: Extract notification ID and user ID
+    const { notificationId } = req.params
+    const userId = req.user._id
+
+    // STEP 2: Validate notification ID is provided
+    if (!notificationId) {
+        throw new ApiError(400, "Notification ID not provided")
+    }
+
+    // STEP 3: Validate user ID exists
+    if (!userId) {
+        throw new ApiError(400, "User ID not provided")
+    }
+
+    // STEP 4: Validate notification ID format
+    if (!mongoose.isValidObjectId(notificationId)) {
+        throw new ApiError(400, "Invalid Notification ID")
+    }
+
+    // STEP 5: Validate user ID format
+    if (!mongoose.isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid User ID provided")
+    }
+
+    // STEP 6: Fetch and verify notification exists
+    const existingNotification = await notification.findById(notificationId)
+    if (!existingNotification) {
+        throw new ApiError(404, "Notification does not exist")
+    }
+
+    // STEP 7: Check ownership - only recipient can mark as read
+    if (existingNotification.recepient.toString() !== userId.toString()) {
+        throw new ApiError(
+            403,
+            "You are not authorized to access this notification"
+        )
+    }
+
+    // STEP 8: Check if notification is already marked as read
+    if (existingNotification.isRead === true) {
+        throw new ApiError(400, "Notification already marked as read")
+    }
+
+    // STEP 9: Update notification to mark as read with timestamp
+    const updatedNotification = await notification.findByIdAndUpdate(
+        notificationId,
+        {
+            isRead: true,
+            readAt: new Date(), // Track when it was read
+        },
+        {
+            new: true, // Return updated document
+        }
+    )
+
+    // STEP 10: Verify update was successful
+    if (!updatedNotification) {
+        throw new ApiError(500, "Failed to mark notification as read")
+    }
+
+    // STEP 11: Send success response
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                updatedNotification,
+                "Notification marked as read successfully"
+            )
+        )
+})
+
+/**
+ * MARK ALL AS READ CONTROLLER
+ * Marks all unread notifications as read for the authenticated user
+ * 
+ * Purpose:
+ * - Bulk update all unread notifications to read status
+ * - Provide "Mark all as read" functionality
+ * - Track when notifications were read
+ * - Return count of updated notifications
+ * 
+ * Process Flow:
+ * 1. Validate user ID
+ * 2. Build filter for unread notifications
+ * 3. Update all matching notifications
+ * 4. Verify update success
+ * 5. Return count of updated notifications
+ * 
+ * @route PATCH /api/v1/notifications/read-all
+ * @access Private (requires authentication)
+ * @returns {Object} ApiResponse with update statistics
+ */
+const markAllAsRead = asyncHandler(async (req, res) => {
+    // STEP 1: Extract authenticated user ID
+    const userId = req.user._id
+    
+    // STEP 2: Validate user ID exists
+    if (!userId) {
+        throw new ApiError(400, "User ID not provided")
+    }
+    
+    // STEP 3: Validate user ID format
+    if (!mongoose.isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid User ID provided")
+    }
+    
+    // STEP 4: Build filter for unread notifications only
+    // Only updates notifications that are currently unread
+    const filter = {
+        recepient: userId,
+        isRead: false
+    }
+    
+    // STEP 5: Update all unread notifications to read status
+    // Uses updateMany to bulk update all matching documents
+    const result = await notification.updateMany(
+        filter,
+        {
+            $set: {
+                isRead: true,
+                readAt: new Date()  // Track when they were read
+            }
+        }
+    )
+
+    // STEP 6: Verify operation was acknowledged by database
+    if (!result.acknowledged) {
+        throw new ApiError(500, "Failed to mark all notifications as read")
+    }
+    
+    // STEP 7: Check if any notifications were found and updated
+    if (result.modifiedCount === 0) {
+        throw new ApiError(404, "No unread notifications found")
+    }
+    
+    // STEP 8: Build response with update statistics
+    const updateStats = {
+        matchedCount: result.matchedCount,      // Number of notifications found
+        modifiedCount: result.modifiedCount,    // Number of notifications updated
+    }
+    
+    // STEP 9: Send success response
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            updateStats,
+            "All notifications marked as read successfully"
+        )
+    )
+})
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
-export { getNotifications }
+export { 
+    getNotifications,
+    markAsRead,
+    markAllAsRead
+}
