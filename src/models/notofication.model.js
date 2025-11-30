@@ -3,7 +3,7 @@ import { Schema } from "mongoose"
 
 const notificationSchema = new mongoose.Schema(
     {
-        recepient: {
+        recipient: {
             type: Schema.Types.ObjectId,
             ref: "User",
             required: true,
@@ -19,7 +19,7 @@ const notificationSchema = new mongoose.Schema(
         },
         video: {
             type: Schema.Types.ObjectId,
-            ref: "video",
+            ref: "Video",
         },
         comment: {
             type: Schema.Types.ObjectId,
@@ -33,8 +33,11 @@ const notificationSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        readAt: {
+            type: Date,
+        }
     },
     { timestamps: true }
 )
 
-export const notification = mongoose.model("Notification", notificationSchema)
+export const Notification = mongoose.model("Notification", notificationSchema)

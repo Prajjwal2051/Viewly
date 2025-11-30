@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
-import { playlist } from "../models/playlist.model.js"
+import { Playlist } from "../models/playlist.model.js"
 import { video } from "../models/video.model.js"
 import mongoose, { mongo } from "mongoose"
 
@@ -83,7 +83,7 @@ const createPlayList = asyncHandler(async (req, res) => {
 
     // STEP 6: Create new playlist document in database
     // Initialize with empty videos array that can be populated later
-    const newPlaylist = await playlist.create({
+    const newPlaylist = await Playlist.create({
         name: name.trim(), // Remove whitespace from name
         description: description?.trim() || "", // Remove whitespace or empty string
         owner: userId, // Link to authenticated user
@@ -291,8 +291,8 @@ const getUserPlaylist = asyncHandler(async (req, res) => {
     // - page: current page number
     // - totalPages: number of pages available
     // - hasNextPage, hasPrevPage: navigation helpers
-    const result = await playlist.aggregatePaginate(
-        playlist.aggregate(aggregationPipeline),
+    const result = await Playlist.aggregatePaginate(
+        Playlist.aggregate(aggregationPipeline),
         options
     )
 
@@ -453,8 +453,8 @@ const getPlaylistById = asyncHandler(async (req, res) => {
  */
 const addVideoToPlaylist = asyncHandler(async(req, res) => {
     // STEP 1: Extract playlist and video IDs from request body
-    const { playlistId, videoId } = req.body
-    const userId = req.user._id
+    const { playlistId} = req.params.playlistId
+    const {videoId}=req.params.videoId
 
     // STEP 2: Validate playlist ID
     if(!playlistId){
@@ -473,7 +473,7 @@ const addVideoToPlaylist = asyncHandler(async(req, res) => {
     }
     
     // STEP 4: Fetch and verify playlist exists
-    const existsPlaylist = await playlist.findById(playlistId)
+    const existsPlaylist = await Playlist.findById(playlistId)
     if(!existsPlaylist){
         throw new ApiError(404, "Playlist not found")
     }
@@ -509,7 +509,7 @@ const addVideoToPlaylist = asyncHandler(async(req, res) => {
 
     // STEP 9: Add video to playlist using $addToSet (prevents duplicates)
     // Returns updated playlist with populated fields
-    const updatedPlaylist = await playlist.findByIdAndUpdate(
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(
         playlistId,
         { $addToSet: { videos: videoId } },  // $addToSet ensures no duplicates
         { new: true }                         // Return updated document
@@ -567,7 +567,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     }
 
     // STEP 4: Fetch and verify playlist exists
-    const existsPlaylist = await playlist.findById(playlistId)
+    const existsPlaylist = await Playlist.findById(playlistId)
     if (!existsPlaylist) {
         throw new ApiError(404, "Playlist not found")
     }
@@ -583,7 +583,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     }
 
     // STEP 7: Remove video from playlist using $pull operator
-    const updatedPlaylist = await playlist.findByIdAndUpdate(
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(
         playlistId,
         { $pull: { videos: videoId } },  // $pull removes matching element
         { new: true }                     // Return updated document
@@ -641,7 +641,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     }
 
     // STEP 4: Fetch and verify playlist exists
-    const existsPlaylist = await playlist.findById(playlistId)
+    const existsPlaylist = await Playlist.findById(playlistId)
     if (!existsPlaylist) {
         throw new ApiError(404, "Playlist not found")
     }
@@ -673,7 +673,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     if (isPublic !== undefined) updateData.isPublic = isPublic
 
     // STEP 9: Update playlist in database
-    const updatedPlaylist = await playlist.findByIdAndUpdate(
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(
         playlistId,
         { $set: updateData },
         { new: true, runValidators: true }  // Return updated doc and run validators
@@ -720,7 +720,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     }
 
     // STEP 3: Fetch and verify playlist exists
-    const existsPlaylist = await playlist.findById(playlistId)
+    const existsPlaylist = await Playlist.findById(playlistId)
     if (!existsPlaylist) {
         throw new ApiError(404, "Playlist not found")
     }
@@ -731,7 +731,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     }
 
     // STEP 5: Delete playlist from database
-    await playlist.findByIdAndDelete(playlistId)
+    await Playlist.findByIdAndDelete(playlistId)
 
     // STEP 6: Send success response
     return res.status(200).json(

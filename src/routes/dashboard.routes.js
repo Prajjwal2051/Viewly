@@ -12,12 +12,6 @@ import { getChannelStats, getChannelVideos } from "../controllers/dashboard.cont
 // ============================================
 const router = Router();
 
-// ============================================
-// PROTECTED ROUTES (Authentication Required)
-// All dashboard routes require authentication
-// ============================================
-router.use(verifyJWT);
-
 /**
  * GET CHANNEL STATISTICS ROUTE
  * Retrieves comprehensive analytics for a channel
@@ -32,7 +26,7 @@ router.use(verifyJWT);
  * @route GET /api/v1/dashboard/stats/:channelId
  * @access Private (only channel owner)
  */
-router.route("/stats/:channelId").get(getChannelStats);
+router.route("/stats/:channelId").get(verifyJWT, getChannelStats);
 
 /**
  * GET CHANNEL VIDEOS ROUTE
