@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary, getPublicId, deleteFromCloudinary } from "../utils/cloudnary.js";
-import { video } from "../models/video.model.js";
+import { Video } from "../models/video.model.js";
 import mongoose from "mongoose";
 
 // ============================================
@@ -76,7 +76,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
 
     // Create video document in MongoDB with all metadata
     console.log("💾 Saving video to database...");
-    const newVideo = await video.create({
+    const newVideo = await Video.create({
         videoFile: videoFile.url,
         thumbNail: thumbnailFile.url,
         title: title.trim(),
@@ -96,7 +96,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
     }
 
     // Fetch created video with populated owner details for response
-    const uploadedVideo = await video.findById(newVideo._id).populate(
+    const uploadedVideo = await Video.findById(newVideo._id).populate(
         "owner",
         "username fullName avatar"
     );
@@ -199,14 +199,14 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
     console.log("💾 Fetching videos from database...");
     // Find videos with filters, sort, and pagination
-    const videos = await video.find(filter)
+    const videos = await Video.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(limitNumber)
         .populate('owner', 'username fullName avatar');
 
     // Get total count for pagination metadata
-    const totalVideos = await video.countDocuments(filter);
+    const totalVideos = await Video.countDocuments(filter);
     const totalPages = Math.ceil(totalVideos / limitNumber);
 
     console.log(`✅ Retrieved ${videos.length} videos (Total: ${totalVideos}, Page: ${pageNumber}/${totalPages})`);
@@ -261,7 +261,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     console.log("💾 Fetching video from database...");
     // Find video by ID and populate owner details
-    const foundVideo = await video.findById(videoId).populate('owner', 'username fullName avatar');
+    const foundVideo = await Video.findById(videoId).populate('owner', 'username fullName avatar');
 
     // Check if video exists
     if (!foundVideo) {
@@ -279,7 +279,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     console.log("👁️  Incrementing view count...");
     // Increment view count using $inc operator and return updated video
-    const updatedVideo = await video.findByIdAndUpdate(
+    const updatedVideo = await Video.findByIdAndUpdate(
         videoId,
         { $inc: { views: 1 } },  // Increment views by 1
         { new: true }            // Return updated document
@@ -328,7 +328,7 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     console.log("💾 Fetching video from database...");
     // Find video in database
-    const foundVideo = await video.findById(videoId)
+    const foundVideo = await Video.findById(videoId)
 
     if (!foundVideo) {
         console.log("❌ Video not found in database");
@@ -393,7 +393,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     // $set: updates only specified fields
     // new: true - returns updated document
     // runValidators: true - runs schema validation on update
-    const updatedVideo = await video.findByIdAndUpdate(
+    const updatedVideo = await Video.findByIdAndUpdate(
         videoId,
         { $set: updateData },
         { new: true, runValidators: true }
@@ -433,7 +433,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
     
     console.log("💾 Fetching video from database...");
     // Find video in database
-    const foundVideo = await video.findById(videoId)
+    const foundVideo = await Video.findById(videoId)
     
     if (!foundVideo) {
         console.log("❌ Video not found in database");
@@ -481,7 +481,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
     // Delete video document from MongoDB database
     console.log("💾 Deleting video from database...");
-    await video.findByIdAndDelete(videoId)
+    await Video.findByIdAndDelete(videoId)
     
     console.log(`✅ Video "${foundVideo.title}" deleted successfully (ID: ${videoId})`);
 

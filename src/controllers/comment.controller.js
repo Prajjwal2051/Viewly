@@ -4,8 +4,8 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-import { comment } from "../models/comment.model.js"
-import { video } from "../models/video.model.js"
+import { Comment } from "../models/comment.model.js"
+import { Video } from "../models/video.model.js"
 import mongoose, { mongo } from "mongoose"
 
 // ============================================
@@ -51,7 +51,7 @@ const addComment = asyncHandler(async (req, res) => {
 
     // STEP 4: Verify video exists in database and is published
     // Users can only comment on published videos
-    const videoExists = await video.findById(videoId)
+    const videoExists = await Video.findById(videoId)
     if (!videoExists) {
         throw new ApiError(404, "Video not found")
     }
@@ -62,7 +62,7 @@ const addComment = asyncHandler(async (req, res) => {
     // STEP 5: Create comment document in database
     // owner comes from req.user._id (added by auth middleware)
     // parentComment is null for top-level comments (not replies)
-    const newComment = await comment.create({
+    const newComment = await Comment.create({
         content: content.trim(),
         video: videoId,
         owner: req.user._id,
@@ -77,7 +77,7 @@ const addComment = asyncHandler(async (req, res) => {
 
     // STEP 7: Fetch created comment with populated owner details
     // Populate owner field with username, fullname, and avatar for response
-    const createdComment = await comment
+    const createdComment = await Comment
         .findById(newComment._id)
         .populate("owner", "username fullname avatar")
 
@@ -130,14 +130,14 @@ const getAllComment = asyncHandler(async (req, res) => {
     }
 
     // STEP 3: Verify video exists in database
-    const videoExists = await video.findById(videoId)
+    const videoExists = await Video.findById(videoId)
     if (!videoExists) {
         throw new ApiError(404, "Video not found")
     }
 
     // STEP 4: Build MongoDB aggregation pipeline
     // This efficiently fetches comments with owner details in a single query
-    const aggregate = comment.aggregate([
+    const aggregate = Comment.aggregate([
         // Match only top-level comments for this specific video
         // parentComment: null excludes nested replies
         {
@@ -189,7 +189,7 @@ const getAllComment = asyncHandler(async (req, res) => {
 
     // STEP 6: Execute aggregation with pagination
     // aggregatePaginate handles pagination logic automatically
-    const comments = await comment.aggregatePaginate(aggregate, options)
+    const comments = await Comment.aggregatePaginate(aggregate, options)
 
     // STEP 7: Send success response with paginated comments
     return res
@@ -250,7 +250,7 @@ const updateComment = asyncHandler(async (req, res) => {
     }
 
     // STEP 4: Verify comment exists in database
-    const existingComment = await comment.findById(commentId)
+    const existingComment = await Comment.findById(commentId)
     if (!existingComment) {
         throw new ApiError(404, "Comment not found")
     }
@@ -263,7 +263,7 @@ const updateComment = asyncHandler(async (req, res) => {
 
     // STEP 6: Update comment in database with new content
     // Uses findByIdAndUpdate for atomic operation
-    const updatedComment = await comment.findByIdAndUpdate(
+    const updatedComment = await Comment.findByIdAndUpdate(
         commentId,
         {
             $set: {
@@ -283,7 +283,7 @@ const updateComment = asyncHandler(async (req, res) => {
 
     // STEP 8: Fetch updated comment with populated owner details
     // Populate owner field with username, fullname, and avatar for response
-    const commentWithOwner = await comment
+    const commentWithOwner = await Comment
         .findById(updatedComment._id)
         .populate("owner", "username fullname avatar")
 
@@ -341,7 +341,7 @@ const deleteComment = asyncHandler(async (req,res)=>{
     }
 
     // STEP 4: Verify comment exists in database
-    const existingComment=await comment.findById(commentId)
+    const existingComment=await Comment.findById(commentId)
     if(!existingComment){
         console.log("comment does not exists")
         throw new ApiError(404,"comment not found for deletion")
@@ -354,7 +354,7 @@ const deleteComment = asyncHandler(async (req,res)=>{
     }
     
     // STEP 6: Delete comment from database
-    const deletedComment=await comment.findByIdAndDelete(commentId)
+    const deletedComment=await Comment.findByIdAndDelete(commentId)
     
     // STEP 7: Validate deletion was successful
     if(!deletedComment){

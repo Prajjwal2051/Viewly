@@ -4,7 +4,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-import { video } from "../models/video.model.js"
+import { Video } from "../models/video.model.js"
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -125,7 +125,7 @@ const searchVideos = asyncHandler(async (req, res) => {
     }
 
     // STEP 8: Build MongoDB aggregation pipeline
-    const aggregateQuery = video.aggregate([
+    const aggregateQuery = Video.aggregate([
         // Match videos based on search filter
         { $match: searchFilter },
 
@@ -185,7 +185,7 @@ const searchVideos = asyncHandler(async (req, res) => {
     }
 
     // STEP 10: Execute aggregation with pagination
-    const videos = await video.aggregatePaginate(aggregateQuery, options)
+    const videos = await Video.aggregatePaginate(aggregateQuery, options)
 
     // STEP 11: Send successful response with paginated results and metadata
     return res.status(200).json(

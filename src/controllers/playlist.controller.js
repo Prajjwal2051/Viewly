@@ -6,7 +6,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
 import { Playlist } from "../models/playlist.model.js"
-import { video } from "../models/video.model.js"
+import { Video } from "../models/video.model.js"
 import mongoose, { mongo } from "mongoose"
 
 // ============================================
@@ -490,7 +490,7 @@ const addVideoToPlaylist = asyncHandler(async(req, res) => {
     }
 
     // STEP 6: Fetch and verify video exists
-    const existingVideo = await video.findById(videoId)
+    const existingVideo = await Video.findById(videoId)
     if(!existingVideo){
         throw new ApiError(404, "Video not found")
     }

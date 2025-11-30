@@ -4,8 +4,8 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-import { video } from "../models/video.model.js"
-import { comment } from "../models/comment.model.js"
+import { Video } from "../models/video.model.js"
+import { Comment } from "../models/comment.model.js"
 import { like } from "../models/like.model.js"
 import mongoose from "mongoose"
 
@@ -53,7 +53,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     }
 
     // STEP 3: Verify video exists in database
-    const exisitingVideo = await video.findById(videoId)
+    const exisitingVideo = await Video.findById(videoId)
     if (!exisitingVideo) {
         throw new ApiError(404, "Video not found")
     }
@@ -124,7 +124,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     }
 
     // STEP 3: Verify comment exists in database
-    const existingComment = await comment.findById(commentId)
+    const existingComment = await Comment.findById(commentId)
     if (!existingComment) {
         throw new ApiError(404, "Comment not found")
     }

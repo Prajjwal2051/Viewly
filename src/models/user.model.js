@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema({
     watchHistory: [
         {
             type: Schema.Types.ObjectId,  // References to video documents
-            ref: "video",                 // Points to the "video" collection
+            ref: "Video",                 // Points to the "Video" collection
         }
     ],
     

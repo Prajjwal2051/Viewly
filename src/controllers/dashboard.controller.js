@@ -6,8 +6,8 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
 import { like } from "../models/like.model.js"
-import { video } from "../models/video.model.js"
-import { comment } from "../models/comment.model.js"
+import { Video } from "../models/video.model.js"
+import { Comment } from "../models/comment.model.js"
 import mongoose from "mongoose"
 import { subscription } from "../models/subscription.model.js"
 
@@ -76,14 +76,14 @@ const getChannelStats = asyncHandler(async (req, res) => {
     // ============================================
     
     // STEP 6: Count total published videos
-    const totalVideos = await video.countDocuments({
+    const totalVideos = await Video.countDocuments({
         owner: channelId,
         isPublished: true,
     })
 
     // STEP 7: Calculate total views across all published videos
     // Uses aggregation to sum all view counts
-    const totalViewsResult = await video.aggregate([
+    const totalViewsResult = await Video.aggregate([
         // Filter: Only published videos owned by this channel
         {
             $match: {
@@ -142,7 +142,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
     
     // STEP 10: Calculate views growth by month for historical trends
     // Groups videos by month and sums their views
-    const viewsGrowth = await video.aggregate([
+    const viewsGrowth = await Video.aggregate([
         // Match: Filter published videos for this channel
         {
             $match: {
@@ -172,7 +172,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
 
     // STEP 12: Calculate views from videos created in last 30 days
-    const last30DaysViews = await video.aggregate([
+    const last30DaysViews = await Video.aggregate([
         // Match: Videos created in last 30 days
         {
             $match: {
@@ -188,10 +188,10 @@ const getChannelStats = asyncHandler(async (req, res) => {
                 totalViews: { $sum: "$views" },
             },
         },
-    ])
+    ]
 
     // STEP 13: Calculate views from videos created 30-60 days ago
-    const previous30DaysViews = await video.aggregate([
+    const previous30DaysViews = await Video.aggregate([
         // Match: Videos created between 30-60 days ago
         {
             $match: {
@@ -270,7 +270,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
 
     // STEP 21: Count total comments on all channel videos
     // Joins comments with videos to filter by channel owner
-    const totalCommentsResult = await comment.aggregate([
+    const totalCommentsResult = await Comment.aggregate([
         // Lookup: Join comments with videos collection
         {
             $lookup: {
@@ -298,7 +298,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
     const totalComments = totalCommentsResult[0]?.totalComments || 0
 
     // STEP 22: Find most popular video by view count
-    const mostPopularVideo = await video.findOne({
+    const mostPopularVideo = await Video.findOne({
         owner: channelId,
         isPublished: true,
     })
@@ -420,7 +420,7 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     sortOptions[sortBy] = sortOrder
     
     // STEP 11: Fetch videos with pagination, sorting, and population
-    const videos = await video.find(filter)
+    const videos = await Video.find(filter)
         .sort(sortOptions)                    // Apply sorting
         .skip(skip)                            // Skip for pagination
         .limit(limit)                          // Limit results per page
@@ -428,7 +428,7 @@ const getChannelVideos = asyncHandler(async (req, res) => {
         .populate('owner', 'username fullName avatar')  // Populate owner details
     
     // STEP 12: Get total count for pagination metadata
-    const totalVideos = await video.countDocuments(filter)
+    const totalVideos = await Video.countDocuments(filter)
     const totalPages = Math.ceil(totalVideos / limit)
     
     // STEP 13: Send success response with videos and pagination

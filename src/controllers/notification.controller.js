@@ -4,7 +4,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-import { notification } from "../models/notofication.model.js"
+import { Notification } from "../models/notofication.model.js"
 import mongoose from "mongoose"
 import { User } from "../models/user.model.js"
 
@@ -84,7 +84,7 @@ const getNotifications = asyncHandler(async (req, res) => {
 
     // STEP 8: Fetch paginated notifications with populated details
     // Populates sender info, video details, and comment content
-    const notifications = await notification
+    const notifications = await Notification
         .find(filter)
         .sort({ createdAt: -1 }) // Most recent first
         .skip(skip)
@@ -94,10 +94,10 @@ const getNotifications = asyncHandler(async (req, res) => {
         .populate("comment", "content createdAt") // Comment details
 
     // STEP 9: Get total notification count for pagination
-    const totalNotifications = await notification.countDocuments(filter)
+    const totalNotifications = await Notification.countDocuments(filter)
 
     // STEP 10: Get unread notification count for badge display
-    const unreadCount = await notification.countDocuments({
+    const unreadCount = await Notification.countDocuments({
         recepient: userId,
         isRead: false,
     })
@@ -174,7 +174,7 @@ const markAsRead = asyncHandler(async (req, res) => {
     }
 
     // STEP 6: Fetch and verify notification exists
-    const existingNotification = await notification.findById(notificationId)
+    const existingNotification = await Notification.findById(notificationId)
     if (!existingNotification) {
         throw new ApiError(404, "Notification does not exist")
     }
@@ -193,7 +193,7 @@ const markAsRead = asyncHandler(async (req, res) => {
     }
 
     // STEP 9: Update notification to mark as read with timestamp
-    const updatedNotification = await notification.findByIdAndUpdate(
+    const updatedNotification = await Notification.findByIdAndUpdate(
         notificationId,
         {
             isRead: true,
@@ -265,7 +265,7 @@ const markAllAsRead = asyncHandler(async (req, res) => {
 
     // STEP 5: Update all unread notifications to read status
     // Uses updateMany to bulk update all matching documents
-    const result = await notification.updateMany(filter, {
+    const result = await Notification.updateMany(filter, {
         $set: {
             isRead: true,
             readAt: new Date(), // Track when they were read
@@ -337,7 +337,7 @@ const deleteNotification = asyncHandler(async (req, res) => {
     }
 
     // STEP 4: Fetch and verify notification exists
-    const existingNotification = await notification.findById(notificationId)
+    const existingNotification = await Notification.findById(notificationId)
     if (!existingNotification) {
         throw new ApiError(404, "Notification not found")
     }
@@ -348,7 +348,7 @@ const deleteNotification = asyncHandler(async (req, res) => {
     }
 
     // STEP 6: Delete the notification from database
-    await notification.findByIdAndDelete(notificationId)
+    await Notification.findByIdAndDelete(notificationId)
 
     // STEP 7: Send success response
     return res
