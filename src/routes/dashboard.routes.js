@@ -5,7 +5,7 @@
 
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { getChannelStats } from "../controllers/dashboard.controller.js";
+import { getChannelStats, getChannelVideos } from "../controllers/dashboard.controller.js";
 
 // ============================================
 // INITIALIZE ROUTER
@@ -33,5 +33,24 @@ router.use(verifyJWT);
  * @access Private (only channel owner)
  */
 router.route("/stats/:channelId").get(getChannelStats);
+
+/**
+ * GET CHANNEL VIDEOS ROUTE
+ * Retrieves paginated list of videos from a channel
+ * 
+ * Query Parameters:
+ * - page: Page number (default: 1)
+ * - limit: Videos per page (default: 10)
+ * - sortBy: Sort field - views, createdAt, likes (default: createdAt)
+ * - sortOrder: asc or desc (default: desc)
+ * 
+ * Privacy:
+ * - Public: Shows only published videos
+ * - Owner: Shows all videos (including unpublished)
+ * 
+ * @route GET /api/v1/dashboard/videos/:channelId
+ * @access Public (with privacy filtering)
+ */
+router.route("/videos/:channelId").get(getChannelVideos);
 
 export default router;

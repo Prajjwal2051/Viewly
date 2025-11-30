@@ -339,9 +339,119 @@ const getChannelStats = asyncHandler(async (req, res) => {
     )
 })
 
+/**
+ * GET CHANNEL VIDEOS CONTROLLER
+ * Retrieves paginated list of videos for a specific channel
+ * 
+ * Purpose:
+ * - Display all videos from a channel
+ * - Support pagination and sorting options
+ * - Show published videos for public viewing
+ * - Show all videos (including unpublished) for channel owner
+ * 
+ * Features:
+ * - Pagination (default: 10 videos per page)
+ * - Sorting by views, creation date, or likes
+ * - Ascending/descending sort order
+ * - Privacy filtering (only published videos for non-owners)
+ * - Populated owner details
+ * 
+ * Process Flow:
+ * 1. Validate channel ID
+ * 2. Parse pagination and sorting parameters
+ * 3. Verify channel exists
+ * 4. Check ownership for privacy filtering
+ * 5. Fetch paginated videos with sorting
+ * 6. Return formatted video list
+ * 
+ * @route GET /api/v1/dashboard/videos/:channelId
+ * @access Public (with privacy filtering)
+ * @param {string} channelId - MongoDB ObjectId of the channel
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Videos per page (default: 10)
+ * @query {string} sortBy - Sort field: views, createdAt, likes (default: createdAt)
+ * @query {string} sortOrder - Sort direction: asc or desc (default: desc)
+ * @returns {Object} ApiResponse with paginated video list
+ */
+const getChannelVideos = asyncHandler(async (req, res) => {
+    // STEP 1: Extract channel ID from URL parameters
+    const { channelId } = req.params
+    
+    // STEP 2: Extract and parse pagination parameters
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
+    
+    // STEP 3: Extract sorting parameters
+    const sortBy = req.query.sortBy || 'createdAt'  // Field to sort by
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1  // Sort direction
+    
+    // STEP 4: Validate channel ID is provided
+    if (!channelId) {
+        throw new ApiError(400, "Channel ID not provided")
+    }
+    
+    // STEP 5: Validate channel ID format
+    if (!mongoose.isValidObjectId(channelId)) {
+        throw new ApiError(400, "Invalid Channel ID")
+    }
+    
+    // STEP 6: Verify channel exists in database
+    const channel = await User.findById(channelId)
+    if (!channel) {
+        throw new ApiError(404, "Channel not found")
+    }
+    
+    // STEP 7: Check if user is viewing their own channel
+    // Owner can see all videos (including unpublished)
+    const isOwnChannel = req.user && channelId === req.user._id.toString()
+    
+    // STEP 8: Build filter object based on ownership
+    const filter = { owner: channelId }
+    
+    // STEP 9: Add privacy filter for non-owners
+    // Only show published videos if not the channel owner
+    if (!isOwnChannel) {
+        filter.isPublished = true
+    }
+    
+    // STEP 10: Create sort object dynamically
+    const sortOptions = {}
+    sortOptions[sortBy] = sortOrder
+    
+    // STEP 11: Fetch videos with pagination, sorting, and population
+    const videos = await video.find(filter)
+        .sort(sortOptions)                    // Apply sorting
+        .skip(skip)                            // Skip for pagination
+        .limit(limit)                          // Limit results per page
+        .select('title description thumbnail duration views createdAt isPublished')
+        .populate('owner', 'username fullName avatar')  // Populate owner details
+    
+    // STEP 12: Get total count for pagination metadata
+    const totalVideos = await video.countDocuments(filter)
+    const totalPages = Math.ceil(totalVideos / limit)
+    
+    // STEP 13: Send success response with videos and pagination
+    return res.status(200).json(
+        new ApiResponse(200, {
+            videos,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalVideos,
+                limit,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        }, "Channel videos fetched successfully")
+    )
+})
+
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
 export {
-    getChannelStats
+    getChannelStats,
+    getChannelVideos
 }
