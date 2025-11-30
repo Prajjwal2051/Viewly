@@ -404,7 +404,8 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     
     // STEP 7: Check if user is viewing their own channel
     // Owner can see all videos (including unpublished)
-    const isOwnChannel = req.user && channelId === req.user._id.toString()
+    // Use optional chaining since auth is optional for this route
+    const isOwnChannel = req.user?._id && channelId === req.user._id.toString()
     
     // STEP 8: Build filter object based on ownership
     const filter = { owner: channelId }
