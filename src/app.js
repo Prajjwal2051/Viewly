@@ -31,6 +31,7 @@ import LikeRouter from "./routes/likes.routes.js"
 import subscriptionRouter from "./routes/subscription.routes.js"
 import searchRouter from "./routes/search.routes.js"
 import notificationRouter from "./routes/notification.routes.js"
+import dashboardRouter from "./routes/dashboard.routes.js"
 
 
 // routes declaration
@@ -41,6 +42,7 @@ app.use("/api/v1/like", LikeRouter)
 app.use("/api/v1/subscription", subscriptionRouter)
 app.use("/api/v1/search", searchRouter)
 app.use("/api/v1/notifications", notificationRouter)
+app.use("/api/v1/dashboard", dashboardRouter)
 
 
 
