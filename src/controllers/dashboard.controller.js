@@ -188,7 +188,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
                 totalViews: { $sum: "$views" },
             },
         },
-    ]
+    ])
 
     // STEP 13: Calculate views from videos created 30-60 days ago
     const previous30DaysViews = await Video.aggregate([

@@ -5,7 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --detectOpenHandles --forceExit",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -19,8 +22,13 @@
   },
   "homepage": "https://github.com/Prajjwal2051/VidNest#readme",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.3.0",
     "nodemon": "^3.1.10",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "supertest": "^7.1.4"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
