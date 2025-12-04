@@ -9,12 +9,12 @@ import { API_BASE_URL } from "../utils/constants.js"
 
 /**
  * CREATE AXIOS INSTANCE
- * 
+ *
  * Why create an instance instead of using axios directly?
  * - Reusable configuration (baseURL, headers, credentials)
  * - All API calls share same settings
  * - Interceptors apply to all requests/responses
- * 
+ *
  * Configuration explained:
  * - baseURL: Prepended to all requests (e.g., '/users/login' → 'http://localhost:8000/api/v1/users/login')
  * - withCredentials: Sends cookies with requests (needed for refreshToken cookie from backend)
@@ -22,7 +22,7 @@ import { API_BASE_URL } from "../utils/constants.js"
  */
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
-    withCredentials: true,  // CRITICAL: Enables cookie transmission (refresh token)
+    withCredentials: true, // CRITICAL: Enables cookie transmission (refresh token)
     headers: {
         "Content-Type": "application/json",
     },
@@ -30,15 +30,15 @@ const apiClient = axios.create({
 
 /**
  * REQUEST INTERCEPTOR
- * 
+ *
  * What are interceptors?
  * - Functions that run BEFORE every request is sent
  * - Think of them as middleware for HTTP requests
- * 
+ *
  * Purpose:
  * - Automatically attach JWT accessToken to protected API calls
  * - Backend's verifyJWT middleware expects "Authorization: Bearer <token>" header
- * 
+ *
  * Flow:
  * 1. User calls API (e.g., apiClient.get('/videos'))
  * 2. Interceptor runs → checks localStorage for token
@@ -49,7 +49,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
     (config) => {
         // Retrieve accessToken from localStorage (stored during login)
-        const token = localStorage.getItem("acessToken")  // Note: Fix typo → "accessToken" later
+        const token = localStorage.getItem("acessToken") // Note: Fix typo → "accessToken" later
 
         // If token exists, attach it to request headers
         if (token) {
@@ -68,15 +68,15 @@ apiClient.interceptors.request.use(
 
 /**
  * RESPONSE INTERCEPTOR
- * 
+ *
  * What are response interceptors?
  * - Functions that run AFTER backend responds, BEFORE your component receives data
  * - Process or transform responses globally
- * 
+ *
  * Purpose:
  * - Unwrap backend response (return just .data instead of full Axios response)
  * - Handle errors globally (401 → auto logout, network errors → friendly message)
- * 
+ *
  * Flow:
  * 1. Backend responds: { statusCode: 200, data: {...}, message: "Success", success: true }
  * 2. Interceptor unwraps → returns just {...} to your component
@@ -87,7 +87,7 @@ apiClient.interceptors.response.use(
         // SUCCESS: Return only the data object
         // Without this: response.data.data.videos
         // With this: response.data.videos ✅
-        return response.data  // ApiResponse { statusCode, data, message, success }
+        return response.data // ApiResponse { statusCode, data, message, success }
     },
     (error) => {
         // ERROR HANDLING
