@@ -6,34 +6,34 @@
 
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-import "./index.css"  // Global styles and Tailwind CSS imports
+import "./index.css" // Global styles and Tailwind CSS imports
 import App from "./App.jsx"
 import { Provider } from "react-redux"
 import store from "./store/index.js"
 
 /**
  * RENDER APPLICATION
- * 
+ *
  * What happens here?
  * 1. Find HTML element with id="root" (in index.html)
  * 2. Create React root using React 18's createRoot API
  * 3. Render app with wrappers (StrictMode, Provider)
- * 
+ *
  * Component Hierarchy:
  * <StrictMode>              // Development safety checks (warns about deprecated APIs)
  *   <Provider store={store}> // Makes Redux store available to ALL components
  *     <App />                // Your main app component (routes, layouts, pages)
  *   </Provider>
  * </StrictMode>
- * 
+ *
  * Why this order?
  * - StrictMode outermost: Checks entire app for issues
  * - Provider middle: Wraps app so all components can access Redux
  * - App innermost: Your actual application code
  */
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    {/* 
+    <StrictMode>
+        {/* 
           REDUX PROVIDER
           
           What does <Provider> do?
@@ -46,8 +46,8 @@ createRoot(document.getElementById("root")).render(
             const user = useSelector(state => state.auth.user)
             const dispatch = useDispatch()
         */}
-    <Provider store={store}>
-      {/* 
+        <Provider store={store}>
+            {/* 
               MAIN APP COMPONENT
               
               Contains:
@@ -55,7 +55,7 @@ createRoot(document.getElementById("root")).render(
               - Layout components (Navbar, Sidebar)
               - Page components (HomePage, LoginPage, etc.)
             */}
-      <App />
-    </Provider>
-  </StrictMode>
+            <App />
+        </Provider>
+    </StrictMode>
 )
