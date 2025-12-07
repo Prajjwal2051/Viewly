@@ -1,1 +1,41 @@
+/* ============================================
+   GLOBAL STYLES - TAILWIND V4 & CUSTOM CSS
+   ============================================
+   Imports Tailwind utilities and defines custom styles.
+   Handles mobile navigation spacing and scrollbar styling.
+*/
+
+/* Tailwind CSS v4 - Single import for all utilities */
 @import "tailwindcss";
+
+/* Custom base styles */
+body {
+    /* Smoother font rendering across browsers */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile-specific: Add bottom padding to avoid content hiding under fixed nav */
+@media (max-width: 768px) {
+    main {
+        padding-bottom: 5rem !important;
+    }
+}
+
+/* CUSTOM SCROLLBAR - Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 8px; /* Thin scrollbar width */
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Light gray track */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888; /* Medium gray thumb */
+    border-radius: 4px; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darker on hover */
+}

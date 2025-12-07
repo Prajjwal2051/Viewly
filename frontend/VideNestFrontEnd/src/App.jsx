@@ -13,6 +13,11 @@ import { Toaster } from "react-hot-toast"
 import HomePage from "./pages/HomePage"
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
+// Placeholder imports - create these pages as needed
+// import DiscoverPage from "./pages/DiscoverPage"
+// import UploadPage from "./pages/UploadPage"
+// import ActivityPage from "./pages/ActivityPage"
+// import ProfilePage from "./pages/ProfilePage"
 
 // Layout wrapper for protected pages
 import MainLayout from "./components/layout/MainLayout"
@@ -46,12 +51,10 @@ const ProtectedRoute = ({ children }) => {
  *
  * Route Types:
  * - Public: /login, /register (accessible without login)
- * - Protected: / (requires authentication, wrapped in ProtectedRoute)
+ * - Protected: All other routes (wrapped in ProtectedRoute + MainLayout)
  * - Fallback: * (catches invalid URLs, shows 404)
  */
 function App() {
-    const [count, setCount] = useState(0)
-
     return (
         <BrowserRouter>
             {/* Toast notifications - displays success/error messages globally */}
@@ -62,8 +65,8 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
 
-                {/* PROTECTED ROUTE - Requires authentication
-                    Flow: ProtectedRoute checks login → MainLayout adds header/sidebar → HomePage renders */}
+                {/* PROTECTED ROUTES - All require authentication
+                    Each route wraps its page in ProtectedRoute → MainLayout → Page */}
                 <Route
                     path="/"
                     element={
@@ -74,6 +77,49 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+
+                {/* Additional protected routes - uncomment when pages are created
+                <Route
+                    path="/discover"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <DiscoverPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/upload"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <UploadPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/activity"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <ActivityPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <ProfilePage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                */}
 
                 {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
                 <Route path="*" element={<div>404- Page Not Found</div>} />
