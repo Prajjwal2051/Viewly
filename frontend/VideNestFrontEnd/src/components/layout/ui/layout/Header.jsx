@@ -9,9 +9,9 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { Search, Bell, Menu, X } from "lucide-react" // Icon library
 import Button from "../Button" // Goes up from layout/ to ui/, then Button.jsx
-import Input from "../Input"   // Goes up from layout/ to ui/, then Input.jsx
+import Input from "../Input" // Goes up from layout/ to ui/, then Input.jsx
 import { logout } from "../../../../store/slices/authSlice.js" // Goes up to src/, then into store/
-import { logoutUser } from "../../../../api/authApi"          // Goes up to src/, then into api/
+import { logoutUser } from "../../../../api/authApi" // Goes up to src/, then into api/
 import toast from "react-hot-toast"
 
 const Header = () => {
@@ -100,7 +100,9 @@ const Header = () => {
                                     type="text"
                                     placeholder="Search videos, channels, or playlists..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
                                     className="pl-10 pr-4"
                                 />
                             </div>

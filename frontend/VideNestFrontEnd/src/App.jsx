@@ -64,7 +64,6 @@ function App() {
                 {/* PUBLIC ROUTES - No login required */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-
                 {/* PROTECTED ROUTES - All require authentication
                     Each route wraps its page in ProtectedRoute → MainLayout → Page */}
                 <Route
@@ -77,7 +76,6 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
-
                 Additional protected routes - uncomment when pages are created
                 <Route
                     path="/discover"
@@ -119,8 +117,6 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
-               
-
                 {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
                 <Route path="*" element={<div>404- Page Not Found</div>} />
             </Routes>
