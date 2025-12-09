@@ -66,6 +66,7 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 {/* PROTECTED ROUTES - All require authentication
                     Each route wraps its page in ProtectedRoute → MainLayout → Page */}
+                <Route path="/video/:id" element={<VideoDetailPage />} />
                 <Route
                     path="/"
                     element={
