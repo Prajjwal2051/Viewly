@@ -92,7 +92,7 @@ userSchema.methods.isPasswordCorrect = async function(password){
 }
 
 // INSTANCE METHOD: Generate Access Token for user authentication
-userSchema.methods.generateAcessToken = function(){
+userSchema.methods.generateAccessToken = function(){
     // Create JWT token with user information as payload
     return jwt.sign({
         _id: this._id,              // User's unique ID from database
