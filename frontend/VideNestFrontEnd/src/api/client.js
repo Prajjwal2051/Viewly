@@ -49,7 +49,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
     (config) => {
         // Retrieve accessToken from localStorage (stored during login)
-        const token = localStorage.getItem("acessToken") // Note: Fix typo → "accessToken" later
+        const token = localStorage.getItem("accessToken") // Note: Fix typo → "accessToken" later
 
         // If token exists, attach it to request headers
         if (token) {

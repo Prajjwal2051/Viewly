@@ -66,8 +66,12 @@ const generateAcessAndRefreshToken = async (userId) => {
 const registerUser = asyncHandler(async (req, res) => {
     // STEP 1: Extract user data from request body
     const { fullName, email, username, password } = req.body
+    console.log("\n========================================");
     console.log("👤 [USER REGISTRATION] Request received");
-    console.log("📧 Email:", email, "| Username:", username);
+    console.log("========================================");
+    console.log("📧 Email:", email);
+    console.log("👤 Username:", username);
+    console.log("📝 Full Name:", fullName);
 
     // STEP 2: Validate input fields - ensure no field is empty or contains only whitespace
     if (
@@ -80,14 +84,15 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // STEP 3: Check if user already exists with the same username or email
     // This prevents duplicate accounts and maintains data integrity
-    console.log("🔍 Checking for existing user...");
+    console.log("🔍 [STEP 3] Checking for existing user in database...");
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
     if (existedUser) {
-        console.log("❌ User already exists");
+        console.log("❌ REGISTRATION FAILED: User already exists with this username or email");
         throw new ApiError(409, "user already exists")
     }
+    console.log("✅ No duplicate found - proceeding with registration");
 
     // STEP 4: Extract local file paths for uploaded images
     // Multer middleware stores uploaded files temporarily on the server
@@ -97,28 +102,44 @@ const registerUser = asyncHandler(async (req, res) => {
     if (req.files && Array.isArray(req.files.coverimage) && req.files.coverimage.length > 0) {
         coverImgLocalPath = req.files.coverimage[0].path
     }
-    console.log("📂 Files received - Avatar:", avatarLocalPath ? "✓" : "✗", "| Cover Image:", coverImgLocalPath ? "✓" : "✗");
+    console.log("📂 [STEP 4] Files received:");
+    console.log("   - Avatar:", avatarLocalPath ? "✅ " + avatarLocalPath : "❌ Missing");
+    console.log("   - Cover Image:", coverImgLocalPath ? "✅ " + coverImgLocalPath : "⚠️  Optional (not provided)");
 
     // STEP 5: Validate avatar is provided (mandatory field)
     if (!avatarLocalPath) {
+        console.log("❌ REGISTRATION FAILED: Avatar is required");
         throw new ApiError(400, "avatar is required")
     }
 
     // STEP 6: Upload images to Cloudinary cloud storage
     // Avatar is mandatory, cover image is optional
-    console.log("☁️  Uploading avatar to Cloudinary...");
+    console.log("☁️  [STEP 6] Uploading files to Cloudinary...");
+    console.log("   - Uploading avatar...");
     const avatar = await uploadOnCloudinary(avatarLocalPath)
+    console.log("   - Avatar upload:", avatar ? "✅ Success" : "❌ Failed");
+
+    if (coverImgLocalPath) {
+        console.log("   - Uploading cover image...");
+    }
     const coverImg = await uploadOnCloudinary(coverImgLocalPath)
+    if (coverImgLocalPath) {
+        console.log("   - Cover image upload:", coverImg ? "✅ Success" : "❌ Failed");
+    }
 
     // STEP 7: Verify avatar upload was successful
     if (!avatar) {
+        console.log("❌ REGISTRATION FAILED: Avatar upload to Cloudinary failed");
         throw new ApiError(400, "avatar upload failed")
     }
-    console.log("✅ Images uploaded successfully");
+    console.log("✅ All files uploaded successfully to Cloudinary");
 
     // STEP 8: Create user entry in database with all validated data
     // Password will be automatically hashed by the pre-save middleware in user model
-    console.log("💾 Creating user in database...");
+    console.log("💾 [STEP 8] Creating user in database...");
+    console.log("   - Username:", username.toLowerCase());
+    console.log("   - Email:", email);
+    console.log("   - Avatar URL:", avatar.url);
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -127,19 +148,25 @@ const registerUser = asyncHandler(async (req, res) => {
         password,  // Will be hashed before saving
         username: username.toLowerCase()  // Ensure consistency with lowercase usernames
     })
+    console.log("✅ User created with ID:", user._id);
 
     // STEP 9: Retrieve created user from database, excluding sensitive fields
     // The select() method with "-" prefix removes specified fields from the response
+    console.log("🔍 [STEP 9] Fetching created user (excluding sensitive data)...");
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
 
     // STEP 10: Verify user was successfully created in database
     if (!createdUser) {
+        console.log("❌ REGISTRATION FAILED: User creation verification failed");
         throw new ApiError(500, "something went wrong while registering the user")
     }
 
-    console.log(`✅ User @${username} registered successfully (ID: ${user._id})`);
+    console.log("========================================");
+    console.log(`✅ REGISTRATION SUCCESS: @${username}`);
+    console.log(`   User ID: ${user._id}`);
+    console.log("========================================\n");
 
     // STEP 11: Send success response with user data (without sensitive information)
     return res.status(201).json(
@@ -166,46 +193,51 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
     // STEP 1: Extract login credentials from request body
     const { email, username, password } = req.body
+    console.log("\n========================================");
     console.log("🔐 [USER LOGIN] Request received");
-    console.log("📧 Credential:", username || email);
+    console.log("========================================");
+    console.log("📧 Login with:", username ? `Username: ${username}` : `Email: ${email}`);
 
     // STEP 2: Validate that at least username or email is provided
     // User can login with either username OR email
     if (!username && !email) {
+        console.log("❌ LOGIN FAILED: No username or email provided");
         throw new ApiError(400, "username or email is required")
     }
 
     // STEP 3: Find user in database by username OR email
     // $or operator allows matching either field
-    console.log("🔍 Searching for user...");
+    console.log("🔍 [STEP 3] Searching for user in database...");
     const user = await User.findOne({
         $or: [{ username }, { email }]
     })
 
     // STEP 4: Check if user exists in database
     if (!user) {
-        console.log("❌ User not found");
+        console.log("❌ LOGIN FAILED: User not found in database");
         throw new ApiError(404, "user does not exist")
     }
 
-    console.log(`✅ User found: @${user.username}`);
+    console.log(`✅ User found: @${user.username} (ID: ${user._id})`);
 
     // STEP 5: Verify password using bcrypt comparison
     // isPasswordCorrect is a custom method defined in user model
-    console.log("🔑 Verifying password...");
+    console.log("🔑 [STEP 5] Verifying password...");
     const isPasswordValid = await user.isPasswordCorrect(password)
     if (!isPasswordValid) {
-        console.log("❌ Invalid password");
+        console.log("❌ LOGIN FAILED: Invalid password");
         throw new ApiError(401, "invalid user credentials")
     }
 
-    console.log("✅ Password verified");
+    console.log("✅ Password verified successfully");
 
     // STEP 6: Generate access and refresh tokens for the user
-    console.log("🎫 Generating tokens...");
+    console.log("🎫 [STEP 6] Generating access and refresh tokens...");
     const { acessToken, refreshToken } = await generateAcessAndRefreshToken(user._id)
+    console.log("✅ Tokens generated successfully");
 
     // STEP 7: Retrieve user data without sensitive information
+    console.log("🔍 [STEP 7] Fetching user data (excluding password & refresh token)...");
     const loggedUser = await User.findById(user._id).select("-password -refreshToken")
 
     // STEP 8: Configure cookie options for security
@@ -214,7 +246,12 @@ const loginUser = asyncHandler(async (req, res) => {
         secure: true     // Ensures cookies are only sent over HTTPS in production
     }
 
-    console.log(`✅ User @${user.username} logged in successfully`);
+    console.log("🍪 [STEP 8] Setting secure cookies...");
+    console.log("========================================");
+    console.log(`✅ LOGIN SUCCESS: @${user.username}`);
+    console.log(`   User ID: ${user._id}`);
+    console.log(`   Email: ${user.email}`);
+    console.log("========================================\n");
 
     // STEP 9: Send response with cookies and user data
     return res.status(200)
@@ -247,12 +284,15 @@ const loginUser = asyncHandler(async (req, res) => {
  * @access Private (requires authentication middleware)
  */
 const logoutUser = asyncHandler(async (req, res) => {
+    console.log("\n========================================");
     console.log("🚪 [USER LOGOUT] Request received");
-    console.log(`👤 User: @${req.user?.username} (ID: ${req.user?._id})`);
+    console.log("========================================");
+    console.log(`👤 User: @${req.user?.username}`);
+    console.log(`   User ID: ${req.user?._id}`);
 
     // STEP 1: Remove refresh token from database
     // This invalidates the user's session on the server side
-    console.log("🗑️ Clearing refresh token from database...");
+    console.log("🗑️ [STEP 1] Clearing refresh token from database...");
     await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -264,6 +304,7 @@ const logoutUser = asyncHandler(async (req, res) => {
             new: true  // Return the updated document
         }
     )
+    console.log("✅ Refresh token cleared from database");
 
     // STEP 2: Configure cookie options for clearing
     const options = {
@@ -271,7 +312,10 @@ const logoutUser = asyncHandler(async (req, res) => {
         secure: true     // Only send over HTTPS
     }
 
-    console.log(`✅ User @${req.user?.username} logged out successfully`);
+    console.log("🍪 [STEP 2] Clearing cookies from client...");
+    console.log("========================================");
+    console.log(`✅ LOGOUT SUCCESS: @${req.user?.username}`);
+    console.log("========================================\n");
 
     // STEP 3: Clear cookies and send success response
     return res
@@ -304,43 +348,49 @@ const logoutUser = asyncHandler(async (req, res) => {
  */
 const refreshAccessToken = asyncHandler(async (req, res) => {
     try {
+        console.log("\n========================================");
         console.log("🔄 [TOKEN REFRESH] Request received");
+        console.log("========================================");
 
         // STEP 1: Extract refresh token from cookies (web) or body (mobile)
         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
         // STEP 2: Validate refresh token is provided
         if (!incomingRefreshToken) {
-            console.log("❌ No refresh token provided");
+            console.log("❌ REFRESH FAILED: No refresh token provided");
             throw new ApiError(401, "Unauthorized request - Refresh token required")
         }
 
-        console.log("🔍 Verifying refresh token...");
+        console.log("🔍 [STEP 3] Verifying refresh token signature and expiry...");
 
         // STEP 3: Verify and decode the refresh token
         // This checks signature, expiry, and decodes the payload
         const decodedToken = jwt.verify(
-            incomingRefreshToken, 
+            incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET
         )
+        console.log("✅ Token signature valid, decoded user ID:", decodedToken?._id);
 
         // STEP 4: Find user in database using decoded user ID
+        console.log("🔍 [STEP 4] Finding user in database...");
         const user = await User.findById(decodedToken?._id)
 
         // STEP 5: Validate user exists
         if (!user) {
-            console.log("❌ User not found for token");
+            console.log("❌ REFRESH FAILED: User not found for token");
             throw new ApiError(401, "Invalid refresh token - User not found")
         }
 
-        console.log(`✅ Token verified for user: @${user.username}`);
+        console.log(`✅ User found: @${user.username}`);
 
         // STEP 6: Compare incoming token with stored token in database
         // This prevents reuse of old/stolen refresh tokens (token rotation)
+        console.log("🔒 [STEP 6] Validating token against database...");
         if (incomingRefreshToken !== user?.refreshToken) {
-            console.log("❌ Token mismatch - possible reuse detected");
+            console.log("❌ REFRESH FAILED: Token mismatch - possible reuse or theft detected");
             throw new ApiError(401, "Refresh token is expired or already used")
         }
+        console.log("✅ Token matches database record");
 
         // STEP 7: Configure secure cookie options
         const options = {
@@ -349,10 +399,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         }
 
         // STEP 8: Generate new access and refresh tokens
-        console.log("🎫 Generating new tokens...");
+        console.log("🎫 [STEP 8] Generating new token pair...");
         const { acessToken, refreshToken: newRefreshToken } = await generateAcessAndRefreshToken(user._id)
 
-        console.log(`✅ Tokens refreshed successfully for @${user.username}`);
+        console.log("========================================");
+        console.log(`✅ REFRESH SUCCESS: @${user.username}`);
+        console.log("   New tokens generated and stored");
+        console.log("========================================\n");
 
         // STEP 9: Send new tokens in cookies and response body
         return res
@@ -362,17 +415,20 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             .json(
                 new ApiResponse(
                     200,
-                    { 
-                        acessToken, 
-                        refreshToken: newRefreshToken 
+                    {
+                        acessToken,
+                        refreshToken: newRefreshToken
                     },
                     "Access token refreshed successfully"
                 )
             )
-            
+
     } catch (error) {
         // Handle JWT errors (expired, invalid signature, malformed, etc.)
-        console.log("❌ Token refresh failed:", error.message);
+        console.log("========================================");
+        console.log("❌ TOKEN REFRESH ERROR");
+        console.log("   Error:", error.message);
+        console.log("========================================\n");
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
 })
@@ -693,7 +749,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     // STEP 1: Extract username from URL parameters
     const { username } = req.params
     console.log(`🔍 Looking for channel: @${username}`);
-    
+
     // STEP 2: Validate username is provided and not empty
     if (!username?.trim()) {
         console.log("❌ Username missing in request");
@@ -711,7 +767,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 username: username?.toLowerCase()  // Match username (case-insensitive)
             }
         },
-        
+
         // STAGE 2: Lookup subscribers
         // Find all users who subscribed TO this channel
         {
@@ -722,7 +778,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 as: "subscribers"             // Store results in 'subscribers' array
             }
         },
-        
+
         // STAGE 3: Lookup subscribed-to channels
         // Find all channels this user has subscribed TO
         {
@@ -733,7 +789,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 as: "subscribedTo"            // Store results in 'subscribedTo' array
             }
         },
-        
+
         // STAGE 4: Add computed fields
         // Calculate subscriber counts and subscription status
         {
@@ -742,12 +798,12 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 subscribersCount: {
                     $size: "$subscribers"
                 },
-                
+
                 // Count how many channels this user subscribes to
                 channelsSubscribedToCount: {
                     $size: "$subscribedTo"
                 },
-                
+
                 // Check if current logged-in user is subscribed to this channel
                 isSubscribed: {
                     $cond: {
@@ -758,7 +814,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 }
             }
         },
-        
+
         // STAGE 5: Project only required fields
         // Select which fields to include in final output
         {
@@ -838,7 +894,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 _id: new mongoose.Types.ObjectId(req.user._id)
             }
         },
-        
+
         // STAGE 2: Lookup videos from watch history
         // This is the MAIN LOOKUP - gets all videos user has watched
         {
@@ -847,7 +903,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 localField: "watchHistory",  // Array of video IDs in user document
                 foreignField: "_id",         // Match with video's _id
                 as: "watchHistory",          // Replace watchHistory array with full video documents
-                
+
                 // SUB-PIPELINE: Executes for EACH video in watch history
                 // This is a nested aggregation that runs on the video documents
                 pipeline: [
@@ -859,7 +915,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                             localField: "owner",     // Video's owner field (user ID who uploaded)
                             foreignField: "_id",     // Match with user's _id
                             as: "owner",             // Store owner details in 'owner' array
-                            
+
                             // NESTED SUB-PIPELINE: Executes for the owner
                             // Controls what owner data to include
                             pipeline: [
@@ -873,7 +929,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                             ]
                         }
                     },
-                    
+
                     // SUB-STAGE 2: Convert owner array to single object
                     // $lookup returns array, but we want single owner object
                     {
@@ -897,7 +953,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         .status(200)
         .json(
             new ApiResponse(
-                200, 
+                200,
                 user[0].watchHistory,  // Fixed: was user[0].getWatchHistory (typo)
                 "Watch history fetched successfully"
             )
@@ -907,20 +963,20 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
-export { 
+export {
     // Authentication Controllers
     registerUser,           // POST /register - Create new user account
     loginUser,              // POST /login - Authenticate and get tokens
     logoutUser,             // POST /logout - Clear tokens and session
     refreshAccessToken,     // POST /refreshToken - Get new access token
-    
+
     // User Profile Controllers
     getCurrentUser,         // GET /current-user - Get authenticated user info
     changeCurrentPassword,  // POST /change-password - Update user password
     updateAccountDetails,   // PATCH /update-account - Update name/email
     updateUserAvatar,       // PATCH /avatar - Update profile picture
     updateUserCoverImg,     // PATCH /cover-image - Update cover/banner image
-    
+
     // Channel & History Controllers
     getUserChannelProfile,  // GET /c/:username - Get channel profile with subscriber stats
     getWatchHistory         // GET /watch-history - Get user's watched videos with owner details

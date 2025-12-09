@@ -83,7 +83,7 @@ const authSlice = createSlice({
          *
          * @param {Object} action.payload - User object from backend
          */
-        loginSucess: (state, action) => {
+        loginSuccess: (state, action) => {
             state.loading = false
             state.isAuthenticated = true
             state.user = action.payload // Save user data (username, email, avatar, etc.)
@@ -153,7 +153,7 @@ const authSlice = createSlice({
  * Redux flow:
  * dispatch(action) → Redux finds matching reducer → reducer updates state → components re-render
  */
-export const { loginStart, loginSucess, loginFailure, logout } =
+export const { loginStart, loginSuccess, loginFailure, logout } =
     authSlice.actions
 
 /**
