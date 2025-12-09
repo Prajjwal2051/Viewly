@@ -73,7 +73,7 @@ const registerUser = asyncHandler(async (req, res) => {
     console.log("👤 Username:", username);
     console.log("📝 Full Name:", fullName);
 
-    // STEP 2: Validate input fields - ensure no field is empty or contains only whitespace
+    // STEP 2: Validate input fields - ensure no fiel   d is empty or contains only whitespace
     if (
         [fullName, email, username, password].some((field) => {
             field?.trim() === ""
