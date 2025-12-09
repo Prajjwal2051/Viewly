@@ -8,9 +8,9 @@ import {extractPublicId} from 'cloudinary-build-url'
 // Set up Cloudinary with credentials from environment variables
 // This connects our app to our Cloudinary account for file storage
 cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,           // Your Cloudinary cloud name
-    api_key: process.env.API_KEY_CLOUDNARY,       // API key for authentication
-    api_secret: process.env.API_SECRET_CLOUDNARY  // API secret for secure operations
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,           // Your Cloudinary cloud name
+    api_key: process.env.CLOUDINARY_API_KEY,       // API key for authentication
+    api_secret: process.env.CLOUDINARY_API_SECRET  // API secret for secure operations
 });
 
 /**
