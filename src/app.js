@@ -4,9 +4,28 @@ import cookieParser from "cookie-parser"
 
 const app = express()
 
+
+console.log("CORS_ORIGIN:", process.env.CORS_ORIGIN); // DEBUG log
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
+    origin: function (origin, callback) {
+        const allowedOrigin = process.env.CORS_ORIGIN;
+        // Allow fallback if no origin provided (e.g. mobile apps)
+        if (!origin) return callback(null, true);
+        
+        // If allowedOrigin is '*', we return 'true'. 
+        // The cors middleware will then emit 'Access-Control-Allow-Origin: <request_origin>' 
+        // which allows credentials to work (browsers reject literal '*')
+        if (allowedOrigin === "*" || allowedOrigin === origin) {
+            callback(null, true);
+        } else {
+            console.log(`CORS Blocked: Origin ${origin} does not match ${allowedOrigin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 }))
 
 app.use(express.json({
