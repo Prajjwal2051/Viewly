@@ -51,7 +51,7 @@ const LoginPage = () => {
 
         // Basic validation
         if (!formData.usernameOrEmail || !formData.password) {
-            toast.error('Please fill in all fields');
+            toast.error('⚠️ Please enter both username/email and password');
             return;
         }
 
@@ -69,11 +69,19 @@ const LoginPage = () => {
             // Update Redux state with user data
             dispatch(loginSuccess(response.data.user));
 
-            toast.success('Login successful!');
+            toast.success(`🎉 Welcome back, ${response.data.user.username}!`);
             navigate('/'); // Redirect to home page
         } catch (error) {
             dispatch(loginFailure(error.message || 'Login failed'));
-            toast.error(error.message || 'Login failed');
+            // Provide helpful error messages based on common issues
+            const errorMessage = error.message || 'Unable to login. Please try again.';
+            if (errorMessage.includes('does not exist')) {
+                toast.error('❌ Account not found. Please check your credentials or register.');
+            } else if (errorMessage.includes('credentials')) {
+                toast.error('❌ Incorrect password. Please try again.');
+            } else {
+                toast.error(`❌ ${errorMessage}`);
+            }
         }
     };
 

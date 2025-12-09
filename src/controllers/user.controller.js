@@ -23,13 +23,13 @@ import mongoose from "mongoose"
  * @returns {Object} Object containing accessToken and refreshToken
  * @throws {ApiError} If token generation fails
  */
-const generateAcessAndRefreshToken = async (userId) => {
+const generateAccessAndRefreshToken = async (userId) => {
     try {
         // Find user in database by ID
         const user = await User.findById(userId)
 
         // Generate access token (short-lived, contains user info)
-        const acessToken = user.generateAcessToken()
+        const accessToken = user.generateAccessToken()
 
         // Generate refresh token (long-lived, contains only user ID)
         const refreshToken = user.generateRefreshToken()
@@ -40,7 +40,7 @@ const generateAcessAndRefreshToken = async (userId) => {
         // Save without running validation (password is already hashed)
         await user.save({ validateBeforeSave: false })
 
-        return { acessToken, refreshToken }
+        return { accessToken, refreshToken }
 
     } catch (error) {
         throw new ApiError(500, "something went wrong while generating refresh and access token")
@@ -192,15 +192,20 @@ const registerUser = asyncHandler(async (req, res) => {
  */
 const loginUser = asyncHandler(async (req, res) => {
     // STEP 1: Extract login credentials from request body
-    const { email, username, password } = req.body
+    // Accept either the combined 'usernameOrEmail' field (from frontend) or separate fields
+    const { email, username, password, usernameOrEmail } = req.body
+    
+    // Use usernameOrEmail if provided, otherwise fall back to separate fields
+    const loginIdentifier = usernameOrEmail || username || email
+    
     console.log("\n========================================");
     console.log("🔐 [USER LOGIN] Request received");
     console.log("========================================");
-    console.log("📧 Login with:", username ? `Username: ${username}` : `Email: ${email}`);
+    console.log("📧 Login with:", loginIdentifier);
 
     // STEP 2: Validate that at least username or email is provided
     // User can login with either username OR email
-    if (!username && !email) {
+    if (!loginIdentifier) {
         console.log("❌ LOGIN FAILED: No username or email provided");
         throw new ApiError(400, "username or email is required")
     }
@@ -209,7 +214,7 @@ const loginUser = asyncHandler(async (req, res) => {
     // $or operator allows matching either field
     console.log("🔍 [STEP 3] Searching for user in database...");
     const user = await User.findOne({
-        $or: [{ username }, { email }]
+        $or: [{ username: loginIdentifier }, { email: loginIdentifier }]
     })
 
     // STEP 4: Check if user exists in database
@@ -233,7 +238,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // STEP 6: Generate access and refresh tokens for the user
     console.log("🎫 [STEP 6] Generating access and refresh tokens...");
-    const { acessToken, refreshToken } = await generateAcessAndRefreshToken(user._id)
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
     console.log("✅ Tokens generated successfully");
 
     // STEP 7: Retrieve user data without sensitive information
@@ -255,14 +260,14 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // STEP 9: Send response with cookies and user data
     return res.status(200)
-        .cookie("acessToken", acessToken, options)      // Set access token cookie
+        .cookie("accessToken", accessToken, options)      // Set access token cookie
         .cookie("refreshToken", refreshToken, options)   // Set refresh token cookie
         .json(
             new ApiResponse(
                 200,
                 {
                     user: loggedUser,    // User data without sensitive fields
-                    acessToken,          // Also send tokens in response body for mobile apps
+                    accessToken,          // Also send tokens in response body for mobile apps
                     refreshToken
                 },
                 "User logged in successfully"
@@ -320,7 +325,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     // STEP 3: Clear cookies and send success response
     return res
         .status(200)
-        .clearCookie("acessToken", options)
+        .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
         .json(new ApiResponse(200, {}, "User logged out successfully"))
 })
@@ -400,7 +405,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         // STEP 8: Generate new access and refresh tokens
         console.log("🎫 [STEP 8] Generating new token pair...");
-        const { acessToken, refreshToken: newRefreshToken } = await generateAcessAndRefreshToken(user._id)
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id)
 
         console.log("========================================");
         console.log(`✅ REFRESH SUCCESS: @${user.username}`);
@@ -410,13 +415,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         // STEP 9: Send new tokens in cookies and response body
         return res
             .status(200)
-            .cookie("acessToken", acessToken, options)
+            .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", newRefreshToken, options)
             .json(
                 new ApiResponse(
                     200,
                     {
-                        acessToken,
+                        accessToken,
                         refreshToken: newRefreshToken
                     },
                     "Access token refreshed successfully"

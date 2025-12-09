@@ -71,17 +71,22 @@ const RegisterPage = () => {
 
         // Validation
         if (!formData.username || !formData.email || !formData.fullName || !formData.password) {
-            toast.error('Please fill in all required fields');
+            toast.error('⚠️ Please fill in all required fields (marked with *)');
             return;
         }
 
         if (formData.password !== formData.confirmPassword) {
-            toast.error('Passwords do not match');
+            toast.error('❌ Passwords don\'t match. Please re-enter.');
+            return;
+        }
+
+        if (formData.password.length < 8) {
+            toast.error('⚠️ Password must be at least 8 characters long');
             return;
         }
 
         if (!avatar) {
-            toast.error('Please upload an avatar');
+            toast.error('📸 Please upload a profile picture (avatar)');
             return;
         }
 
@@ -107,11 +112,19 @@ const RegisterPage = () => {
             // Update Redux state
             dispatch(loginSuccess(response.data.user));
 
-            toast.success('Registration successful!');
+            toast.success(`🎉 Welcome to VidNest, ${formData.username}! Your account is ready.`);
             navigate('/'); // Redirect to home
         } catch (error) {
             dispatch(loginFailure(error.message || 'Registration failed'));
-            toast.error(error.message || 'Registration failed');
+            // Provide helpful error messages
+            const errorMessage = error.message || 'Unable to create account. Please try again.';
+            if (errorMessage.includes('already exists')) {
+                toast.error('❌ This username or email is already taken. Please try another.');
+            } else if (errorMessage.includes('avatar')) {
+                toast.error('❌ Failed to upload avatar. Please try a different image.');
+            } else {
+                toast.error(`❌ ${errorMessage}`);
+            }
         }
     };
 
