@@ -13,11 +13,6 @@ import { Toaster } from "react-hot-toast"
 import HomePage from "./pages/HomePage"
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
-// Placeholder imports - create these pages as needed
-import DiscoverPage from "./pages/DiscoverPage"
-import UploadPage from "./pages/UploadPage"
-import ActivityPage from "./pages/ActivityPage"
-import ProfilePage from "./pages/ProfilePage"
 
 // Layout wrapper for protected pages
 import MainLayout from "./components/layout/MainLayout"
@@ -64,9 +59,9 @@ function App() {
                 {/* PUBLIC ROUTES - No login required */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+
                 {/* PROTECTED ROUTES - All require authentication
                     Each route wraps its page in ProtectedRoute → MainLayout → Page */}
-                <Route path="/video/:id" element={<VideoDetailPage />} />
                 <Route
                     path="/"
                     element={
@@ -77,7 +72,8 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
-                Additional protected routes - uncomment when pages are created
+
+                {/* Additional protected routes - uncomment when pages are created
                 <Route
                     path="/discover"
                     element={
@@ -118,6 +114,9 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="/video/:id" element={<VideoDetailPage />} />
+                */}
+
                 {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
                 <Route path="*" element={<div>404- Page Not Found</div>} />
             </Routes>
