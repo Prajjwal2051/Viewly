@@ -59,7 +59,7 @@ const Header = () => {
 
     return (
         // Sticky header: stays at top while scrolling, minimal float
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 py-3">
+        <header className="sticky top-0 z-40 bg-black/95 backdrop-blur-sm border-b border-gray-800 py-3">
             <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between gap-4">
                     
@@ -68,13 +68,13 @@ const Header = () => {
                         {showSearchBar ? (
                             <form onSubmit={handleSearch} className="w-full">
                                 <div className="relative w-full group">
-                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 group-hover:text-gray-400 transition-colors" />
                                     <input
                                         type="text"
                                         placeholder="Search"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-transparent rounded-full focus:bg-white focus:border-gray-300 focus:ring-0 transition-all duration-200 hover:bg-gray-200/70"
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-900 border-transparent rounded-full focus:bg-gray-800 focus:border-gray-700 focus:ring-0 text-white placeholder-gray-500 transition-all duration-200 hover:bg-gray-800"
                                     />
                                 </div>
                             </form>
@@ -91,17 +91,17 @@ const Header = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => navigate("/notifications")}
-                            className="relative hover:bg-gray-100 rounded-full h-12 w-12"
+                            className="relative hover:bg-gray-900 rounded-full h-12 w-12"
                         >
-                            <Bell className="h-6 w-6 text-gray-500" />
-                            <span className="absolute top-3 right-3 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
+                            <Bell className="h-6 w-6 text-gray-400 hover:text-white" />
+                            <span className="absolute top-3 right-3 h-2 w-2 bg-red-600 rounded-full border-2 border-black"></span>
                         </Button>
 
                         {/* USER MENU - Avatar with click dropdown */}
                         <div className="relative">
                             <button 
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition-all"
+                                className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-900 focus:outline-none transition-all"
                             >
                                 <img
                                     src={
@@ -109,7 +109,7 @@ const Header = () => {
                                         "https://via.placeholder.com/40"
                                     }
                                     alt={user?.username}
-                                    className="h-10 w-10 rounded-full object-cover border border-gray-200"
+                                    className="h-10 w-10 rounded-full object-cover border border-gray-800"
                                 />
                             </button>
 
@@ -122,13 +122,13 @@ const Header = () => {
                                         onClick={() => setShowUserMenu(false)}
                                     ></div>
                                     
-                                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-[0_0_24px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-20">
+                                    <div className="absolute right-0 mt-2 w-64 bg-gray-900 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.5)] border border-gray-800 py-2 z-20">
 
-                                <div className="px-4 py-4 border-b border-gray-100">
-                                    <p className="font-bold text-gray-900 truncate text-lg">
+                                <div className="px-4 py-4 border-b border-gray-800">
+                                    <p className="font-bold text-white truncate text-lg">
                                         {user?.fullName}
                                     </p>
-                                    <p className="text-sm text-gray-500 truncate">
+                                    <p className="text-sm text-gray-400 truncate">
                                         @{user?.username}
                                     </p>
                                 </div>
@@ -139,7 +139,7 @@ const Header = () => {
                                             navigate(`/channel/${user?.username}`)
                                             setShowUserMenu(false)
                                         }}
-                                        className="w-full text-left px-4 py-3 hover:bg-gray-100 rounded-xl font-medium text-gray-700 transition-colors"
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-xl font-medium text-gray-300 hover:text-white transition-colors"
                                     >
                                         Your Channel
                                     </button>
@@ -148,16 +148,16 @@ const Header = () => {
                                             navigate("/dashboard")
                                             setShowUserMenu(false)
                                         }}
-                                        className="w-full text-left px-4 py-3 hover:bg-gray-100 rounded-xl font-medium text-gray-700 transition-colors"
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-xl font-medium text-gray-300 hover:text-white transition-colors"
                                     >
                                         Studio Dashboard
                                     </button>
                                 </div>
 
-                                <div className="border-t border-gray-100 p-2">
+                                <div className="border-t border-gray-800 p-2">
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full text-left px-4 py-3 hover:bg-red-50 rounded-xl font-medium text-red-600 transition-colors"
+                                        className="w-full text-left px-4 py-3 hover:bg-red-900/20 rounded-xl font-medium text-red-500 hover:text-red-400 transition-colors"
                                     >
                                         Log out
                                     </button>

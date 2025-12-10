@@ -18,7 +18,7 @@ import Sidebar from "./ui/layout/Sidebar.jsx"
  */
 const MainLayout = ({ children }) => {
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-black text-white">
             {/* SIDEBAR - Fixed left */}
             <Sidebar />
 

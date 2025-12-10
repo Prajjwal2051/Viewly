@@ -3,19 +3,19 @@ import { createContext, useContext, useEffect, useState } from "react"
 const ThemeContext = createContext()
 
 export const ThemeProvider = ({ children }) => {
-    // Force light mode state
-    const [isDarkMode] = useState(false)
+    // Force dark mode state
+    const [isDarkMode] = useState(true)
 
-    // Ensure dark class is removed and theme is set to light
+    // Ensure dark class is ADDED and theme is set to dark
     useEffect(() => {
         const root = window.document.documentElement
-        root.classList.remove("dark")
-        localStorage.setItem("theme", "light")
+        root.classList.add("dark")
+        localStorage.setItem("theme", "dark")
     }, [])
 
     const toggleTheme = () => {
-        // No-op: Dark mode is disabled
-        console.log("Dark mode is disabled")
+        // No-op: Light mode is disabled
+        console.log("Light mode is disabled")
     }
 
     return (

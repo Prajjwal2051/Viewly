@@ -39,7 +39,7 @@ const Sidebar = () => {
     }
 
     return (
-        <aside className="fixed left-0 top-0 h-screen w-20 xl:w-64 bg-white border-r border-gray-100 flex flex-col items-center xl:items-start py-6 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <aside className="fixed left-0 top-0 h-screen w-20 xl:w-64 bg-black border-r border-gray-800 flex flex-col items-center xl:items-start py-6 z-50">
             {/* LOGO */}
             <div 
                 onClick={() => navigate("/")}
@@ -64,14 +64,14 @@ const Sidebar = () => {
                             key={item.id}
                             onClick={() => navigate(item.path)}
                             className={`w-full flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full transition-all duration-200 group
-                                ${active ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"}
+                                ${active ? "bg-red-600 text-white" : "text-gray-400 hover:bg-gray-900 hover:text-white"}
                             `}
                         >
                             <Icon 
                                 className={`h-6 w-6 ${active ? "stroke-current" : "stroke-current"} transition-transform group-hover:scale-110`} 
                                 strokeWidth={2.5}
                             />
-                            <span className={`hidden xl:block font-semibold text-base ${active ? "text-white" : "text-gray-700"}`}>
+                            <span className={`hidden xl:block font-semibold text-base ${active ? "text-white" : "text-gray-400 group-hover:text-white"}`}>
                                 {item.label}
                             </span>
                         </button>
@@ -83,7 +83,7 @@ const Sidebar = () => {
             <div className="w-full px-3 mt-auto">
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors"
+                    className="w-full flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full text-gray-500 hover:bg-gray-900 hover:text-red-500 transition-colors"
                 >
                     <LogOut className="h-6 w-6" strokeWidth={2.5} />
                     <span className="hidden xl:block font-semibold text-base">

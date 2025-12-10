@@ -13,7 +13,7 @@ body {
     /* Smoother font rendering across browsers */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    @apply transition-colors duration-200 dark:bg-gray-900 dark:text-white bg-white text-gray-900;
+    @apply transition-colors duration-200 bg-black text-white;
 }
 
 /* Mobile-specific: Add bottom padding to avoid content hiding under fixed nav */
