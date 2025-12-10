@@ -13,6 +13,10 @@ import { Toaster } from "react-hot-toast"
 import HomePage from "./pages/HomePage"
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
+import SettingsPage from "./pages/SettingsPage"
+
+// Context
+import { ThemeProvider } from "./context/ThemeContext"
 
 // Layout wrapper for protected pages
 import MainLayout from "./components/layout/MainLayout"
@@ -51,11 +55,12 @@ const ProtectedRoute = ({ children }) => {
  */
 function App() {
     return (
-        <BrowserRouter>
-            {/* Toast notifications - displays success/error messages globally */}
-            <Toaster position="top-right" />
+        <ThemeProvider>
+            <BrowserRouter>
+                {/* Toast notifications - displays success/error messages globally */}
+                <Toaster position="top-right" />
 
-            <Routes>
+                <Routes>
                 {/* PUBLIC ROUTES - No login required */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
@@ -68,6 +73,17 @@ function App() {
                         <ProtectedRoute>
                             <MainLayout>
                                 <HomePage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                
+                <Route
+                    path="/settings"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <SettingsPage />
                             </MainLayout>
                         </ProtectedRoute>
                     }
@@ -121,6 +137,7 @@ function App() {
                 <Route path="*" element={<div>404- Page Not Found</div>} />
             </Routes>
         </BrowserRouter>
+        </ThemeProvider>
     )
 }
 

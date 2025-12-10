@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from "react-redux"
 import { Search, Bell, Menu, X } from "lucide-react" // Icon library
 import Button from "../Button" // Goes up from layout/ to ui/, then Button.jsx
 import Input from "../Input" // Goes up from layout/ to ui/, then Input.jsx
+import SettingsModal from "../../../ui/SettingsModal" // Settings modal
 import { logout } from "../../../../store/slices/authSlice.js" // Goes up to src/, then into store/
 import { logoutUser } from "../../../../api/authApi" // Goes up to src/, then into api/
 import toast from "react-hot-toast"
@@ -17,6 +18,8 @@ import toast from "react-hot-toast"
 const Header = () => {
     // State management
     const [showMobileMenu, setShowMobileMenu] = useState(false) // Toggles mobile menu
+    const [showUserMenu, setShowUserMenu] = useState(false) // Toggles user dropdown
+    const [showSettingsModal, setShowSettingsModal] = useState(false) // Toggles settings modal
     const [searchQuery, setSearchQuery] = useState("") // Stores search input
 
     // Hooks
@@ -64,7 +67,7 @@ const Header = () => {
 
     return (
         // Sticky header: stays at top while scrolling, semi-transparent with blur effect
-        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+        <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
                 <div className="flex items-center justify-between gap-4">
                     {/* LOGO & MOBILE MENU TOGGLE */}
@@ -134,9 +137,12 @@ const Header = () => {
                             <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
                         </Button>
 
-                        {/* USER MENU - Avatar with hover dropdown (CSS-only, no JS state) */}
-                        <div className="relative group">
-                            <button className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100">
+                        {/* USER MENU - Avatar with click dropdown */}
+                        <div className="relative">
+                            <button 
+                                onClick={() => setShowUserMenu(!showUserMenu)}
+                                className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                            >
                                 <img
                                     src={
                                         user?.avatar ||
@@ -147,34 +153,50 @@ const Header = () => {
                                 />
                             </button>
 
-                            {/* Dropdown menu - shown on hover via Tailwind's group-hover */}
-                            <div className="hidden group-hover:block absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
-                                <div className="px-4 py-3 border-b border-gray-200">
-                                    <p className="font-semibold text-sm truncate">
+                            {/* Dropdown menu - shown on click */}
+                            {showUserMenu && (
+                                <>
+                                    {/* Invisible overlay to close menu when clicking outside */}
+                                    <div 
+                                        className="fixed inset-0 z-10" 
+                                        onClick={() => setShowUserMenu(false)}
+                                    ></div>
+                                    
+                                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-20">
+
+                                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                    <p className="font-semibold text-sm truncate dark:text-white">
                                         {user?.fullName}
                                     </p>
-                                    <p className="text-xs text-gray-500 truncate">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                         @{user?.username}
                                     </p>
                                 </div>
 
                                 <button
-                                    onClick={() =>
+                                    onClick={() => {
                                         navigate(`/channel/${user?.username}`)
-                                    }
+                                        setShowUserMenu(false)
+                                    }}
                                     className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm transition-colors"
                                 >
                                     Your Channel
                                 </button>
                                 <button
-                                    onClick={() => navigate("/dashboard")}
+                                    onClick={() => {
+                                        navigate("/dashboard")
+                                        setShowUserMenu(false)
+                                    }}
                                     className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm transition-colors"
                                 >
                                     Dashboard
                                 </button>
                                 <button
-                                    onClick={() => navigate("/settings")}
-                                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm transition-colors"
+                                    onClick={() => {
+                                        setShowSettingsModal(true)
+                                        setShowUserMenu(false)
+                                    }}
+                                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors"
                                 >
                                     Settings
                                 </button>
@@ -183,11 +205,13 @@ const Header = () => {
 
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full text-left px-4 py-2.5 hover:bg-red-50 text-sm text-red-600 transition-colors"
+                                    className="w-full text-left px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm text-red-600 dark:text-red-400 transition-colors"
                                 >
                                     Logout
                                 </button>
                             </div>
+                        </>
+                    )}
                         </div>
                     </div>
                 </div>
@@ -208,6 +232,12 @@ const Header = () => {
                     </form>
                 )}
             </div>
+
+            {/* Settings Modal */}
+            <SettingsModal 
+                isOpen={showSettingsModal} 
+                onClose={() => setShowSettingsModal(false)} 
+            />
         </header>
     )
 }

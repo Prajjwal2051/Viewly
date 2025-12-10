@@ -17,17 +17,17 @@ const HomePage = () => {
     const [loading, setLoading] = useState(true) // Loading spinner control
     const [page, setPage] = useState(1) // Current page number
     const [hasMore, setHasMore] = useState(true) // Whether more videos exist
-    const [selectedCategory, setSelectedCategory] = useState("all") // Active category filter
+    const [activeCategory, setActiveCategory] = useState("All") // Active category filter
 
     // Category options with icons
     const categories = [
-        { id: "all", label: "All", icon: Film },
-        { id: "trending", label: "Trending", icon: TrendingUp },
-        { id: "gaming", label: "Gaming", icon: Gamepad2 },
-        { id: "music", label: "Music", icon: Music },
-        { id: "coding", label: "Coding", icon: Code },
-        { id: "education", label: "Education", icon: BookOpen },
-        { id: "fitness", label: "Fitness", icon: Dumbbell },
+        { name: "All", icon: <Film className="w-4 h-4" /> },
+        { name: "Trending", icon: <TrendingUp className="w-4 h-4" /> },
+        { name: "Gaming", icon: <Gamepad2 className="w-4 h-4" /> },
+        { name: "Music", icon: <Music className="w-4 h-4" /> },
+        { name: "Coding", icon: <Code className="w-4 h-4" /> },
+        { name: "Education", icon: <BookOpen className="w-4 h-4" /> },
+        { name: "Fitness", icon: <Dumbbell className="w-4 h-4" /> },
     ]
 
     /**
@@ -35,45 +35,46 @@ const HomePage = () => {
      * Triggers when component mounts, page changes, or category changes
      */
     useEffect(() => {
-        // Reset videos when category changes
-        if (page === 1) {
-            setVideos([])
-        }
-        fetchVideos()
-    }, [page, selectedCategory])
-
-    /**
-     * FETCH VIDEOS FROM API
-     * Loads 12 videos per page and appends to existing list
-     */
-    const fetchVideos = async () => {
-        try {
-            setLoading(true)
-            const response = await getAllVideos({ 
-                page, 
-                limit: 12,
-                category: selectedCategory !== "all" ? selectedCategory : undefined 
-            })
-
-            if (response.videos && response.videos.length > 0) {
-                setVideos((prev) => page === 1 ? response.videos : [...prev, ...response.videos])
-                setHasMore(response.pagination?.hasNextPage || false)
-            } else {
-                setHasMore(false)
+        const fetchVideos = async () => {
+            try {
+                // If category changed, reset list
+                if (page === 1) setLoading(true)
+                
+                // Fetch videos (simulating category filter if needed)
+                const response = await getAllVideos({ 
+                    page, 
+                    limit: 12,
+                    category: activeCategory === "All" ? undefined : activeCategory 
+                })
+                
+                // Assuming API returns { docs, hasNextPage } or similar
+                // Adjust based on actual API response structure
+                const newVideos = response.videos || response.data?.videos || []
+                
+                if (page === 1) {
+                    setVideos(newVideos)
+                } else {
+                    setVideos(prev => [...prev, ...newVideos])
+                }
+                
+                setHasMore(response.pagination?.hasNextPage || newVideos.length === 12)
+            } catch (error) {
+                console.error("Failed to fetch videos:", error)
+                toast.error("Could not load videos")
+            } finally {
+                setLoading(false)
             }
-        } catch (error) {
-            toast.error(error.message || "Failed to load videos")
-        } finally {
-            setLoading(false)
         }
-    }
+
+        fetchVideos()
+    }, [page, activeCategory])
 
     /**
      * HANDLE CATEGORY CHANGE
      * Resets page to 1 and updates selected category
      */
-    const handleCategoryChange = (categoryId) => {
-        setSelectedCategory(categoryId)
+    const handleCategoryChange = (categoryName) => {
+        setActiveCategory(categoryName)
         setPage(1)
         setVideos([])
     }
@@ -82,63 +83,70 @@ const HomePage = () => {
      * LOAD MORE HANDLER
      * Increments page number to fetch next page
      */
-    const loadMore = () => {
+    const handleLoadMore = () => {
         if (!loading && hasMore) {
             setPage((prev) => prev + 1)
         }
     }
 
     return (
-        <div className="space-y-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
             {/* HERO SECTION */}
-            <div className="relative bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 rounded-2xl overflow-hidden shadow-2xl">
-                <div className="absolute inset-0 bg-black/20"></div>
-                <div className="relative px-8 py-16 md:py-24 text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-                        Welcome to VidNest
-                    </h1>
-                    <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-                        Discover amazing videos from creators around the world
-                    </p>
-                    <div className="flex justify-center gap-4">
-                        <button className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg">
-                            <Play className="h-5 w-5" />
-                            Explore Now
-                        </button>
+            <div className="relative h-[400px] w-full overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+                {/* Animated gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-red-600/30 animate-pulse"></div>
+                
+                <div className="absolute inset-0 flex items-center">
+                    <div className="max-w-7xl mx-auto px-4 w-full">
+                        <div className="max-w-2xl text-white space-y-6">
+                            <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+                                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">VidNest</span>
+                            </h1>
+                            <p className="text-lg md:text-xl text-gray-200">
+                                Discover, share, and connect through the power of video. 
+                                Join our community of creators today.
+                            </p>
+                            <div className="flex gap-4 pt-4">
+                                <button className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full font-semibold hover:scale-105 transition transform shadow-lg flex items-center gap-2">
+                                    <Play className="fill-current w-5 h-5" />
+                                    Explore Now
+                                </button>
+                                <button className="px-8 py-3 bg-white/10 backdrop-blur-md rounded-full font-semibold hover:bg-white/20 transition border border-white/20">
+                                    Learn More
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* CATEGORY FILTERS */}
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 md:px-8 lg:px-12 mt-8">
                 {categories.map((category) => {
-                    const Icon = category.icon
-                    const isActive = selectedCategory === category.id
+                    const isActive = activeCategory === category.name
                     return (
                         <button
-                            key={category.id}
-                            onClick={() => handleCategoryChange(category.id)}
+                            key={category.name}
+                            onClick={() => handleCategoryChange(category.name)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
                                 isActive
                                     ? "bg-purple-600 text-white shadow-lg scale-105"
-                                    : "bg-white text-gray-700 hover:bg-gray-100 shadow-md"
+                                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 shadow-md"
                             }`}
                         >
-                            <Icon className="h-4 w-4" />
-                            {category.label}
+                            {category.icon}
+                            {category.name}
                         </button>
                     )
                 })}
             </div>
 
             {/* SECTION TITLE */}
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
-                    {selectedCategory === "all" ? "All Videos" : 
-                     selectedCategory === "trending" ? "Trending Now" :
-                     `${categories.find(c => c.id === selectedCategory)?.label} Videos`}
+            <div className="flex items-center justify-between px-4 md:px-8 lg:px-12 mt-8 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {activeCategory === "All" ? "All Videos" : `${activeCategory} Videos`}
                 </h2>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                     {videos.length} {videos.length === 1 ? "video" : "videos"}
                 </span>
             </div>
@@ -162,7 +170,7 @@ const HomePage = () => {
                 <div className="flex justify-center items-center py-12">
                     <div className="text-center">
                         <Loader2 className="h-10 w-10 animate-spin text-purple-600 mx-auto mb-3" />
-                        <p className="text-gray-600">Loading more videos...</p>
+                        <p className="text-gray-600 dark:text-gray-300">Loading more videos...</p>
                     </div>
                 </div>
             )}
@@ -183,7 +191,7 @@ const HomePage = () => {
             {!loading && !hasMore && videos.length > 0 && (
                 <div className="text-center py-8">
                     <div className="inline-block px-6 py-3 bg-gray-100 rounded-full">
-                        <p className="text-gray-600 font-medium">
+                        <p className="text-gray-600 dark:text-gray-300 font-medium">
                             🎉 You've watched them all!
                         </p>
                     </div>
@@ -196,16 +204,16 @@ const HomePage = () => {
                     <div className="inline-block p-6 bg-gray-100 rounded-full mb-4">
                         <Film className="h-16 w-16 text-gray-400" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                         No videos found
                     </h3>
-                    <p className="text-gray-600 mb-6">
-                        {selectedCategory !== "all" 
-                            ? `No ${selectedCategory} videos available yet.`
+                    <p className="text-gray-600 dark:text-gray-300 mb-6">
+                        {activeCategory !== "All" 
+                            ? `No ${activeCategory} videos available yet.`
                             : "Be the first to upload amazing content!"}
                     </p>
                     <button 
-                        onClick={() => handleCategoryChange("all")}
+                        onClick={() => handleCategoryChange("All")}
                         className="px-6 py-3 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors"
                     >
                         Browse All Videos

@@ -5,7 +5,7 @@
    Handles mobile navigation spacing and scrollbar styling.
 */
 
-/* Tailwind CSS v4 - Single import for all utilities */
+/* Tailwind CSS - Import utilities */
 @import "tailwindcss";
 
 /* Custom base styles */
@@ -13,6 +13,7 @@ body {
     /* Smoother font rendering across browsers */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    @apply transition-colors duration-200 dark:bg-gray-900 dark:text-white bg-white text-gray-900;
 }
 
 /* Mobile-specific: Add bottom padding to avoid content hiding under fixed nav */

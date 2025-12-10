@@ -14,8 +14,8 @@
 const Input = ({ className = "", ...props }) => {
     return (
         <input
-            // Default styles: full width, padding, border, rounded, focus ring
-            className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${className}`}
+            // Default styles with dark mode support
+            className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 ${className}`}
             {...props} // Passes through type, placeholder, value, onChange, name, required, etc.
         />
     )
