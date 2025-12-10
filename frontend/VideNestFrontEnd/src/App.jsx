@@ -14,6 +14,7 @@ import HomePage from "./pages/HomePage"
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import SettingsPage from "./pages/SettingsPage"
+import UploadPage from "./pages/UploadPage"
 import NotFoundPage from "./pages/NotFoundPage"
 
 // Context
@@ -90,17 +91,6 @@ function App() {
                         }
                     />
 
-                    {/* Additional protected routes - uncomment when pages are created
-                <Route
-                    path="/discover"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <DiscoverPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
                 <Route
                     path="/upload"
                     element={
@@ -111,6 +101,8 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+
+                    {/* Additional protected routes - uncomment when pages are created
                 <Route
                     path="/activity"
                     element={
