@@ -7,21 +7,18 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
-import { Search, Bell, Menu, X } from "lucide-react" // Icon library
+import { Search, Bell } from "lucide-react" // Icon library
 import Button from "../Button" // Goes up from layout/ to ui/, then Button.jsx
 import Input from "../Input" // Goes up from layout/ to ui/, then Input.jsx
-import SettingsModal from "../../../ui/SettingsModal" // Settings modal
 import { logout } from "../../../../store/slices/authSlice.js" // Goes up to src/, then into store/
 import { logoutUser } from "../../../../api/authApi" // Goes up to src/, then into api/
 import toast from "react-hot-toast"
 
 const Header = () => {
     // State management
-    const [showMobileMenu, setShowMobileMenu] = useState(false) // Toggles mobile menu
     const [showUserMenu, setShowUserMenu] = useState(false) // Toggles user dropdown
-    const [showSettingsModal, setShowSettingsModal] = useState(false) // Toggles settings modal
     const [searchQuery, setSearchQuery] = useState("") // Stores search input
-
+    
     // Hooks
     const navigate = useNavigate() // Programmatic navigation (e.g., navigate("/home"))
     const location = useLocation() // Current URL path
@@ -47,11 +44,6 @@ const Header = () => {
 
     /**
      * LOGOUT HANDLER
-     * Multi-step logout process:
-     * 1. Call backend API to invalidate session/tokens
-     * 2. Remove access token from browser storage
-     * 3. Update Redux state (user = null, isAuthenticated = false)
-     * 4. Redirect to login page
      */
     const handleLogout = async () => {
         try {
@@ -66,82 +58,50 @@ const Header = () => {
     }
 
     return (
-        // Sticky header: stays at top while scrolling, semi-transparent with blur effect
-        <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+        // Sticky header: stays at top while scrolling, minimal float
+        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 py-3">
+            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between gap-4">
-                    {/* LOGO & MOBILE MENU TOGGLE */}
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setShowMobileMenu(!showMobileMenu)}
-                            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-                        >
-                            {showMobileMenu ? (
-                                <X className="h-6 w-6" />
-                            ) : (
-                                <Menu className="h-6 w-6" />
-                            )}
-                        </button>
-
-                        <h1
-                            onClick={() => navigate("/")}
-                            className="text-xl sm:text-2xl font-bold bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent cursor-pointer select-none"
-                        >
-                            VidNest
-                        </h1>
+                    
+                    {/* SEARCH BAR - Main focus area */}
+                    <div className="flex-1 max-w-3xl">
+                        {showSearchBar ? (
+                            <form onSubmit={handleSearch} className="w-full">
+                                <div className="relative w-full group">
+                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-transparent rounded-full focus:bg-white focus:border-gray-300 focus:ring-0 transition-all duration-200 hover:bg-gray-200/70"
+                                    />
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="h-12"></div> // Spacer to keep layout stable
+                        )}
                     </div>
 
-                    {/* SEARCH BAR - Hidden on mobile, shown on md (768px+) screens */}
-                    {showSearchBar && (
-                        <form
-                            onSubmit={handleSearch}
-                            className="hidden md:flex flex-1 max-w-2xl"
-                        >
-                            <div className="relative w-full">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <Input
-                                    type="text"
-                                    placeholder="Search videos, channels, or playlists..."
-                                    value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
-                                    className="pl-10 pr-4"
-                                />
-                            </div>
-                        </form>
-                    )}
-
                     {/* HEADER ACTIONS - Right side icons */}
-                    <div className="flex items-center gap-2">
-                        {/* Mobile search icon - only shows on small screens */}
-                        {showSearchBar && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => navigate("/search")}
-                                className="md:hidden"
-                            >
-                                <Search className="h-5 w-5" />
-                            </Button>
-                        )}
-
-                        {/* Notification bell with red dot indicator */}
+                    <div className="flex items-center gap-3">
+                        
+                        {/* Notification bell */}
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => navigate("/notifications")}
-                            className="relative"
+                            className="relative hover:bg-gray-100 rounded-full h-12 w-12"
                         >
-                            <Bell className="h-5 w-5" />
-                            <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                            <Bell className="h-6 w-6 text-gray-500" />
+                            <span className="absolute top-3 right-3 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
                         </Button>
 
                         {/* USER MENU - Avatar with click dropdown */}
                         <div className="relative">
                             <button 
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition-all"
                             >
                                 <img
                                     src={
@@ -149,7 +109,7 @@ const Header = () => {
                                         "https://via.placeholder.com/40"
                                     }
                                     alt={user?.username}
-                                    className="h-8 w-8 rounded-full object-cover border-2 border-gray-200"
+                                    className="h-10 w-10 rounded-full object-cover border border-gray-200"
                                 />
                             </button>
 
@@ -162,82 +122,53 @@ const Header = () => {
                                         onClick={() => setShowUserMenu(false)}
                                     ></div>
                                     
-                                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-20">
+                                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-[0_0_24px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-20">
 
-                                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                    <p className="font-semibold text-sm truncate dark:text-white">
+                                <div className="px-4 py-4 border-b border-gray-100">
+                                    <p className="font-bold text-gray-900 truncate text-lg">
                                         {user?.fullName}
                                     </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    <p className="text-sm text-gray-500 truncate">
                                         @{user?.username}
                                     </p>
                                 </div>
 
-                                <button
-                                    onClick={() => {
-                                        navigate(`/channel/${user?.username}`)
-                                        setShowUserMenu(false)
-                                    }}
-                                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm transition-colors"
-                                >
-                                    Your Channel
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        navigate("/dashboard")
-                                        setShowUserMenu(false)
-                                    }}
-                                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm transition-colors"
-                                >
-                                    Dashboard
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowSettingsModal(true)
-                                        setShowUserMenu(false)
-                                    }}
-                                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors"
-                                >
-                                    Settings
-                                </button>
+                                <div className="p-2">
+                                    <button
+                                        onClick={() => {
+                                            navigate(`/channel/${user?.username}`)
+                                            setShowUserMenu(false)
+                                        }}
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-100 rounded-xl font-medium text-gray-700 transition-colors"
+                                    >
+                                        Your Channel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            navigate("/dashboard")
+                                            setShowUserMenu(false)
+                                        }}
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-100 rounded-xl font-medium text-gray-700 transition-colors"
+                                    >
+                                        Studio Dashboard
+                                    </button>
+                                </div>
 
-                                <hr className="my-2" />
-
-                                <button
-                                    onClick={handleLogout}
-                                    className="w-full text-left px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm text-red-600 dark:text-red-400 transition-colors"
-                                >
-                                    Logout
-                                </button>
+                                <div className="border-t border-gray-100 p-2">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full text-left px-4 py-3 hover:bg-red-50 rounded-xl font-medium text-red-600 transition-colors"
+                                    >
+                                        Log out
+                                    </button>
+                                </div>
                             </div>
                         </>
                     )}
                         </div>
                     </div>
                 </div>
-
-                {/* MOBILE SEARCH BAR - Shows below header on small screens */}
-                {showSearchBar && (
-                    <form onSubmit={handleSearch} className="md:hidden mt-3">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10"
-                            />
-                        </div>
-                    </form>
-                )}
             </div>
-
-            {/* Settings Modal */}
-            <SettingsModal 
-                isOpen={showSettingsModal} 
-                onClose={() => setShowSettingsModal(false)} 
-            />
         </header>
     )
 }

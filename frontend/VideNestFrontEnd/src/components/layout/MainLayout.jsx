@@ -5,30 +5,33 @@
 // Creates the app shell: header at top, nav at bottom, content in middle.
 
 import Header from "./ui/layout/Header.jsx"
-import Navigation from "./ui/layout/Navigation.jsx"
+import Sidebar from "./ui/layout/Sidebar.jsx"
 
 /**
  * Props:
  * - children: The page content to render (HomePage, ProfilePage, etc.)
  *
  * Layout Structure:
- * - Header: Sticky top bar with search, notifications, user menu
- * - Main: Scrollable content area with max-width constraint
- * - Navigation: Fixed bottom bar with main navigation icons
+ * - Sidebar: Fixed left navigation
+ * - Header: Fixed top bar (offset by sidebar width)
+ * - Main: Content area (offset by sidebar and header)
  */
 const MainLayout = ({ children }) => {
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* HEADER - Sticky at top, follows user on scroll */}
-            <Header />
+        <div className="min-h-screen bg-white">
+            {/* SIDEBAR - Fixed left */}
+            <Sidebar />
 
-            {/* MAIN CONTENT - Centered with max-width, bottom padding for nav bar */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-20">
-                {children} {/* Renders the current page component */}
-            </main>
+            {/* MAIN WRAPPER - Offset by sidebar width */}
+            <div className="pl-20 xl:pl-64 min-h-screen transition-all duration-300">
+                {/* HEADER - Sticky at top */}
+                <Header />
 
-            {/* BOTTOM NAVIGATION - Fixed at bottom, mobile-first design */}
-            <Navigation />
+                {/* MAIN CONTENT */}
+                <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    {children}
+                </main>
+            </div>
         </div>
     )
 }

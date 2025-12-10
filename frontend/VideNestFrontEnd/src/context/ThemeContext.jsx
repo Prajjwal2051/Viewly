@@ -3,32 +3,19 @@ import { createContext, useContext, useEffect, useState } from "react"
 const ThemeContext = createContext()
 
 export const ThemeProvider = ({ children }) => {
-    // Check localStorage or system preference on initial load
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        if (typeof window !== "undefined") {
-            const savedTheme = localStorage.getItem("theme")
-            if (savedTheme) {
-                return savedTheme === "dark"
-            }
-            return window.matchMedia("(prefers-color-scheme: dark)").matches
-        }
-        return false
-    })
+    // Force light mode state
+    const [isDarkMode] = useState(false)
 
-    // Update class and storage when theme changes
+    // Ensure dark class is removed and theme is set to light
     useEffect(() => {
         const root = window.document.documentElement
-        if (isDarkMode) {
-            root.classList.add("dark")
-            localStorage.setItem("theme", "dark")
-        } else {
-            root.classList.remove("dark")
-            localStorage.setItem("theme", "light")
-        }
-    }, [isDarkMode])
+        root.classList.remove("dark")
+        localStorage.setItem("theme", "light")
+    }, [])
 
     const toggleTheme = () => {
-        setIsDarkMode((prev) => !prev)
+        // No-op: Dark mode is disabled
+        console.log("Dark mode is disabled")
     }
 
     return (

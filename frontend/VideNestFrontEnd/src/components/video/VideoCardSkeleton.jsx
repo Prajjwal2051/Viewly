@@ -6,29 +6,29 @@
 
 const VideoCardSkeleton = () => {
     return (
-        <div className="bg-white rounded-lg overflow-hidden shadow-md animate-pulse">
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md animate-pulse border dark:border-gray-700">
             {/* Thumbnail skeleton */}
-            <div className="aspect-video bg-gray-300"></div>
+            <div className="aspect-video bg-gray-300 dark:bg-gray-700"></div>
             
             {/* Info section skeleton */}
             <div className="p-4">
                 <div className="flex gap-3">
                     {/* Avatar skeleton */}
-                    <div className="h-10 w-10 rounded-full bg-gray-300 shrink-0"></div>
+                    <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-700 shrink-0"></div>
                     
                     <div className="flex-1 space-y-2">
                         {/* Title skeleton - 2 lines */}
-                        <div className="h-4 bg-gray-300 rounded w-full"></div>
-                        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
                         
                         {/* Channel name skeleton */}
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
                         
                         {/* Stats skeleton */}
                         <div className="flex gap-3">
-                            <div className="h-3 bg-gray-200 rounded w-16"></div>
-                            <div className="h-3 bg-gray-200 rounded w-12"></div>
-                            <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-16"></div>
+                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-12"></div>
+                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-20"></div>
                         </div>
                     </div>
                 </div>

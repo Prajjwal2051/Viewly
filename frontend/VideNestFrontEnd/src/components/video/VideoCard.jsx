@@ -43,7 +43,7 @@ const VideoCard = ({ video }) => {
         // Card container - clickable, expands shadow on hover, 'group' enables child hover effects
         <div
             onClick={() => navigate(`/video/${video._id}`)}
-            className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow cursor-pointer group"
+            className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow cursor-pointer group border dark:border-gray-700"
         >
             {/* VIDEO THUMBNAIL - 16:9 aspect ratio with duration badge */}
             <div className="relative aspect-video bg-gray-200">
@@ -82,17 +82,17 @@ const VideoCard = ({ video }) => {
 
                     <div className="flex-1 min-w-0">
                         {/* Video title - max 2 lines with ellipsis (line-clamp-2) */}
-                        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1">
                             {video.title}
                         </h3>
 
                         {/* Channel name - clickable text */}
-                        <p className="text-sm text-gray-600 hover:text-gray-900">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
                             {video.owner?.fullName || video.owner?.username}
                         </p>
 
                         {/* Video statistics - views, likes, upload time */}
-                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
                             <span className="flex items-center gap-1">
                                 <Eye className="h-3 w-3" />
                                 {formatViews(video.views)} views

@@ -190,7 +190,7 @@ const HomePage = () => {
             {/* END MESSAGE */}
             {!loading && !hasMore && videos.length > 0 && (
                 <div className="text-center py-8">
-                    <div className="inline-block px-6 py-3 bg-gray-100 rounded-full">
+                    <div className="inline-block px-6 py-3 bg-gray-100 dark:bg-gray-800 rounded-full">
                         <p className="text-gray-600 dark:text-gray-300 font-medium">
                             🎉 You've watched them all!
                         </p>
@@ -201,8 +201,8 @@ const HomePage = () => {
             {/* EMPTY STATE */}
             {!loading && videos.length === 0 && (
                 <div className="text-center py-16">
-                    <div className="inline-block p-6 bg-gray-100 rounded-full mb-4">
-                        <Film className="h-16 w-16 text-gray-400" />
+                    <div className="inline-block p-6 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
+                        <Film className="h-16 w-16 text-gray-400 dark:text-gray-500" />
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                         No videos found
