@@ -106,13 +106,17 @@ const RegisterPage = () => {
 
             const response = await registerUser(data);
 
+            // authApi.js returns response.data which is already unwrapped
+            // So 'response' here is directly { user, accessToken, refreshToken }
+            const { user, accessToken } = response
+
             // Store token
-            localStorage.setItem('accessToken', response.data.accessToken);
+            localStorage.setItem('accessToken', accessToken);
 
             // Update Redux state
-            dispatch(loginSuccess(response.data.user));
+            dispatch(loginSuccess(user));
 
-            toast.success(`🎉 Welcome to VidNest, ${formData.username}! Your account is ready.`);
+            toast.success(`🎉 Welcome to VidNest, ${user.username}! Your account is ready.`);
             navigate('/'); // Redirect to home
         } catch (error) {
             dispatch(loginFailure(error.message || 'Registration failed'));

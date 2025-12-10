@@ -63,15 +63,38 @@ const LoginPage = () => {
                 password: formData.password,
             });
 
+            // DEBUG: Log the actual response to see its structure
+            console.log('Full response:', response);
+            console.log('response keys:', Object.keys(response || {}));
+            console.log('response.data:', response?.data);
+            console.log('response type:', typeof response);
+
+            // authApi.js returns response.data which is already unwrapped by the interceptor
+            // So 'response' here is directly { user, accessToken, refreshToken }
+            if (!response || !response.user || !response.accessToken) {
+                console.error('Invalid response structure:', response);
+                throw new Error('Invalid response from server');
+            }
+            
+            const { user, accessToken } = response
+
+            console.log('Extracted user:', user);
+            console.log('Extracted accessToken:', accessToken);
+
             // Store token for future API calls
-            localStorage.setItem('accessToken', response.data.accessToken);
+            localStorage.setItem('accessToken', accessToken);
 
             // Update Redux state with user data
-            dispatch(loginSuccess(response.data.user));
+            dispatch(loginSuccess(user));
 
-            toast.success(`🎉 Welcome back, ${response.data.user.username}!`);
+            toast.success(`🎉 Welcome back, ${user.username}!`);
+
             navigate('/'); // Redirect to home page
         } catch (error) {
+            console.error('Login error:', error);
+            console.error('Error response:', error.response);
+            console.error('Error data:', error.response?.data);
+            
             dispatch(loginFailure(error.message || 'Login failed'));
             // Provide helpful error messages based on common issues
             const errorMessage = error.message || 'Unable to login. Please try again.';
