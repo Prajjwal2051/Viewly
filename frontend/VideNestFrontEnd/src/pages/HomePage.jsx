@@ -92,23 +92,28 @@ const HomePage = () => {
     return (
         <div className="min-h-screen bg-black pb-20">
             {/* HERO SECTION */}
-            <div className="relative h-[400px] w-full overflow-hidden bg-[#181a1b] border-b border-gray-800">
-                <div className="absolute inset-0 flex items-center">
-                    <div className="max-w-7xl mx-auto px-4 w-full">
-                        <div className="max-w-2xl text-white space-y-6">
-                            <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tighter">
-                                Welcome to <span className="text-red-600">VidNest</span>
+            <div className="px-4 md:px-8 lg:px-12 pt-6">
+                <div className="relative h-[400px] w-full overflow-hidden bg-gradient-to-r from-gray-900 via-[#0a0a0a] to-black rounded-[2.5rem] border border-gray-800 shadow-2xl">
+                    {/* Background Effects */}
+                    <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none opacity-60"></div>
+                    <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-red-900/10 rounded-full blur-[100px] pointer-events-none opacity-40"></div>
+                    
+                    {/* Hero Content */}
+                    <div className="absolute inset-0 flex flex-col justify-center items-start text-left relative z-10 pl-10 md:pl-20 lg:pl-32 pr-4 pt-8">
+                        <div className="max-w-4xl text-white space-y-8">
+                            <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tighter drop-shadow-xl animate-fadeInUp delay-200">
+                                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-600">VidNest</span>
                             </h1>
-                            <p className="text-lg md:text-xl text-gray-400">
+                            <p className="text-lg md:text-xl text-gray-300 max-w-xl animate-fadeInUp delay-400 leading-relaxed">
                                 Discover, share, and connect through the power of video. 
-                                Join our community of creators today.
+                                Join our community of creators today and start watching.
                             </p>
-                            <div className="flex gap-4 pt-4">
-                                <button className="px-8 py-3 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition transform hover:scale-105 shadow-lg flex items-center gap-2">
+                            <div className="flex gap-4 pt-4 animate-fadeInUp delay-600">
+                                <button className="px-8 py-4 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg shadow-red-900/20 flex items-center gap-2">
                                     <Play className="fill-current w-5 h-5" />
                                     Explore Now
                                 </button>
-                                <button className="px-8 py-3 bg-[#2d3035] text-white rounded-full font-semibold hover:bg-[#3a3d42] transition border border-[#3a3d42]">
+                                <button className="px-8 py-4 bg-white/5 backdrop-blur-sm text-white rounded-full font-semibold hover:bg-white/10 transition border border-white/10 hover:border-white/20">
                                     Learn More
                                 </button>
                             </div>
@@ -116,6 +121,7 @@ const HomePage = () => {
                     </div>
                 </div>
             </div>
+
 
             {/* CATEGORY FILTERS */}
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 md:px-8 lg:px-12 mt-8">

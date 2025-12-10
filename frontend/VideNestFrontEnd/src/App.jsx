@@ -14,6 +14,7 @@ import HomePage from "./pages/HomePage"
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import SettingsPage from "./pages/SettingsPage"
+import NotFoundPage from "./pages/NotFoundPage"
 
 // Context
 import { ThemeProvider } from "./context/ThemeContext"
@@ -134,7 +135,7 @@ function App() {
                 */}
 
                 {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
-                <Route path="*" element={<div>404- Page Not Found</div>} />
+                <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </BrowserRouter>
         </ThemeProvider>

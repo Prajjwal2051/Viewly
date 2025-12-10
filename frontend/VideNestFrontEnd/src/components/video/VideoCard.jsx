@@ -43,7 +43,7 @@ const VideoCard = ({ video }) => {
         // Card container - clickable, expands shadow on hover, 'group' enables child hover effects
         <div
             onClick={() => navigate(`/video/${video._id}`)}
-            className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow cursor-pointer group border dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow cursor-pointer group border dark:border-gray-700"
         >
             {/* VIDEO THUMBNAIL - 16:9 aspect ratio with duration badge */}
             <div className="relative aspect-video bg-gray-200">
