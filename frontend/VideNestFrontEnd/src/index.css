@@ -6,7 +6,7 @@
 */
 
 /* Google Fonts Import */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap");
 
 /* Tailwind CSS - Import utilities */
 @import "tailwindcss";
@@ -45,9 +45,15 @@ body {
     animation-fill-mode: both;
 }
 
-.delay-200 { animation-delay: 200ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-600 { animation-delay: 600ms; }
+.delay-200 {
+    animation-delay: 200ms;
+}
+.delay-400 {
+    animation-delay: 400ms;
+}
+.delay-600 {
+    animation-delay: 600ms;
+}
 
 /* CUSTOM SCROLLBAR - Webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
@@ -69,10 +75,10 @@ body {
 
 /* UTILITY: Hide scrollbar while keeping scroll functionality */
 .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari, Opera */
+    display: none; /* Chrome, Safari, Opera */
 }

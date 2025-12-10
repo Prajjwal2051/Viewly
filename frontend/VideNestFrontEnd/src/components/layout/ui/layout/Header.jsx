@@ -18,7 +18,7 @@ const Header = () => {
     // State management
     const [showUserMenu, setShowUserMenu] = useState(false) // Toggles user dropdown
     const [searchQuery, setSearchQuery] = useState("") // Stores search input
-    
+
     // Hooks
     const navigate = useNavigate() // Programmatic navigation (e.g., navigate("/home"))
     const location = useLocation() // Current URL path
@@ -62,7 +62,6 @@ const Header = () => {
         <header className="sticky top-0 z-40 bg-black/95 backdrop-blur-sm border-b border-gray-800 py-3">
             <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between gap-4">
-                    
                     {/* SEARCH BAR - Main focus area */}
                     <div className="flex-1 max-w-3xl">
                         {showSearchBar ? (
@@ -73,7 +72,9 @@ const Header = () => {
                                         type="text"
                                         placeholder="Search"
                                         value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onChange={(e) =>
+                                            setSearchQuery(e.target.value)
+                                        }
                                         className="w-full pl-12 pr-4 py-3 bg-[#121212] border border-gray-800 rounded-full focus:bg-black focus:border-red-600 focus:ring-1 focus:ring-red-600 text-white placeholder-gray-500 transition-all duration-200 hover:bg-[#1a1a1a]"
                                     />
                                 </div>
@@ -85,7 +86,6 @@ const Header = () => {
 
                     {/* HEADER ACTIONS - Right side icons */}
                     <div className="flex items-center gap-3">
-                        
                         {/* Notification bell */}
                         <Button
                             variant="ghost"
@@ -99,7 +99,7 @@ const Header = () => {
 
                         {/* USER MENU - Avatar with click dropdown */}
                         <div className="relative">
-                            <button 
+                            <button
                                 onClick={() => setShowUserMenu(!showUserMenu)}
                                 className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-900 focus:outline-none transition-all"
                             >
@@ -117,54 +117,55 @@ const Header = () => {
                             {showUserMenu && (
                                 <>
                                     {/* Invisible overlay to close menu when clicking outside */}
-                                    <div 
-                                        className="fixed inset-0 z-10" 
+                                    <div
+                                        className="fixed inset-0 z-10"
                                         onClick={() => setShowUserMenu(false)}
                                     ></div>
-                                    
+
                                     <div className="absolute right-0 mt-2 w-64 bg-gray-900 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.5)] border border-gray-800 py-2 z-20">
+                                        <div className="px-4 py-4 border-b border-gray-800">
+                                            <p className="font-bold text-white truncate text-lg">
+                                                {user?.fullName}
+                                            </p>
+                                            <p className="text-sm text-gray-400 truncate">
+                                                @{user?.username}
+                                            </p>
+                                        </div>
 
-                                <div className="px-4 py-4 border-b border-gray-800">
-                                    <p className="font-bold text-white truncate text-lg">
-                                        {user?.fullName}
-                                    </p>
-                                    <p className="text-sm text-gray-400 truncate">
-                                        @{user?.username}
-                                    </p>
-                                </div>
+                                        <div className="p-2">
+                                            <button
+                                                onClick={() => {
+                                                    navigate(
+                                                        `/channel/${user?.username}`
+                                                    )
+                                                    setShowUserMenu(false)
+                                                }}
+                                                className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-xl font-medium text-gray-300 hover:text-white transition-colors"
+                                            >
+                                                Your Channel
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    navigate("/dashboard")
+                                                    setShowUserMenu(false)
+                                                }}
+                                                className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-xl font-medium text-gray-300 hover:text-white transition-colors"
+                                            >
+                                                Studio Dashboard
+                                            </button>
+                                        </div>
 
-                                <div className="p-2">
-                                    <button
-                                        onClick={() => {
-                                            navigate(`/channel/${user?.username}`)
-                                            setShowUserMenu(false)
-                                        }}
-                                        className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-xl font-medium text-gray-300 hover:text-white transition-colors"
-                                    >
-                                        Your Channel
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            navigate("/dashboard")
-                                            setShowUserMenu(false)
-                                        }}
-                                        className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-xl font-medium text-gray-300 hover:text-white transition-colors"
-                                    >
-                                        Studio Dashboard
-                                    </button>
-                                </div>
-
-                                <div className="border-t border-gray-800 p-2">
-                                    <button
-                                        onClick={handleLogout}
-                                        className="w-full text-left px-4 py-3 hover:bg-red-900/20 rounded-xl font-medium text-red-500 hover:text-red-400 transition-colors"
-                                    >
-                                        Log out
-                                    </button>
-                                </div>
-                            </div>
-                        </>
-                    )}
+                                        <div className="border-t border-gray-800 p-2">
+                                            <button
+                                                onClick={handleLogout}
+                                                className="w-full text-left px-4 py-3 hover:bg-red-900/20 rounded-xl font-medium text-red-500 hover:text-red-400 transition-colors"
+                                            >
+                                                Log out
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

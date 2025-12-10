@@ -62,35 +62,35 @@ function App() {
                 <Toaster position="top-right" />
 
                 <Routes>
-                {/* PUBLIC ROUTES - No login required */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+                    {/* PUBLIC ROUTES - No login required */}
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
 
-                {/* PROTECTED ROUTES - All require authentication
+                    {/* PROTECTED ROUTES - All require authentication
                     Each route wraps its page in ProtectedRoute → MainLayout → Page */}
-                <Route
-                    path="/"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <HomePage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-                
-                <Route
-                    path="/settings"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <SettingsPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
+                    <Route
+                        path="/"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <HomePage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
 
-                {/* Additional protected routes - uncomment when pages are created
+                    <Route
+                        path="/settings"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SettingsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Additional protected routes - uncomment when pages are created
                 <Route
                     path="/discover"
                     element={
@@ -134,10 +134,10 @@ function App() {
                 <Route path="/video/:id" element={<VideoDetailPage />} />
                 */}
 
-                {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
-                <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-        </BrowserRouter>
+                    {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
+                    <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+            </BrowserRouter>
         </ThemeProvider>
     )
 }

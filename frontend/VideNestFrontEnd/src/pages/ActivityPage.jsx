@@ -7,7 +7,7 @@
 /**
  * ACTIVITY PAGE COMPONENT
  * Will display user's interaction history across the platform
- * 
+ *
  * Future Implementation:
  * - Liked videos list with timestamps
  * - Comment history with links to videos

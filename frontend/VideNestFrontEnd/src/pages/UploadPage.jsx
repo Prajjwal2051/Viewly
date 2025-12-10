@@ -7,7 +7,7 @@
 /**
  * UPLOAD PAGE COMPONENT
  * Will provide interface for content creators to upload videos
- * 
+ *
  * Future Implementation:
  * - Video file upload with drag-and-drop
  * - Thumbnail image upload/selection

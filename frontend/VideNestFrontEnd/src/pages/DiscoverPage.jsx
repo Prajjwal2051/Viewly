@@ -7,7 +7,7 @@
 /**
  * DISCOVER PAGE COMPONENT
  * Will show trending content, popular creators, and category browsing
- * 
+ *
  * Future Implementation:
  * - Trending videos by views/likes
  * - Recommended channels based on user interests

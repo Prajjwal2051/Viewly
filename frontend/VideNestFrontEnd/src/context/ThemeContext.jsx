@@ -16,7 +16,7 @@ const ThemeContext = createContext()
 /**
  * THEME PROVIDER COMPONENT
  * Wraps entire app to provide theme state to all components
- * 
+ *
  * Props:
  * - children: The app components wrapped by this provider
  */
@@ -57,7 +57,7 @@ export const ThemeProvider = ({ children }) => {
 /**
  * USE THEME HOOK
  * Custom hook to access theme context in components
- * 
+ *
  * Usage:
  * const { isDarkMode, toggleTheme } = useTheme()
  */

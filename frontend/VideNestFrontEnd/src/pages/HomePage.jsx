@@ -9,7 +9,17 @@ import { getAllVideos } from "../api/videoApi"
 import VideoCard from "../components/video/VideoCard"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
 import toast from "react-hot-toast"
-import { Loader2, Play, TrendingUp, Film, Gamepad2, Music, Code, BookOpen, Dumbbell } from "lucide-react"
+import {
+    Loader2,
+    Play,
+    TrendingUp,
+    Film,
+    Gamepad2,
+    Music,
+    Code,
+    BookOpen,
+    Dumbbell,
+} from "lucide-react"
 
 const HomePage = () => {
     // State management
@@ -39,25 +49,28 @@ const HomePage = () => {
             try {
                 // If category changed, reset list
                 if (page === 1) setLoading(true)
-                
+
                 // Fetch videos (simulating category filter if needed)
-                const response = await getAllVideos({ 
-                    page, 
+                const response = await getAllVideos({
+                    page,
                     limit: 12,
-                    category: activeCategory === "All" ? undefined : activeCategory 
+                    category:
+                        activeCategory === "All" ? undefined : activeCategory,
                 })
-                
+
                 // Assuming API returns { docs, hasNextPage } or similar
                 // Adjust based on actual API response structure
                 const newVideos = response.videos || response.data?.videos || []
-                
+
                 if (page === 1) {
                     setVideos(newVideos)
                 } else {
-                    setVideos(prev => [...prev, ...newVideos])
+                    setVideos((prev) => [...prev, ...newVideos])
                 }
-                
-                setHasMore(response.pagination?.hasNextPage || newVideos.length === 12)
+
+                setHasMore(
+                    response.pagination?.hasNextPage || newVideos.length === 12
+                )
             } catch (error) {
                 console.error("Failed to fetch videos:", error)
                 toast.error("Could not load videos")
@@ -97,16 +110,20 @@ const HomePage = () => {
                     {/* Background Effects */}
                     <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none opacity-60"></div>
                     <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-red-900/10 rounded-full blur-[100px] pointer-events-none opacity-40"></div>
-                    
+
                     {/* Hero Content */}
                     <div className="absolute inset-0 flex flex-col justify-center items-start text-left relative z-10 pl-10 md:pl-20 lg:pl-32 pr-4 pt-8">
                         <div className="max-w-4xl text-white space-y-8">
                             <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tighter drop-shadow-xl animate-fadeInUp delay-200">
-                                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-600">VidNest</span>
+                                Welcome to{" "}
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-600">
+                                    VidNest
+                                </span>
                             </h1>
                             <p className="text-lg md:text-xl text-gray-300 max-w-xl animate-fadeInUp delay-400 leading-relaxed">
-                                Discover, share, and connect through the power of video. 
-                                Join our community of creators today and start watching.
+                                Discover, share, and connect through the power
+                                of video. Join our community of creators today
+                                and start watching.
                             </p>
                             <div className="flex gap-4 pt-4 animate-fadeInUp delay-600">
                                 <button className="px-8 py-4 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg shadow-red-900/20 flex items-center gap-2">
@@ -121,7 +138,6 @@ const HomePage = () => {
                     </div>
                 </div>
             </div>
-
 
             {/* CATEGORY FILTERS */}
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 md:px-8 lg:px-12 mt-8">
@@ -147,7 +163,9 @@ const HomePage = () => {
             {/* SECTION TITLE */}
             <div className="flex items-center justify-between px-4 md:px-8 lg:px-12 mt-8 mb-6">
                 <h2 className="text-2xl font-bold text-white">
-                    {activeCategory === "All" ? "All Videos" : `${activeCategory} Videos`}
+                    {activeCategory === "All"
+                        ? "All Videos"
+                        : `${activeCategory} Videos`}
                 </h2>
                 <span className="text-sm text-gray-500">
                     {videos.length} {videos.length === 1 ? "video" : "videos"}
@@ -156,16 +174,14 @@ const HomePage = () => {
 
             {/* VIDEO GRID */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 md:px-8 lg:px-12">
-                {loading && page === 1 ? (
-                    // Show skeleton cards on initial load
-                    Array.from({ length: 8 }).map((_, index) => (
-                        <VideoCardSkeleton key={index} />
-                    ))
-                ) : (
-                    videos.map((video) => (
-                        <VideoCard key={video._id} video={video} />
-                    ))
-                )}
+                {loading && page === 1
+                    ? // Show skeleton cards on initial load
+                      Array.from({ length: 8 }).map((_, index) => (
+                          <VideoCardSkeleton key={index} />
+                      ))
+                    : videos.map((video) => (
+                          <VideoCard key={video._id} video={video} />
+                      ))}
             </div>
 
             {/* LOADING SPINNER - Only for "Load More" */}
@@ -211,11 +227,11 @@ const HomePage = () => {
                         No videos found
                     </h3>
                     <p className="text-gray-400 mb-6">
-                        {activeCategory !== "All" 
+                        {activeCategory !== "All"
                             ? `No ${activeCategory} videos available yet.`
                             : "Be the first to upload amazing content!"}
                     </p>
-                    <button 
+                    <button
                         onClick={() => handleCategoryChange("All")}
                         className="px-6 py-3 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-colors"
                     >

@@ -12,7 +12,7 @@
 /**
  * VIDEO CARD SKELETON COMPONENT
  * Shows during loading states to improve perceived performance
- * 
+ *
  * Usage:
  * {loading && <VideoCardSkeleton />}
  * {videos.map(video => <VideoCard key={video.id} video={video} />)}

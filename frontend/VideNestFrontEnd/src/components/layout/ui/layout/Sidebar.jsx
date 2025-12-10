@@ -41,7 +41,7 @@ const Sidebar = () => {
     return (
         <aside className="fixed left-0 top-0 h-screen w-20 xl:w-64 bg-black border-r border-gray-800 flex flex-col items-center xl:items-start py-6 z-50">
             {/* LOGO */}
-            <div 
+            <div
                 onClick={() => navigate("/")}
                 className="mb-8 px-4 cursor-pointer"
             >
@@ -58,7 +58,7 @@ const Sidebar = () => {
                 {navItems.map((item) => {
                     const Icon = item.icon
                     const active = isActive(item.path)
-                    
+
                     return (
                         <button
                             key={item.id}
@@ -67,11 +67,13 @@ const Sidebar = () => {
                                 ${active ? "bg-red-600 text-white" : "text-gray-400 hover:bg-gray-900 hover:text-white"}
                             `}
                         >
-                            <Icon 
-                                className={`h-6 w-6 ${active ? "stroke-current" : "stroke-current"} transition-transform group-hover:scale-110`} 
+                            <Icon
+                                className={`h-6 w-6 ${active ? "stroke-current" : "stroke-current"} transition-transform group-hover:scale-110`}
                                 strokeWidth={2.5}
                             />
-                            <span className={`hidden xl:block font-semibold text-base ${active ? "text-white" : "text-gray-400 group-hover:text-white"}`}>
+                            <span
+                                className={`hidden xl:block font-semibold text-base ${active ? "text-white" : "text-gray-400 group-hover:text-white"}`}
+                            >
                                 {item.label}
                             </span>
                         </button>

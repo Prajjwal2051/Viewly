@@ -9,13 +9,13 @@ import { useSelector } from "react-redux"
 /**
  * PROFILE PAGE COMPONENT
  * Displays current user's profile with avatar, name, and stats
- * 
+ *
  * Features:
  * - User avatar with fallback placeholder
  * - Full name and username display
  * - Email address
  * - Stats grid (videos, subscribers, views) - currently placeholder zeros
- * 
+ *
  * Data Source:
  * - Redux auth state (user object from store)
  * - User data loaded during login/registration
