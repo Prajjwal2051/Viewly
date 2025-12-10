@@ -1,1 +1,8 @@
+/* ============================================
+ * APP.CSS - GLOBAL STYLES
+ * ============================================
+ * Imports Tailwind CSS v4 for utility-first styling.
+ * Additional global styles can be added below.
+ */
+
 @import "tailwindcss";
