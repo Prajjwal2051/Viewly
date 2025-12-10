@@ -5,6 +5,9 @@
    Handles mobile navigation spacing and scrollbar styling.
 */
 
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
 /* Tailwind CSS - Import utilities */
 @import "tailwindcss";
 
@@ -13,7 +16,8 @@ body {
     /* Smoother font rendering across browsers */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    @apply transition-colors duration-200 bg-black text-white;
+    background-color: #000000; /* Pure Black */
+    @apply transition-colors duration-200 text-white;
 }
 
 /* Mobile-specific: Add bottom padding to avoid content hiding under fixed nav */
@@ -22,6 +26,28 @@ body {
         padding-bottom: 5rem !important;
     }
 }
+
+/* Custom Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 40px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.animate-fadeInUp {
+    animation-name: fadeInUp;
+    animation-duration: 0.8s;
+    animation-fill-mode: both;
+}
+
+.delay-200 { animation-delay: 200ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-600 { animation-delay: 600ms; }
 
 /* CUSTOM SCROLLBAR - Webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {

@@ -90,28 +90,25 @@ const HomePage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+        <div className="min-h-screen bg-black pb-20">
             {/* HERO SECTION */}
-            <div className="relative h-[400px] w-full overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
-                {/* Animated gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-red-600/30 animate-pulse"></div>
-                
+            <div className="relative h-[400px] w-full overflow-hidden bg-[#181a1b] border-b border-gray-800">
                 <div className="absolute inset-0 flex items-center">
                     <div className="max-w-7xl mx-auto px-4 w-full">
                         <div className="max-w-2xl text-white space-y-6">
-                            <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-                                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">VidNest</span>
+                            <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tighter">
+                                Welcome to <span className="text-red-600">VidNest</span>
                             </h1>
-                            <p className="text-lg md:text-xl text-gray-200">
+                            <p className="text-lg md:text-xl text-gray-400">
                                 Discover, share, and connect through the power of video. 
                                 Join our community of creators today.
                             </p>
                             <div className="flex gap-4 pt-4">
-                                <button className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full font-semibold hover:scale-105 transition transform shadow-lg flex items-center gap-2">
+                                <button className="px-8 py-3 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition transform hover:scale-105 shadow-lg flex items-center gap-2">
                                     <Play className="fill-current w-5 h-5" />
                                     Explore Now
                                 </button>
-                                <button className="px-8 py-3 bg-white/10 backdrop-blur-md rounded-full font-semibold hover:bg-white/20 transition border border-white/20">
+                                <button className="px-8 py-3 bg-[#2d3035] text-white rounded-full font-semibold hover:bg-[#3a3d42] transition border border-[#3a3d42]">
                                     Learn More
                                 </button>
                             </div>
@@ -130,8 +127,8 @@ const HomePage = () => {
                             onClick={() => handleCategoryChange(category.name)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
                                 isActive
-                                    ? "bg-purple-600 text-white shadow-lg scale-105"
-                                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 shadow-md"
+                                    ? "bg-red-600 text-white shadow-lg"
+                                    : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
                             }`}
                         >
                             {category.icon}
@@ -143,16 +140,16 @@ const HomePage = () => {
 
             {/* SECTION TITLE */}
             <div className="flex items-center justify-between px-4 md:px-8 lg:px-12 mt-8 mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-2xl font-bold text-white">
                     {activeCategory === "All" ? "All Videos" : `${activeCategory} Videos`}
                 </h2>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-gray-500">
                     {videos.length} {videos.length === 1 ? "video" : "videos"}
                 </span>
             </div>
 
             {/* VIDEO GRID */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 md:px-8 lg:px-12">
                 {loading && page === 1 ? (
                     // Show skeleton cards on initial load
                     Array.from({ length: 8 }).map((_, index) => (
@@ -169,8 +166,8 @@ const HomePage = () => {
             {loading && page > 1 && (
                 <div className="flex justify-center items-center py-12">
                     <div className="text-center">
-                        <Loader2 className="h-10 w-10 animate-spin text-purple-600 mx-auto mb-3" />
-                        <p className="text-gray-600 dark:text-gray-300">Loading more videos...</p>
+                        <Loader2 className="h-10 w-10 animate-spin text-red-600 mx-auto mb-3" />
+                        <p className="text-gray-400">Loading more videos...</p>
                     </div>
                 </div>
             )}
@@ -179,8 +176,8 @@ const HomePage = () => {
             {!loading && hasMore && videos.length > 0 && (
                 <div className="flex justify-center mt-8">
                     <button
-                        onClick={loadMore}
-                        className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-xl transition-all transform hover:scale-105"
+                        onClick={handleLoadMore}
+                        className="px-8 py-3 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-all shadow-lg"
                     >
                         Load More Videos
                     </button>
@@ -190,8 +187,8 @@ const HomePage = () => {
             {/* END MESSAGE */}
             {!loading && !hasMore && videos.length > 0 && (
                 <div className="text-center py-8">
-                    <div className="inline-block px-6 py-3 bg-gray-100 dark:bg-gray-800 rounded-full">
-                        <p className="text-gray-600 dark:text-gray-300 font-medium">
+                    <div className="inline-block px-6 py-3 bg-gray-800 rounded-full">
+                        <p className="text-gray-400 font-medium">
                             🎉 You've watched them all!
                         </p>
                     </div>
@@ -201,20 +198,20 @@ const HomePage = () => {
             {/* EMPTY STATE */}
             {!loading && videos.length === 0 && (
                 <div className="text-center py-16">
-                    <div className="inline-block p-6 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
-                        <Film className="h-16 w-16 text-gray-400 dark:text-gray-500" />
+                    <div className="inline-block p-6 bg-gray-800 rounded-full mb-4">
+                        <Film className="h-16 w-16 text-gray-500" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-2xl font-bold text-white mb-2">
                         No videos found
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    <p className="text-gray-400 mb-6">
                         {activeCategory !== "All" 
                             ? `No ${activeCategory} videos available yet.`
                             : "Be the first to upload amazing content!"}
                     </p>
                     <button 
                         onClick={() => handleCategoryChange("All")}
-                        className="px-6 py-3 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors"
+                        className="px-6 py-3 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-colors"
                     >
                         Browse All Videos
                     </button>

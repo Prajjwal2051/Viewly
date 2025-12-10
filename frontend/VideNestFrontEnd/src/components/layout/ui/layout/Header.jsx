@@ -68,13 +68,13 @@ const Header = () => {
                         {showSearchBar ? (
                             <form onSubmit={handleSearch} className="w-full">
                                 <div className="relative w-full group">
-                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 group-hover:text-gray-400 transition-colors" />
+                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-red-500 transition-colors" />
                                     <input
                                         type="text"
                                         placeholder="Search"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-900 border-transparent rounded-full focus:bg-gray-800 focus:border-gray-700 focus:ring-0 text-white placeholder-gray-500 transition-all duration-200 hover:bg-gray-800"
+                                        className="w-full pl-12 pr-4 py-3 bg-[#121212] border border-gray-800 rounded-full focus:bg-black focus:border-red-600 focus:ring-1 focus:ring-red-600 text-white placeholder-gray-500 transition-all duration-200 hover:bg-[#1a1a1a]"
                                     />
                                 </div>
                             </form>

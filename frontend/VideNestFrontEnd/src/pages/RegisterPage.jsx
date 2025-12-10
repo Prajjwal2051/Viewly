@@ -6,12 +6,13 @@
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../store/slices/authSlice';
 import { registerUser } from '../api/authApi';
 import toast from 'react-hot-toast';
 import Input from '../components/layout/ui/Input';
 import Button from '../components/layout/ui/Button';
+import authBgBright from '../assets/auth_bg_bright.png';
 
 const RegisterPage = () => {
     // Form state
@@ -22,16 +23,13 @@ const RegisterPage = () => {
         password: '',
         confirmPassword: '',
     });
-    const [avatar, setAvatar] = useState(null); // File object for avatar
-    const [coverImage, setCoverImage] = useState(null); // File object for cover image
+    const [avatar, setAvatar] = useState(null);
+    const [coverImage, setCoverImage] = useState(null);
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { loading } = useSelector((state) => state.auth);
 
-    /**
-     * HANDLE INPUT CHANGE
-     * Updates text form fields
-     */
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -39,10 +37,6 @@ const RegisterPage = () => {
         });
     };
 
-    /**
-     * HANDLE FILE CHANGE
-     * Stores selected image file
-     */
     const handleFileChange = (e) => {
         const { name, files } = e.target;
         if (files && files[0]) {
@@ -54,29 +48,16 @@ const RegisterPage = () => {
         }
     };
 
-    /**
-     * HANDLE REGISTER SUBMIT
-     * Validates form, creates FormData, calls API
-     * 
-     * Flow:
-     * 1. Validate all required fields
-     * 2. Check password match
-     * 3. Create FormData (required for file upload)
-     * 4. Call backend API
-     * 5. Store token and update Redux
-     * 6. Redirect to home page
-     */
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validation
         if (!formData.username || !formData.email || !formData.fullName || !formData.password) {
-            toast.error('⚠️ Please fill in all required fields (marked with *)');
+            toast.error('⚠️ Please fill in all required fields');
             return;
         }
 
         if (formData.password !== formData.confirmPassword) {
-            toast.error('❌ Passwords don\'t match. Please re-enter.');
+            toast.error('❌ Passwords don\'t match');
             return;
         }
 
@@ -86,14 +67,12 @@ const RegisterPage = () => {
         }
 
         if (!avatar) {
-            toast.error('📸 Please upload a profile picture (avatar)');
+            toast.error('📸 Please upload a profile picture');
             return;
         }
 
         try {
-            dispatch(loginStart()); // Set loading = true
-
-            // Create FormData for file upload
+            dispatch(loginStart());
             const data = new FormData();
             data.append('username', formData.username);
             data.append('email', formData.email);
@@ -105,27 +84,16 @@ const RegisterPage = () => {
             }
 
             const response = await registerUser(data);
-
-            // authApi.js returns response.data which is already unwrapped
-            // So 'response' here is directly { user, accessToken, refreshToken }
-            const { user, accessToken } = response
-
-            // Store token
+            const { user, accessToken } = response;
             localStorage.setItem('accessToken', accessToken);
-
-            // Update Redux state
             dispatch(loginSuccess(user));
-
-            toast.success(`🎉 Welcome to VidNest, ${user.username}! Your account is ready.`);
-            navigate('/'); // Redirect to home
+            toast.success(`🎉 Welcome to VidNest, ${user.username}!`);
+            navigate('/');
         } catch (error) {
             dispatch(loginFailure(error.message || 'Registration failed'));
-            // Provide helpful error messages
-            const errorMessage = error.message || 'Unable to create account. Please try again.';
+            const errorMessage = error.message || 'Unable to create account.';
             if (errorMessage.includes('already exists')) {
-                toast.error('❌ This username or email is already taken. Please try another.');
-            } else if (errorMessage.includes('avatar')) {
-                toast.error('❌ Failed to upload avatar. Please try a different image.');
+                toast.error('❌ Username or email already taken.');
             } else {
                 toast.error(`❌ ${errorMessage}`);
             }
@@ -133,147 +101,121 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 px-4 py-8">
-            <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border dark:border-gray-700">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        VidNest
+        <div 
+            className="min-h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden font-['Outfit']"
+            style={{ backgroundImage: `url(${authBgBright})` }}
+        >
+            {/* Reduced blur and overlay opacity for cleaner look */}
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div>
+
+            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-center gap-10 lg:gap-20">
+                
+                {/* Left Side: Slogan (Animated) */}
+                <div className="hidden md:block w-full md:w-1/2 text-center md:text-left space-y-6">
+                    <h1 className="text-6xl lg:text-8xl font-bold text-white tracking-tighter leading-tight drop-shadow-2xl font-['Playfair_Display'] italic">
+                        <span className="block animate-fadeInUp">Sign up to</span>
+                        <span className="block animate-fadeInUp delay-200">get your</span>
+                        <span className="block animate-fadeInUp delay-400">ideas</span>
                     </h1>
-                    <p className="text-gray-600 mt-2">Create your account to get started.</p>
                 </div>
 
-                {/* Register Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Username */}
-                    <div>
-                        <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                            Username *
-                        </label>
+                {/* Right Side: Form Card (Removed border) */}
+                <div className="w-full md:w-[480px] bg-white rounded-[32px] shadow-2xl p-8">
+                    
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="flex justify-center mb-4">
+                            <div className="h-12 w-12 bg-red-600 rounded-full flex items-center justify-center">
+                                <span className="text-white font-bold text-2xl font-['Outfit']">V</span>
+                            </div>
+                        </div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2 font-['Playfair_Display']">Welcome to VidNest</h2>
+                        <p className="text-gray-500">Find new ideas to try</p>
+                    </div>
+
+                    {/* Register Form */}
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <Input
                             type="text"
-                            id="username"
                             name="username"
-                            placeholder="Choose a unique username"
+                            placeholder="Username"
                             value={formData.username}
                             onChange={handleChange}
                             required
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            disabled={loading}
                         />
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                            Email *
-                        </label>
                         <Input
                             type="email"
-                            id="email"
                             name="email"
-                            placeholder="your@email.com"
+                            placeholder="Email"
                             value={formData.email}
                             onChange={handleChange}
                             required
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            disabled={loading}
                         />
-                    </div>
-
-                    {/* Full Name */}
-                    <div>
-                        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                            Full Name *
-                        </label>
                         <Input
                             type="text"
-                            id="fullName"
                             name="fullName"
-                            placeholder="John Doe"
+                            placeholder="Full Name"
                             value={formData.fullName}
                             onChange={handleChange}
                             required
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            disabled={loading}
                         />
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                            Password *
-                        </label>
-                        <Input
+                         <Input
                             type="password"
-                            id="password"
                             name="password"
-                            placeholder="Minimum 8 characters"
+                            placeholder="Create a password"
                             value={formData.password}
                             onChange={handleChange}
                             required
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            disabled={loading}
                         />
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                            Confirm Password *
-                        </label>
-                        <Input
+                         <Input
                             type="password"
-                            id="confirmPassword"
                             name="confirmPassword"
-                            placeholder="Re-enter password"
+                            placeholder="Confirm password"
                             value={formData.confirmPassword}
                             onChange={handleChange}
                             required
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            disabled={loading}
                         />
+                        
+                        <div className="bg-gray-100 rounded-2xl p-2">
+                             <label className="block text-xs text-gray-500 px-2 mb-1">Avatar</label>
+                             <input
+                                type="file"
+                                name="avatar"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="w-full text-sm text-gray-500 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer"
+                                required
+                                disabled={loading}
+                            />
+                        </div>
+
+                        <Button
+                            type="submit"
+                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-full text-lg shadow-lg transform transition-transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed font-['Outfit']"
+                            disabled={loading}
+                        >
+                            {loading ? 'Creating Account...' : 'Continue'}
+                        </Button>
+                    </form>
+
+                    <div className="mt-6 text-center">
+                        <p className="text-gray-400 text-xs mb-4 px-8">
+                            By continuing, you agree to VidNest's <span className="font-bold text-gray-600 cursor-pointer">Terms of Service</span> and <span className="font-bold text-gray-600 cursor-pointer">Privacy Policy</span>
+                        </p>
+                        <p className="text-gray-500 text-sm">
+                            Already a member? <Link to="/login" className="text-gray-900 font-bold hover:underline">Log in</Link>
+                        </p>
                     </div>
-
-                    {/* Avatar Upload */}
-                    <div>
-                        <label htmlFor="avatar" className="block text-sm font-medium text-gray-700 mb-2">
-                            Avatar * (Profile Picture)
-                        </label>
-                        <input
-                            type="file"
-                            id="avatar"
-                            name="avatar"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Cover Image Upload (Optional) */}
-                    <div>
-                        <label htmlFor="coverImage" className="block text-sm font-medium text-gray-700 mb-2">
-                            Cover Image (Optional)
-                        </label>
-                        <input
-                            type="file"
-                            id="coverImage"
-                            name="coverImage"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    {/* Submit Button */}
-                    <Button
-                        type="submit"
-                        variant="default"
-                        className="w-full"
-                    >
-                        Create Account
-                    </Button>
-                </form>
-
-                {/* Login Link */}
-                <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600">
-                        Already have an account?{' '}
-                        <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
-                            Login here
-                        </Link>
-                    </p>
                 </div>
             </div>
         </div>
