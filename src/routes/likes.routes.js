@@ -12,6 +12,11 @@ const router = Router()
 // Like/unlike a video
 router.post("/video/:videoId", verifyJWT, toggleVideoLike)
 
+// Check if video is liked
+// Note: Frontend must use verifyJWT to check status for specific user
+import { getIsVideoLiked } from "../controllers/like.controller.js"
+router.get("/status/video/:videoId", verifyJWT, getIsVideoLiked)
+
 // Like/unlike a comment
 router.post("/comment/:commentId", verifyJWT, toggleCommentLike)
 

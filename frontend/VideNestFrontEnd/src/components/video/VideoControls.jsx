@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { ThumbsUp, Share2, Bell } from "lucide-react"
-import { toggleVideoLike } from "../../api/likeApi"
+import { toggleVideoLike, getIsVideoLiked } from "../../api/likeApi"
 import {
     toggleSubscription,
     getUserChannelSubscribers,
@@ -14,9 +14,20 @@ const VideoControls = ({ videoId, ownerId, video, onSubscribeToggle }) => {
     const [likesCount, setLikesCount] = useState(video?.likes || 0)
     const [subscribed, setSubscribed] = useState(false)
 
-    // We ideally need initial "isLiked" and "isSubscribed" state from backend.
-    // For now, we will handle interactions optimistically and assume false initially or passed props.
-    // Real implementation would fetch these statuses on mount.
+    // Check initial like status
+    useEffect(() => {
+        const fetchLikeStatus = async () => {
+            if (user && videoId) {
+                try {
+                    const data = await getIsVideoLiked(videoId)
+                    setLiked(data.isLiked)
+                } catch (error) {
+                    // Silent fail
+                }
+            }
+        }
+        fetchLikeStatus()
+    }, [videoId, user])
 
     const handleLike = async () => {
         if (!user) {
@@ -27,7 +38,12 @@ const VideoControls = ({ videoId, ownerId, video, onSubscribeToggle }) => {
         // Optimistic update
         const isLikedNow = !liked
         setLiked(isLikedNow)
-        setLikesCount((prev) => (isLikedNow ? prev + 1 : prev - 1))
+
+        // Prevent negative likes
+        setLikesCount((prev) => {
+            const newCount = isLikedNow ? prev + 1 : prev - 1
+            return Math.max(0, newCount)
+        })
 
         try {
             await toggleVideoLike(videoId)

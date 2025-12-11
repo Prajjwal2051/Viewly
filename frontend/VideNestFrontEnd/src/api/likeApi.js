@@ -18,3 +18,12 @@ export const getLikedVideos = async () => {
     const response = await apiClient.get("/like/videos")
     return response.data
 }
+
+/**
+ * GET LIKE STATUS
+ * Checks if current user liked a specific video
+ */
+export const getIsVideoLiked = async (videoId) => {
+    const response = await apiClient.get(`/like/status/video/${videoId}`)
+    return response.data
+}

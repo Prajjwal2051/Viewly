@@ -27,8 +27,8 @@ const CommentSection = ({ videoId }) => {
                 // Adjust based on actual API response structure (data.docs or data.comments)
                 // Our mock plan said response.data which is ApiResponse object
                 // The actual controller returns { docs: [], totalDocs: ... } inside data
-                setComments(data.data?.comments || [])
-                setHasMore(data.data?.hasNextPage)
+                setComments(data?.comments || [])
+                setHasMore(data?.hasNextPage)
             } catch (error) {
                 console.error("Failed to load comments", error)
             } finally {
@@ -50,10 +50,11 @@ const CommentSection = ({ videoId }) => {
 
         setSubmitting(true)
         try {
-            const response = await addComment(newComment, videoId)
+            const addedComment = await addComment(newComment, videoId)
             // Backend returns the created comment with populated owner
             // Add to top of list
-            setComments((prev) => [response.data, ...prev])
+            // FIXED: addedComment is already the unwrapped data from api helper
+            setComments((prev) => [addedComment, ...prev])
             setNewComment("")
             toast.success("Comment added")
         } catch (error) {
@@ -114,49 +115,51 @@ const CommentSection = ({ videoId }) => {
                         <Loader2 className="animate-spin text-red-600" />
                     </div>
                 ) : (
-                    comments.map((comment) => (
-                        <div key={comment._id} className="flex gap-4 group">
-                            <img
-                                src={
-                                    comment.ownerDetails?.avatar ||
-                                    "https://via.placeholder.com/40"
-                                }
-                                alt={comment.ownerDetails?.username}
-                                className="w-10 h-10 rounded-full object-cover"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-semibold text-white text-sm">
-                                        @{comment.ownerDetails?.username}
-                                    </span>
-                                    <span className="text-gray-500 text-xs">
-                                        {new Date(
-                                            comment.createdAt
-                                        ).toLocaleDateString()}
-                                    </span>
-                                </div>
-                                <p className="text-gray-300 text-sm">
-                                    {comment.content}
-                                </p>
+                    comments.map((comment) => {
+                        const owner = comment.ownerDetails || comment.owner
+                        return (
+                            <div key={comment._id} className="flex gap-4 group">
+                                <img
+                                    src={
+                                        owner?.avatar ||
+                                        "https://via.placeholder.com/40"
+                                    }
+                                    alt={owner?.username}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                />
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-semibold text-white text-sm">
+                                            @{owner?.username}
+                                        </span>
+                                        <span className="text-gray-500 text-xs">
+                                            {new Date(
+                                                comment.createdAt
+                                            ).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <p className="text-gray-300 text-sm">
+                                        {comment.content}
+                                    </p>
 
-                                {/* ACTIONS (Like / Delete) */}
-                                <div className="flex items-center gap-4 mt-2">
-                                    {/* Owner controls */}
-                                    {user?._id ===
-                                        comment.ownerDetails?._id && (
-                                        <button
-                                            onClick={() =>
-                                                handleDelete(comment._id)
-                                            }
-                                            className="text-gray-500 hover:text-red-500 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
+                                    {/* ACTIONS (Like / Delete) */}
+                                    <div className="flex items-center gap-4 mt-2">
+                                        {/* Owner controls */}
+                                        {user?._id === owner?._id && (
+                                            <button
+                                                onClick={() =>
+                                                    handleDelete(comment._id)
+                                                }
+                                                className="text-gray-500 hover:text-red-500 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                Delete
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
+                        )
+                    })
                 )}
             </div>
         </div>
