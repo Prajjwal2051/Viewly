@@ -28,6 +28,7 @@ import { Upload, X, Film, Image as ImageIcon, Loader2 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 import { uploadVideo } from "../api/videoApi"
+import Input from "../components/layout/ui/Input"
 
 const UploadPage = () => {
     const navigate = useNavigate()
@@ -52,7 +53,7 @@ const UploadPage = () => {
         const file = e.target.files[0]
         if (file) {
             setValue(field, file)
-            
+
             // Create preview URL
             const url = URL.createObjectURL(file)
             if (field === "videoFile") setVideoPreview(url)
@@ -64,11 +65,11 @@ const UploadPage = () => {
         try {
             setIsLoading(true)
             const formData = new FormData()
-            
+
             // Append files (critical: must match backend expectations)
             formData.append("videoFile", data.videoFile)
             formData.append("thumbnail", data.thumbnail)
-            
+
             // Append metadata
             formData.append("title", data.title)
             formData.append("description", data.description)
@@ -78,7 +79,7 @@ const UploadPage = () => {
             formData.append("tags", data.tags)
 
             await uploadVideo(formData)
-            
+
             toast.success("Video uploaded successfully!")
             navigate("/") // Redirect to home after success
         } catch (error) {
@@ -100,19 +101,28 @@ const UploadPage = () => {
                     {/* LEFT COLUMN: File Uploads */}
                     <div className="space-y-6">
                         {/* Video Upload Area */}
-                        <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                            errors.videoFile ? "border-red-500 bg-red-50 dark:bg-red-900/10" : "border-gray-300 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400"
-                        }`}>
+                        <div
+                            className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                                errors.videoFile
+                                    ? "border-red-500 bg-red-50 dark:bg-red-900/10"
+                                    : "border-gray-300 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400"
+                            }`}
+                        >
                             <input
                                 type="file"
                                 id="video-upload"
                                 accept="video/*"
                                 className="hidden"
-                                onChange={(e) => handleFileChange(e, "videoFile")}
+                                onChange={(e) =>
+                                    handleFileChange(e, "videoFile")
+                                }
                             />
-                            
+
                             {!videoPreview ? (
-                                <label htmlFor="video-upload" className="cursor-pointer flex flex-col items-center">
+                                <label
+                                    htmlFor="video-upload"
+                                    className="cursor-pointer flex flex-col items-center"
+                                >
                                     <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-4 text-purple-600 dark:text-purple-400">
                                         <Upload size={32} />
                                     </div>
@@ -125,7 +135,11 @@ const UploadPage = () => {
                                 </label>
                             ) : (
                                 <div className="relative rounded-lg overflow-hidden bg-black">
-                                    <video src={videoPreview} className="w-full h-48 object-contain" controls />
+                                    <video
+                                        src={videoPreview}
+                                        className="w-full h-48 object-contain"
+                                        controls
+                                    />
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -139,24 +153,35 @@ const UploadPage = () => {
                                 </div>
                             )}
                             {errors.videoFile && (
-                                <p className="text-red-500 text-sm mt-2">Video is required</p>
+                                <p className="text-red-500 text-sm mt-2">
+                                    Video is required
+                                </p>
                             )}
                         </div>
 
                         {/* Thumbnail Upload Area */}
-                        <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
-                            errors.thumbnail ? "border-red-500" : "border-gray-300 dark:border-gray-700 hover:border-purple-500"
-                        }`}>
+                        <div
+                            className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+                                errors.thumbnail
+                                    ? "border-red-500"
+                                    : "border-gray-300 dark:border-gray-700 hover:border-purple-500"
+                            }`}
+                        >
                             <input
                                 type="file"
                                 id="thumbnail-upload"
                                 accept="image/*"
                                 className="hidden"
-                                onChange={(e) => handleFileChange(e, "thumbnail")}
+                                onChange={(e) =>
+                                    handleFileChange(e, "thumbnail")
+                                }
                             />
-                            
+
                             {!thumbnailPreview ? (
-                                <label htmlFor="thumbnail-upload" className="cursor-pointer flex flex-col items-center">
+                                <label
+                                    htmlFor="thumbnail-upload"
+                                    className="cursor-pointer flex flex-col items-center"
+                                >
                                     <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 text-gray-600 dark:text-gray-400">
                                         <ImageIcon size={24} />
                                     </div>
@@ -166,7 +191,11 @@ const UploadPage = () => {
                                 </label>
                             ) : (
                                 <div className="relative rounded-lg overflow-hidden">
-                                    <img src={thumbnailPreview} alt="Thumbnail preview" className="w-full h-40 object-cover" />
+                                    <img
+                                        src={thumbnailPreview}
+                                        alt="Thumbnail preview"
+                                        className="w-full h-40 object-cover"
+                                    />
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -180,7 +209,9 @@ const UploadPage = () => {
                                 </div>
                             )}
                             {errors.thumbnail && (
-                                <p className="text-red-500 text-sm mt-2">Thumbnail is required</p>
+                                <p className="text-red-500 text-sm mt-2">
+                                    Thumbnail is required
+                                </p>
                             )}
                         </div>
                     </div>
@@ -193,14 +224,19 @@ const UploadPage = () => {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Video Title
                                 </label>
-                                <input
-                                    {...register("title", { required: "Title is required" })}
+
+                                <Input
+                                    {...register("title", {
+                                        required: "Title is required",
+                                    })}
                                     type="text"
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                                    className="bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl py-3 px-4 text-gray-900 dark:text-white placeholder-gray-500 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                                     placeholder="Enter generic title..."
                                 />
                                 {errors.title && (
-                                    <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+                                    <p className="text-red-500 text-sm mt-1">
+                                        {errors.title.message}
+                                    </p>
                                 )}
                             </div>
 
@@ -209,14 +245,19 @@ const UploadPage = () => {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Description
                                 </label>
+
                                 <textarea
-                                    {...register("description", { required: "Description is required" })}
+                                    {...register("description", {
+                                        required: "Description is required",
+                                    })}
                                     rows="4"
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none resize-none"
+                                    className="w-full bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl py-3 px-4 text-gray-900 dark:text-white placeholder-gray-500 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all shadow-inner font-['Outfit'] outline-none resize-none"
                                     placeholder="Tell viewers about your video..."
                                 />
                                 {errors.description && (
-                                    <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
+                                    <p className="text-red-500 text-sm mt-1">
+                                        {errors.description.message}
+                                    </p>
                                 )}
                             </div>
 
@@ -226,26 +267,34 @@ const UploadPage = () => {
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Category
                                     </label>
+
                                     <select
                                         {...register("category")}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                                        className="w-full bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl py-3 px-4 text-gray-900 dark:text-white placeholder-gray-500 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all shadow-inner font-['Outfit'] outline-none"
                                     >
                                         <option value="General">General</option>
                                         <option value="Music">Music</option>
                                         <option value="Gaming">Gaming</option>
-                                        <option value="Education">Education</option>
-                                        <option value="Technology">Technology</option>
-                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Education">
+                                            Education
+                                        </option>
+                                        <option value="Technology">
+                                            Technology
+                                        </option>
+                                        <option value="Entertainment">
+                                            Entertainment
+                                        </option>
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Tags
                                     </label>
-                                    <input
+
+                                    <Input
                                         {...register("tags")}
                                         type="text"
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                                        className="bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl py-3 px-4 text-gray-900 dark:text-white placeholder-gray-500 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                                         placeholder="Comma separated..."
                                     />
                                 </div>
@@ -259,7 +308,10 @@ const UploadPage = () => {
                             >
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="animate-spin" size={20} />
+                                        <Loader2
+                                            className="animate-spin"
+                                            size={20}
+                                        />
                                         <span>Uploading...</span>
                                     </>
                                 ) : (

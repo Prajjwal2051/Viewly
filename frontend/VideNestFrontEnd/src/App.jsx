@@ -91,16 +91,16 @@ function App() {
                         }
                     />
 
-                <Route
-                    path="/upload"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <UploadPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
+                    <Route
+                        path="/upload"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <UploadPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
 
                     {/* Additional protected routes - uncomment when pages are created
                 <Route
