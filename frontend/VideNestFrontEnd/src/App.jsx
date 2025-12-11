@@ -15,6 +15,7 @@ import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import SettingsPage from "./pages/SettingsPage"
 import UploadPage from "./pages/UploadPage"
+import VideoPlayerPage from "./pages/VideoPlayerPage"
 import NotFoundPage from "./pages/NotFoundPage"
 
 // Context
@@ -97,6 +98,17 @@ function App() {
                             <ProtectedRoute>
                                 <MainLayout>
                                     <UploadPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/video/:videoId"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <VideoPlayerPage />
                                 </MainLayout>
                             </ProtectedRoute>
                         }
