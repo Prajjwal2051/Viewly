@@ -67,7 +67,7 @@ const UploadPage = () => {
             const formData = new FormData()
 
             // Append files (critical: must match backend expectations)
-            formData.append("videoFile", data.videoFile)
+            formData.append("video", data.videoFile)
             formData.append("thumbnail", data.thumbnail)
 
             // Append metadata
