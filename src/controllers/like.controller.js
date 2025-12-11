@@ -40,24 +40,43 @@ import mongoose from "mongoose"
  * @access Private (requires authentication)
  */
 const toggleVideoLike = asyncHandler(async (req, res) => {
+    console.log("\n" + "=".repeat(60));
+    console.log("👍 TOGGLE VIDEO LIKE REQUEST");
+    console.log("=".repeat(60));
+
     // STEP 1: Extract video ID from URL parameters and user ID from auth middleware
     const { videoId } = req.params
     const userId = req.user._id
 
+    console.log("\n[STEP 1] 📝 Extracting Request Data");
+    console.log("   ➜ Video ID:", videoId || "(not provided)");
+    console.log("   ➜ User ID:", userId);
+    console.log("   ➜ User:", req.user?.username);
+
+    console.log("\n[STEP 2] ✅ Validating Video ID");
     // STEP 2: Validate video ID is provided and is valid MongoDB ObjectId
     if (!videoId) {
+        console.log("   ❌ Video ID not provided");
         throw new ApiError(400, "VideoId not provided")
     }
+    console.log("   ✓ Video ID provided");
+
     if (!mongoose.isValidObjectId(videoId)) {
+        console.log("   ❌ Invalid MongoDB ObjectId format");
         throw new ApiError(400, "Invalid video Id provided")
     }
+    console.log("   ✓ Video ID format is valid");
 
+    console.log("\n[STEP 3] 🎬 Verifying Video Exists");
     // STEP 3: Verify video exists in database
     const exisitingVideo = await Video.findById(videoId)
     if (!exisitingVideo) {
+        console.log("   ❌ Video not found in database");
         throw new ApiError(404, "Video not found")
     }
+    console.log("   ✓ Video found:", exisitingVideo.title);
 
+    console.log("\n[STEP 4] 🔍 Checking Existing Like");
     // STEP 4: Check if user has already liked this video
     // Query for existing like document with this video ID and user ID
     const existingLike = await like.findOne({
@@ -65,19 +84,48 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
         likedBy: userId,
     })
 
+    if (existingLike) {
+        console.log("   ➜ Status: Already liked - will UNLIKE");
+    } else {
+        console.log("   ➜ Status: Not liked - will LIKE");
+    }
+
+    console.log("\n[STEP 5] 💾 Processing Like Toggle");
     // STEP 5: Toggle logic - remove like if exists, add if doesn't exist
     if (existingLike) {
+        console.log("   ➜ Removing existing like...");
         // User already liked - remove the like (unlike)
         await like.deleteOne({ _id: existingLike._id })
+        console.log("   ✓ Like removed successfully");
+
+        console.log("\n" + "=".repeat(60));
+        console.log("✅ VIDEO UNLIKED");
+        console.log("=".repeat(60));
+        console.log("   👤 User:", req.user.username);
+        console.log("   🎬 Video:", exisitingVideo.title);
+        console.log("   👍 Status: Unliked");
+        console.log("=".repeat(60) + "\n");
+
         return res.status(200).json(
             new ApiResponse(200, { isliked: false }, "Like removed successfully")
         )
     } else {
+        console.log("   ➜ Creating new like...");
         // User hasn't liked yet - create new like
         await like.create({
             video: videoId,
             likedBy: userId,
         })
+        console.log("   ✓ Like created successfully");
+
+        console.log("\n" + "=".repeat(60));
+        console.log("✅ VIDEO LIKED");
+        console.log("=".repeat(60));
+        console.log("   👤 User:", req.user.username);
+        console.log("   🎬 Video:", exisitingVideo.title);
+        console.log("   👍 Status: Liked");
+        console.log("=".repeat(60) + "\n");
+
         return res.status(200).json(
             new ApiResponse(200, { isliked: true }, "Video liked successfully")
         )
@@ -111,30 +159,54 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
  * @access Private (requires authentication)
  */
 const toggleCommentLike = asyncHandler(async (req, res) => {
+    console.log("\n" + "=".repeat(60));
+    console.log("👍 TOGGLE COMMENT LIKE REQUEST");
+    console.log("=".repeat(60));
+
     // STEP 1: Extract comment ID from URL parameters and user ID from auth middleware
     const { commentId } = req.params
     const userId = req.user._id
 
+    console.log("\n[STEP 1] 📝 Extracting Request Data");
+    console.log("   ➜ Comment ID:", commentId || "(not provided)");
+    console.log("   ➜ User:", req.user?.username);
+
+    console.log("\n[STEP 2] ✅ Validating Comment ID");
     // STEP 2: Validate comment ID is provided and is valid MongoDB ObjectId
     if (!commentId) {
+        console.log("   ❌ Comment ID not provided");
         throw new ApiError(400, "Comment id not provided")
     }
+    console.log("   ✓ Comment ID provided");
+
     if (!mongoose.isValidObjectId(commentId)) {
+        console.log("   ❌ Invalid MongoDB ObjectId format");
         throw new ApiError(400, "Invalid comment id")
     }
+    console.log("   ✓ Comment ID format is valid");
 
+    console.log("\n[STEP 3] 💬 Verifying Comment Exists");
     // STEP 3: Verify comment exists in database
     const existingComment = await Comment.findById(commentId)
     if (!existingComment) {
+        console.log("   ❌ Comment not found in database");
         throw new ApiError(404, "Comment not found")
     }
+    console.log("   ✓ Comment found:", `"${existingComment.content.substring(0, 50)}${existingComment.content.length > 50 ? '...' : ''}"`);
 
+    console.log("\n[STEP 4] 🔍 Checking Existing Like");
     // STEP 4: Check if user has already liked this comment
     // Query for existing like document with this comment ID and user ID
     const existingLike = await like.findOne({
         comment: commentId,
         likedBy: userId,
     })
+
+    if (existingLike) {
+        console.log("   ➜ Status: Already liked - will UNLIKE");
+    } else {
+        console.log("   ➜ Status: Not liked - will LIKE");
+    }
 
     // STEP 5: Toggle logic - remove like if exists, add if doesn't exist
     if (existingLike) {

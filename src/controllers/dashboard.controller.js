@@ -46,35 +46,57 @@ import { subscription } from "../models/subscription.model.js"
  * @returns {Object} ApiResponse with comprehensive channel statistics
  */
 const getChannelStats = asyncHandler(async (req, res) => {
+    console.log("\n" + "=".repeat(60));
+    console.log("📊 GET CHANNEL STATISTICS REQUEST");
+    console.log("=".repeat(60));
+
     // STEP 1: Extract channel ID and authenticated user ID
     const { channelId } = req.params
     const userId = req.user._id
 
+    console.log("\n[STEP 1] 📝 Extracting Request Data");
+    console.log("   ➜ Channel ID:", channelId);
+    console.log("   ➜ User ID:", userId);
+    console.log("   ➜ User:", req.user?.username);
+
+    console.log("\n[STEP 2] ✅ Validating User ID");
     // STEP 2: Validate user ID exists
     if (!userId) {
+        console.log("   ❌ User ID not provided");
         throw new ApiError(400, "User ID not provided")
     }
-    
+    console.log("   ✓ User ID exists");
+
     // STEP 3: Validate user ID format
     if (!mongoose.isValidObjectId(userId)) {
+        console.log("   ❌ Invalid MongoDB ObjectId format");
         throw new ApiError(400, "Invalid User ID provided")
     }
-    
+    console.log("   ✓ User ID format is valid");
+
+    console.log("\n[STEP 3] 👤 Verifying Channel Exists");
     // STEP 4: Verify channel exists
     const channel = await User.findById(channelId)
     if (!channel) {
+        console.log("   ❌ Channel not found in database");
         throw new ApiError(404, "Channel does not exist")
     }
-    
+    console.log("   ✓ Channel found:", channel.username);
+
+    console.log("\n[STEP 4] 🔒 Verifying Authorization");
     // STEP 5: Check authorization - only channel owner can view stats
     if (channelId !== userId.toString()) {
+        console.log("   ❌ User is not the channel owner");
         throw new ApiError(403, "You are not authorized to view stats of this channel")
     }
+    console.log("   ✓ User authorized to view channel statistics");
+
+    console.log("\n[STEP 5] 📊 Calculating Channel Statistics...");
 
     // ============================================
     // BASIC STATISTICS
     // ============================================
-    
+
     // STEP 6: Count total published videos
     const totalVideos = await Video.countDocuments({
         owner: channelId,
@@ -139,7 +161,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
     // ============================================
     // GROWTH METRICS
     // ============================================
-    
+
     // STEP 10: Calculate views growth by month for historical trends
     // Groups videos by month and sums their views
     const viewsGrowth = await Video.aggregate([
@@ -255,13 +277,13 @@ const getChannelStats = asyncHandler(async (req, res) => {
     const subscriberGrowthPercentage =
         newSubscribersPrevious30Days > 0
             ? ((newSubscribersLast30Days - newSubscribersPrevious30Days) /
-                  newSubscribersPrevious30Days) * 100
+                newSubscribersPrevious30Days) * 100
             : 0
 
     // ============================================
     // ADDITIONAL METRICS
     // ============================================
-    
+
     // STEP 19: Calculate average views per video
     const averageViewsPerVideo = totalVideos > 0 ? totalViews / totalVideos : 0
 
@@ -376,50 +398,50 @@ const getChannelStats = asyncHandler(async (req, res) => {
 const getChannelVideos = asyncHandler(async (req, res) => {
     // STEP 1: Extract channel ID from URL parameters
     const { channelId } = req.params
-    
+
     // STEP 2: Extract and parse pagination parameters
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
-    
+
     // STEP 3: Extract sorting parameters
     const sortBy = req.query.sortBy || 'createdAt'  // Field to sort by
     const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1  // Sort direction
-    
+
     // STEP 4: Validate channel ID is provided
     if (!channelId) {
         throw new ApiError(400, "Channel ID not provided")
     }
-    
+
     // STEP 5: Validate channel ID format
     if (!mongoose.isValidObjectId(channelId)) {
         throw new ApiError(400, "Invalid Channel ID")
     }
-    
+
     // STEP 6: Verify channel exists in database
     const channel = await User.findById(channelId)
     if (!channel) {
         throw new ApiError(404, "Channel not found")
     }
-    
+
     // STEP 7: Check if user is viewing their own channel
     // Owner can see all videos (including unpublished)
     // Use optional chaining since auth is optional for this route
     const isOwnChannel = req.user?._id && channelId === req.user._id.toString()
-    
+
     // STEP 8: Build filter object based on ownership
     const filter = { owner: channelId }
-    
+
     // STEP 9: Add privacy filter for non-owners
     // Only show published videos if not the channel owner
     if (!isOwnChannel) {
         filter.isPublished = true
     }
-    
+
     // STEP 10: Create sort object dynamically
     const sortOptions = {}
     sortOptions[sortBy] = sortOrder
-    
+
     // STEP 11: Fetch videos with pagination, sorting, and population
     const videos = await Video.find(filter)
         .sort(sortOptions)                    // Apply sorting
@@ -427,11 +449,11 @@ const getChannelVideos = asyncHandler(async (req, res) => {
         .limit(limit)                          // Limit results per page
         .select('title description thumbnail duration views createdAt isPublished')
         .populate('owner', 'username fullName avatar')  // Populate owner details
-    
+
     // STEP 12: Get total count for pagination metadata
     const totalVideos = await Video.countDocuments(filter)
     const totalPages = Math.ceil(totalVideos / limit)
-    
+
     // STEP 13: Send success response with videos and pagination
     return res.status(200).json(
         new ApiResponse(200, {

@@ -33,32 +33,58 @@ import mongoose, { mongo } from "mongoose"
  * @access Private (requires authentication)
  */
 const addComment = asyncHandler(async (req, res) => {
+    console.log("\n" + "=".repeat(60));
+    console.log("💬 ADD COMMENT REQUEST");
+    console.log("=".repeat(60));
+
     // STEP 1: Extract comment data from request body
     const { content, videoId } = req.body
 
+    console.log("\n[STEP 1] 📝 Extracting Comment Data");
+    console.log("   ➜ Video ID:", videoId || "(not provided)");
+    console.log("   ➜ Comment Content:", content ? `"${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"` : "(not provided)");
+    console.log("   ➜ Content Length:", content ? content.length : 0, "characters");
+    console.log("   ➜ User:", req.user?.username || "Unknown");
+
+    console.log("\n[STEP 2] ✅ Validating Comment Content");
     // STEP 2: Validate comment content - must not be empty and within character limit
     if (!content || content.trim() === "") {
+        console.log("   ❌ Validation Failed: Comment content is empty");
         throw new ApiError(400, "Comment not Provided")
     }
+    console.log("   ✓ Content is not empty");
+
     if (content.trim().length > 500) {
+        console.log("   ❌ Validation Failed: Comment exceeds 500 character limit (", content.trim().length, "characters)");
         throw new ApiError(400, "Comment cannot be longer than 500 characters")
     }
+    console.log("   ✓ Content length within limit");
 
+    console.log("\n[STEP 3] ✅ Validating Video ID");
     // STEP 3: Validate video ID - must be provided and valid MongoDB ObjectId
     if (!videoId || !mongoose.isValidObjectId(videoId)) {
+        console.log("   ❌ Invalid or missing Video ID");
         throw new ApiError(400, "Valid Video ID required")
     }
+    console.log("   ✓ Video ID format is valid");
 
+    console.log("\n[STEP 4] 🎬 Verifying Video Exists");
     // STEP 4: Verify video exists in database and is published
     // Users can only comment on published videos
     const videoExists = await Video.findById(videoId)
     if (!videoExists) {
+        console.log("   ❌ Video not found in database");
         throw new ApiError(404, "Video not found")
     }
+    console.log("   ✓ Video found:", videoExists.title);
+
     if (!videoExists.isPublished) {
+        console.log("   ❌ Video is not published - comments not allowed");
         throw new ApiError(403, "Cannot comment on unpublished video")
     }
+    console.log("   ✓ Video is published - comments allowed");
 
+    console.log("\n[STEP 5] 💾 Creating Comment in Database");
     // STEP 5: Create comment document in database
     // owner comes from req.user._id (added by auth middleware)
     // parentComment is null for top-level comments (not replies)
@@ -72,14 +98,28 @@ const addComment = asyncHandler(async (req, res) => {
 
     // STEP 6: Validate comment creation was successful
     if (!newComment) {
+        console.log("   ❌ Failed to create comment document");
         throw new ApiError(500, "Failed to create comment")
     }
+    console.log("   ✓ Comment created successfully");
+    console.log("   ➜ Comment ID:", newComment._id);
 
+    console.log("\n[STEP 6] 🔄 Fetching Complete Comment Details");
     // STEP 7: Fetch created comment with populated owner details
     // Populate owner field with username, fullname, and avatar for response
     const createdComment = await Comment
         .findById(newComment._id)
         .populate("owner", "username fullname avatar")
+    console.log("   ✓ Owner details populated");
+
+    console.log("\n" + "=".repeat(60));
+    console.log("✅ COMMENT ADDED SUCCESSFULLY");
+    console.log("=".repeat(60));
+    console.log("   💬 Comment ID:", newComment._id);
+    console.log("   👤 User:", req.user.username);
+    console.log("   🎬 Video:", videoExists.title);
+    console.log("   📏 Length:", content.trim().length, "characters");
+    console.log("=".repeat(60) + "\n");
 
     // STEP 8: Send success response with comment data
     return res
@@ -120,20 +160,35 @@ const addComment = asyncHandler(async (req, res) => {
  * @access Public
  */
 const getAllComment = asyncHandler(async (req, res) => {
+    console.log("\n" + "=".repeat(60));
+    console.log("📋 GET ALL COMMENTS REQUEST");
+    console.log("=".repeat(60));
+
     // STEP 1: Extract video ID from URL parameters and pagination from query
     const { videoId } = req.params
     const { page = 1, limit = 10 } = req.query
 
+    console.log("\n[STEP 1] 📄 Processing Request Parameters");
+    console.log("   ➜ Video ID:", videoId);
+    console.log("   ➜ Page:", page);
+    console.log("   ➜ Limit:", limit);
+
+    console.log("\n[STEP 2] ✅ Validating Video ID");
     // STEP 2: Validate video ID - must be provided and valid MongoDB ObjectId
     if (!videoId || !mongoose.isValidObjectId(videoId)) {
+        console.log("   ❌ Invalid or missing Video ID");
         throw new ApiError(400, "Valid Video ID required")
     }
+    console.log("   ✓ Video ID format is valid");
 
+    console.log("\n[STEP 3] 🎬 Verifying Video Exists");
     // STEP 3: Verify video exists in database
     const videoExists = await Video.findById(videoId)
     if (!videoExists) {
+        console.log("   ❌ Video not found in database");
         throw new ApiError(404, "Video not found")
     }
+    console.log("   ✓ Video found:", videoExists.title);
 
     // STEP 4: Build MongoDB aggregation pipeline
     // This efficiently fetches comments with owner details in a single query
@@ -324,54 +379,54 @@ const updateComment = asyncHandler(async (req, res) => {
  * @route DELETE /api/v1/comments/:commentId
  * @access Private (requires authentication and ownership)
  */
-const deleteComment = asyncHandler(async (req,res)=>{
+const deleteComment = asyncHandler(async (req, res) => {
     // STEP 1: Extract comment ID from URL parameters
-    const {commentId}=req.params
-    
+    const { commentId } = req.params
+
     // STEP 2: Validate comment ID is provided
-    if(!commentId){
+    if (!commentId) {
         console.log("comment id not provided")
-        throw new ApiError(400,"comment id is not provided")
+        throw new ApiError(400, "comment id is not provided")
     }
-    
+
     // STEP 3: Validate comment ID is a valid MongoDB ObjectId
-    if(!mongoose.isValidObjectId(commentId)){
+    if (!mongoose.isValidObjectId(commentId)) {
         console.log("please peovide a valid comment id")
-        throw new ApiError(400,"Provide a valid comment id")
+        throw new ApiError(400, "Provide a valid comment id")
     }
 
     // STEP 4: Verify comment exists in database
-    const existingComment=await Comment.findById(commentId)
-    if(!existingComment){
+    const existingComment = await Comment.findById(commentId)
+    if (!existingComment) {
         console.log("comment does not exists")
-        throw new ApiError(404,"comment not found for deletion")
+        throw new ApiError(404, "comment not found for deletion")
     }
-    
+
     // STEP 5: Check comment ownership - only author can delete their comment
     // This prevents users from deleting other people's comments
-    if(existingComment.owner.toString() !== req.user._id.toString()){
+    if (existingComment.owner.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to delete this comment")
     }
-    
+
     // STEP 6: Delete comment from database
-    const deletedComment=await Comment.findByIdAndDelete(commentId)
-    
+    const deletedComment = await Comment.findByIdAndDelete(commentId)
+
     // STEP 7: Validate deletion was successful
-    if(!deletedComment){
+    if (!deletedComment) {
         console.log("comment unable to delete")
-        throw new ApiError(500,"Comment unable to delete from DB")
+        throw new ApiError(500, "Comment unable to delete from DB")
     }
-    
+
     // STEP 8: Send success response with deleted comment ID
-     return res
+    return res
         .status(200)
-        .json(new ApiResponse(200,commentId,"Comment sucessfully deleted"))
+        .json(new ApiResponse(200, commentId, "Comment sucessfully deleted"))
 })
 
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
-export { 
+export {
     addComment,         // POST /comments - Add comment to a video
     getAllComment,      // GET /comments/:videoId - Get all comments for a video (paginated)
     updateComment,      // PATCH /comments/:commentId - Update user's own comment

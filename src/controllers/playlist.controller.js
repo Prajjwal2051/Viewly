@@ -52,6 +52,10 @@ import mongoose, { mongo } from "mongoose"
  * @returns {Object} ApiResponse with created playlist data
  */
 const createPlayList = asyncHandler(async (req, res) => {
+    console.log("\n" + "=".repeat(60));
+    console.log("📜 CREATE PLAYLIST REQUEST");
+    console.log("=".repeat(60));
+
     // STEP 1: Extract playlist data from request body
     // name: Playlist title (required)
     // description: Optional description of playlist content
@@ -62,23 +66,41 @@ const createPlayList = asyncHandler(async (req, res) => {
     // Populated by auth middleware after JWT verification
     const userId = req.user._id
 
+    console.log("\n[STEP 1] 📝 Extracting Playlist Data");
+    console.log("   ➜ Name:", name || "(not provided)");
+    console.log("   ➜ Description:", description ? `"${description.substring(0, 50)}${description.length > 50 ? '...' : ''}"` : "(not provided)");
+    console.log("   ➜ Visibility:", isPublic ? "Public" : "Private");
+    console.log("   ➜ User:", req.user?.username);
+
+    console.log("\n[STEP 2] ✅ Validating Playlist Name");
     // STEP 3: Validate playlist name is provided and not empty
     // Trim whitespace to prevent names with only spaces
     if (!name || name.trim() === "") {
+        console.log("   ❌ Playlist name is required");
         throw new ApiError(400, "Playlist name is required")
     }
+    console.log("   ✓ Name is provided");
 
     // STEP 4: Validate playlist name length
     // Prevents excessively long names that could break UI
     // Note: .length is a property, not a method (removed parentheses)
     if (name.trim().length > 100) {
+        console.log("   ❌ Name exceeds 100 character limit (", name.trim().length, "characters)");
         throw new ApiError(400, "Name cannot be more than 100 characters")
     }
+    console.log("   ✓ Name length is valid (", name.trim().length, "characters)");
 
+    console.log("\n[STEP 3] ✅ Validating Description");
     // STEP 5: Validate description length (if provided)
     // Description is optional, but if provided must be under 500 chars
     if (description && description.trim().length > 500) {
+        console.log("   ❌ Description exceeds 500 character limit");
         throw new ApiError(400, "Description cannot exceed 500 characters")
+    }
+    if (description) {
+        console.log("   ✓ Description length is valid");
+    } else {
+        console.log("   ➜ No description provided");
     }
 
     // STEP 6: Create new playlist document in database
@@ -351,7 +373,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     // STEP 1: Extract playlist ID from URL parameters
     // Example: /api/v1/playlists/507f1f77bcf86cd799439011
     const { playlistId } = req.params
-    
+
     // STEP 2: Get authenticated user ID (if user is logged in)
     // May be undefined if user is not authenticated
     // Used later for privacy checks on private playlists
@@ -361,13 +383,13 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     if (!playlistId) {
         throw new ApiError(400, "Playlist ID not provided")
     }
-    
+
     // STEP 4: Validate playlist ID format
     // MongoDB ObjectIds must be 24-character hex strings
     if (!mongoose.isValidObjectId(playlistId)) {
         throw new ApiError(400, "Invalid Playlist ID provided")
     }
-    
+
     // STEP 5: Fetch playlist from database with nested population
     // WHY NESTED POPULATE?
     // We need complete information for displaying the playlist:
@@ -388,13 +410,13 @@ const getPlaylistById = asyncHandler(async (req, res) => {
                 select: "username fullName avatar",  // Select specific owner fields
             },
         })
-    
+
     // STEP 6: Verify playlist exists
     // If playlist ID is valid but doesn't exist in database
     if (!existsPlaylist) {
         throw new ApiError(404, "Playlist not found")
     }
-    
+
     // STEP 7: Enforce privacy rules for private playlists
     // Private playlists should only be accessible to their owners
     if (!existsPlaylist.isPublic) {
@@ -403,7 +425,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         if (!req.user) {
             throw new ApiError(401, "Authentication required to view this playlist")
         }
-        
+
         // SUBSTEP 7B: Check if authenticated user is the playlist owner
         // Compare playlist owner ID with requesting user ID
         // toString() ensures proper comparison of ObjectIds
@@ -411,7 +433,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
             throw new ApiError(403, "You don't have permission to view this playlist")
         }
     }
-    
+
     // STEP 8: Format playlist response with video count
     // Add computed field for total number of videos
     // toObject() converts Mongoose document to plain JavaScript object
@@ -451,59 +473,59 @@ const getPlaylistById = asyncHandler(async (req, res) => {
  * @body {string} videoId - MongoDB ObjectId of the video to add
  * @returns {Object} ApiResponse with updated playlist data
  */
-const addVideoToPlaylist = asyncHandler(async(req, res) => {
+const addVideoToPlaylist = asyncHandler(async (req, res) => {
     // STEP 1: Extract playlist and video IDs from request body
-    const { playlistId} = req.params.playlistId
-    const {videoId}=req.params.videoId
+    const { playlistId } = req.params.playlistId
+    const { videoId } = req.params.videoId
 
     // STEP 2: Validate playlist ID
-    if(!playlistId){
+    if (!playlistId) {
         throw new ApiError(400, "Playlist ID not provided")
     }
-    if(!mongoose.isValidObjectId(playlistId)){
+    if (!mongoose.isValidObjectId(playlistId)) {
         throw new ApiError(400, "Invalid Playlist ID provided")
     }
-    
+
     // STEP 3: Validate video ID
-    if(!videoId){
+    if (!videoId) {
         throw new ApiError(400, "Video ID not provided")
     }
-    if(!mongoose.isValidObjectId(videoId)){
+    if (!mongoose.isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid Video ID provided")
     }
-    
+
     // STEP 4: Fetch and verify playlist exists
     const existsPlaylist = await Playlist.findById(playlistId)
-    if(!existsPlaylist){
+    if (!existsPlaylist) {
         throw new ApiError(404, "Playlist not found")
     }
-    
+
     // STEP 5: Check permissions for private playlists
     // Only owner can add videos to their private playlists
-    if(!existsPlaylist.isPublic){
-        if(!req.user){
+    if (!existsPlaylist.isPublic) {
+        if (!req.user) {
             throw new ApiError(401, "Authentication required to add video to this playlist")
         }
-        if(existsPlaylist.owner.toString() !== req.user._id.toString()){
+        if (existsPlaylist.owner.toString() !== req.user._id.toString()) {
             throw new ApiError(403, "You don't have permission to add video to this playlist")
         }
     }
 
     // STEP 6: Fetch and verify video exists
     const existingVideo = await Video.findById(videoId)
-    if(!existingVideo){
+    if (!existingVideo) {
         throw new ApiError(404, "Video not found")
     }
-    
+
     // STEP 7: Check if video is published
     // Only published videos can be added to playlists
-    if(!existingVideo.isPublished){
+    if (!existingVideo.isPublished) {
         throw new ApiError(400, "Cannot add unpublished video to playlist")
     }
 
     // STEP 8: Check if video already exists in playlist
     // Prevents duplicate entries
-    if(existsPlaylist.videos.includes(videoId)){
+    if (existsPlaylist.videos.includes(videoId)) {
         throw new ApiError(400, "Video already exists in playlist")
     }
 
@@ -514,8 +536,8 @@ const addVideoToPlaylist = asyncHandler(async(req, res) => {
         { $addToSet: { videos: videoId } },  // $addToSet ensures no duplicates
         { new: true }                         // Return updated document
     )
-    .populate('videos')                       // Populate video details
-    .populate('owner', 'username fullName avatar')  // Populate owner details
+        .populate('videos')                       // Populate video details
+        .populate('owner', 'username fullName avatar')  // Populate owner details
 
     // STEP 10: Send success response
     return res.status(200).json(
@@ -588,8 +610,8 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
         { $pull: { videos: videoId } },  // $pull removes matching element
         { new: true }                     // Return updated document
     )
-    .populate('videos')
-    .populate('owner', 'username fullName avatar')
+        .populate('videos')
+        .populate('owner', 'username fullName avatar')
 
     // STEP 8: Send success response
     return res.status(200).json(
@@ -678,7 +700,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         { $set: updateData },
         { new: true, runValidators: true }  // Return updated doc and run validators
     )
-    .populate('owner', 'username fullName avatar')
+        .populate('owner', 'username fullName avatar')
 
     // STEP 10: Send success response
     return res.status(200).json(
@@ -752,19 +774,19 @@ export {
 
     // Get all playlists created by a specific user
     getUserPlaylist,
-    
+
     // Get detailed information about a specific playlist by ID
     getPlaylistById,
-    
+
     // Add a video to an existing playlist
     addVideoToPlaylist,
-    
+
     // Remove a video from an existing playlist
     removeVideoFromPlaylist,
-    
+
     // Update playlist name, description, or privacy settings
     updatePlaylist,
-    
+
     // Delete a playlist permanently
     deletePlaylist,
 }

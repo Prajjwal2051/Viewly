@@ -45,42 +45,69 @@ import { User } from "../models/user.model.js"
  * @returns {Object} ApiResponse with notifications and metadata
  */
 const getNotifications = asyncHandler(async (req, res) => {
+    console.log("\n" + "=".repeat(60));
+    console.log("🔔 GET NOTIFICATIONS REQUEST");
+    console.log("=".repeat(60));
+
     // STEP 1: Extract authenticated user ID
     const userId = req.user._id
 
+    console.log("\n[STEP 1] 📝 Extracting Request Data");
+    console.log("   ➜ User ID:", userId);
+    console.log("   ➜ User:", req.user?.username);
+    console.log("   ➜ Page:", req.query.page || 1);
+    console.log("   ➜ Limit:", req.query.limit || 10);
+    console.log("   ➜ Filter:", req.query.isRead !== undefined ? (req.query.isRead === 'true' ? 'Read only' : 'Unread only') : 'All notifications');
+
+    console.log("\n[STEP 2] ✅ Validating User ID");
     // STEP 2: Validate user ID exists
     // Should always pass due to auth middleware, but we verify for safety
     if (!userId) {
+        console.log("   ❌ User ID not provided");
         throw new ApiError(400, "User ID not provided")
     }
+    console.log("   ✓ User ID exists");
 
     // STEP 3: Validate user ID format
     if (!mongoose.isValidObjectId(userId)) {
+        console.log("   ❌ Invalid MongoDB ObjectId format");
         throw new ApiError(400, "Invalid User ID provided")
     }
+    console.log("   ✓ User ID format is valid");
 
+    console.log("\n[STEP 3] 👤 Verifying User Exists");
     // STEP 4: Verify user exists in database
     const userExist = await User.findById(userId)
     if (!userExist) {
+        console.log("   ❌ User not found in database");
         throw new ApiError(404, "User not found")
     }
+    console.log("   ✓ User found:", userExist.username);
 
+    console.log("\n[STEP 4] 📊 Calculating Pagination");
     // STEP 5: Extract and parse pagination parameters
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
+    console.log("   ➜ Skip:", skip, "notifications");
+    console.log("   ➜ Limit:", limit, "per page");
 
+    console.log("\n[STEP 5] 🔧 Building Filter Criteria");
     // STEP 6: Build filter object for notifications query
     // Base filter: all notifications for this user
     const filter = {
         recepient: userId,
     }
+    console.log("   ✓ Base filter: recipient =", userId);
 
     // STEP 7: Add read/unread filter if provided
     // Allows filtering: ?isRead=true or ?isRead=false
     if (req.query.isRead !== undefined) {
         filter.isRead = req.query.isRead === "true"
+        console.log("   ✓ Added read filter:", filter.isRead ? "Read only" : "Unread only");
     }
+
+    console.log("\n[STEP 6] 💾 Fetching Notifications from Database...");
 
     // STEP 8: Fetch paginated notifications with populated details
     // Populates sender info, video details, and comment content
@@ -365,7 +392,7 @@ const deleteNotification = asyncHandler(async (req, res) => {
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
-export { 
+export {
     getNotifications,
     markAsRead,
     markAllAsRead,
