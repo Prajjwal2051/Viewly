@@ -22,6 +22,9 @@ import {
 } from "lucide-react"
 import toast from "react-hot-toast"
 
+import VideoControls from "../components/video/VideoControls"
+import CommentSection from "../components/comments/CommentSection"
+
 const VideoPlayerPage = () => {
     const { videoId } = useParams() // Get video ID from URL
     const navigate = useNavigate()
@@ -37,35 +40,38 @@ const VideoPlayerPage = () => {
         const fetchVideoData = async () => {
             try {
                 setLoading(true)
-                // 1. Fetch current video details
                 const videoData = await getVideoById(videoId)
 
-                // Inspect response structure - backend usually wraps in 'data' or similar
-                // Based on verifyApi, response might be { ...videoFields } directly or { data: {...} }
-                // Let's assume standard response structure from axios interceptor/apiClient
-                setVideo(videoData.video || videoData)
+                // Ensure we handle the structure correctly
+                // verifyApi in previous turn showed getVideoById returns response.data
+                // which typically has { data: { videoObject } } or just { videoObject }
+                // Let's assume standard ApiResponse wrapper: { statusCode, data, message }
+                // So videoData.data should be the video object.
+                // Or if the helper already unwrapped it.
+                // Let's inspect videoApi.js again visually or safeguard.
+                // "return response.data" in videoApi.js means we get the full payload.
+                const fetchedVideo =
+                    videoData.data || videoData.video || videoData
+                setVideo(fetchedVideo)
 
-                // 2. Fetch related videos (simulated by fetching recent videos for now)
-                // In future: endpoint like /videos/related/:id
+                // Fetch Related
                 const relatedData = await getAllVideos({ limit: 10 })
-                // Filter out current video from related list
-                const filtered = (relatedData.videos || []).filter(
-                    (v) => v._id !== videoId
-                )
+                const filtered = (
+                    relatedData.data?.videos ||
+                    relatedData.videos ||
+                    []
+                ).filter((v) => v._id !== videoId)
                 setRelatedVideos(filtered)
             } catch (error) {
                 console.error("Failed to load video:", error)
-                toast.error("Video not found or deleted")
-                navigate("/") // Return home on error
+                toast.error("Video not found")
             } finally {
                 setLoading(false)
                 setLoadingRelated(false)
             }
         }
-
         if (videoId) {
             fetchVideoData()
-            // scroll to top on navigation associated with new video
             window.scrollTo(0, 0)
         }
     }, [videoId, navigate])
@@ -85,7 +91,7 @@ const VideoPlayerPage = () => {
             <div className="max-w-[1800px] mx-auto px-4 md:px-6 flex flex-col lg:flex-row gap-6">
                 {/* LEFT COLUMN: Main Video Player & Details */}
                 <div className="flex-1 lg:w-[70%]">
-                    {/* 1. Video Player Container */}
+                    {/* 1. Video Player */}
                     <div className="relative w-full pb-[56.25%] bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-900">
                         <video
                             src={video.videoFile}
@@ -98,54 +104,37 @@ const VideoPlayerPage = () => {
                         </video>
                     </div>
 
-                    {/* 2. Video Info */}
+                    {/* 2. Video Info & Controls */}
                     <div className="mt-4 space-y-4">
                         <h1 className="text-xl md:text-2xl font-bold line-clamp-2">
                             {video.title}
                         </h1>
 
-                        {/* Stats & Actions Row */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="text-gray-400 text-sm">
-                                {video.views} views •{" "}
-                                {new Date(video.createdAt).toLocaleDateString()}
-                            </div>
-
-                            {/* Action Buttons (UI Only for Phase 1) */}
-                            <div className="flex items-center gap-2">
-                                <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors">
-                                    <ThumbsUp size={20} />
-                                    <span className="font-medium text-sm">
-                                        Like
-                                    </span>
-                                </button>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors">
-                                    <Share2 size={20} />
-                                    <span className="font-medium text-sm">
-                                        Share
-                                    </span>
-                                </button>
-                                <button className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors">
-                                    <MoreVertical size={20} />
-                                </button>
-                            </div>
-                        </div>
+                        {/* NEW: Video Controls Component */}
+                        <VideoControls
+                            videoId={video._id}
+                            ownerId={video.owner?._id}
+                            video={video}
+                        />
 
                         {/* Channel & Description Area */}
                         <div className="mt-6 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
                             <div className="flex items-center gap-4 mb-4">
-                                {/* Avatar Skeleton/Placeholder if not in video object yet */}
-                                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-bold">
-                                    {(
-                                        video.owner?.username?.[0] || "U"
-                                    ).toUpperCase()}
-                                </div>
+                                <img
+                                    src={
+                                        video.owner?.avatar ||
+                                        "https://via.placeholder.com/40"
+                                    }
+                                    alt={video.owner?.username}
+                                    className="w-12 h-12 rounded-full object-cover border border-gray-700"
+                                />
                                 <div>
-                                    <h3 className="font-semibold text-white">
+                                    <h3 className="font-semibold text-white text-lg">
                                         {video.owner?.username ||
                                             "Unknown Channel"}
                                     </h3>
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-sm text-gray-400">
+                                        {/* Subscriber count would ideally come from subscription api or video owner details */}
                                         {video.owner?.subscribersCount || 0}{" "}
                                         subscribers
                                     </p>
@@ -161,15 +150,8 @@ const VideoPlayerPage = () => {
                             </div>
                         </div>
 
-                        {/* Comments Placeholder for Phase 2 */}
-                        <div className="mt-8">
-                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <MessageSquare size={20} /> Comments
-                            </h3>
-                            <p className="text-gray-500 text-sm italic">
-                                Comments section coming soon...
-                            </p>
-                        </div>
+                        {/* NEW: Comments Section */}
+                        <CommentSection videoId={video._id} />
                     </div>
                 </div>
 
