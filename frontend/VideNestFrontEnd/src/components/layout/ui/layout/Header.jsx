@@ -25,10 +25,11 @@ const Header = () => {
     const dispatch = useDispatch() // Dispatches Redux actions
     const { user } = useSelector((state) => state.auth) // Gets logged-in user from Redux
 
-    // Conditionally show search bar only on specific pages
-    const showSearchBar = ["/", "/discover", "/search"].some(
-        (path) => location.pathname === path
-    )
+    // Conditionally show search bar on specific pages
+    const showSearchBar =
+        ["/", "/discover", "/search"].some((path) =>
+            location.pathname.startsWith(path)
+        ) || location.pathname.startsWith("/video/")
 
     /**
      * SEARCH HANDLER
