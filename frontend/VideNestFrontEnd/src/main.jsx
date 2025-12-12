@@ -6,6 +6,7 @@
 
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
+import { BrowserRouter } from "react-router-dom"
 import "./index.css" // Global styles and Tailwind CSS imports
 import App from "./App.jsx"
 import { Provider } from "react-redux"
@@ -48,14 +49,12 @@ createRoot(document.getElementById("root")).render(
         */}
         <Provider store={store}>
             {/* 
-              MAIN APP COMPONENT
-              
-              Contains:
-              - React Router (routes to different pages)
-              - Layout components (Navbar, Sidebar)
-              - Page components (HomePage, LoginPage, etc.)
+              ROUTER PROVIDER
+              - Moved here from App.jsx so App can use useLocation()
             */}
-            <App />
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
         </Provider>
     </StrictMode>
 )

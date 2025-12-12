@@ -63,7 +63,7 @@ const VideoCard = ({ video }) => {
             {/* CONTENT OVERLAY - Bottom */}
             <div className="absolute bottom-0 left-0 right-0 p-4">
                 {/* Title */}
-                <h3 className="text-white font-bold text-sm line-clamp-2 leading-snug mb-2 drop-shadow-md group-hover:text-red-400 transition-colors">
+                <h3 className="text-white font-bold text-base line-clamp-2 leading-snug mb-2 drop-shadow-md group-hover:text-red-400 transition-colors">
                     {video.title}
                 </h3>
 
@@ -86,7 +86,7 @@ const VideoCard = ({ video }) => {
                     {/* Text Info */}
                     <div className="flex-1 min-w-0">
                         <p
-                            className="text-xs text-gray-400 truncate hover:underline"
+                            className="text-sm text-gray-400 truncate hover:underline"
                             onClick={(e) => {
                                 e.stopPropagation()
                                 navigate(`/channel/${video.owner?.username}`)
@@ -94,9 +94,9 @@ const VideoCard = ({ video }) => {
                         >
                             {video.owner?.fullName || video.owner?.username}
                         </p>
-                        <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-0.5">
+                        <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
                             <span className="flex items-center gap-0.5">
-                                <Eye className="h-2.5 w-2.5" />
+                                <Eye className="h-3 w-3" />
                                 {formatViews(video.views)}
                             </span>
                             <span className="w-0.5 h-0.5 rounded-full bg-[#2A2D2E]0"></span>

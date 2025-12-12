@@ -6,7 +6,7 @@ import { Loader2, Heart, Share2, ArrowLeft } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import toast from "react-hot-toast"
 
-const TweetPage = () => {
+const TweetPage = ({ isModal = false }) => {
     const { tweetId } = useParams()
     const navigate = useNavigate()
     const [tweet, setTweet] = useState(null)
@@ -59,28 +59,45 @@ const TweetPage = () => {
     if (!tweet) return null
 
     return (
-        <div className="min-h-screen bg-[#1E2021] text-white flex flex-col md:flex-row">
-            {/* LEFT: Image Viewer */}
-            <div className="flex-1 bg-[#1E2021] flex items-center justify-center relative min-h-[50vh] md:h-screen">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="absolute top-4 left-4 z-10 p-2 bg-[#1E2021]/50 rounded-full hover:bg-[#1E2021]/80 text-white"
-                >
-                    <ArrowLeft size={24} />
-                </button>
-                {tweet.image && (
+        <div
+            className={`${isModal ? "h-full bg-[#1E2021]" : "min-h-screen bg-[#1E2021]"} text-white flex ${tweet.image ? "flex-col md:flex-row" : "justify-center"} ${isModal ? "rounded-2xl overflow-hidden" : ""}`}
+        >
+            {/* LEFT: Image Viewer - Only if image exists */}
+            {tweet.image && (
+                <div className="flex-1 bg-[#1E2021] flex items-center justify-center relative min-h-[50vh] md:h-screen">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(-1)
+                        }}
+                        className="absolute top-4 left-4 z-10 p-2 bg-[#1E2021]/50 rounded-full hover:bg-[#1E2021]/80 text-white"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
                     <img
                         src={tweet.image}
                         alt="Full size"
                         className="max-w-full max-h-[90vh] object-contain"
                     />
-                )}
-            </div>
+                </div>
+            )}
+
+            {/* Back Button for Text-Only Mode */}
+            {!tweet.image && (
+                <button
+                    onClick={() => navigate(-1)}
+                    className="fixed top-4 left-4 z-50 p-2 bg-[#2A2D2E] rounded-full hover:bg-[#3F4243] text-white shadow-lg"
+                >
+                    <ArrowLeft size={24} />
+                </button>
+            )}
 
             {/* RIGHT: Sidebar (Details & Comments) */}
-            <div className="md:w-[400px] lg:w-[450px] bg-[#2A2D2E] border-l border-[#2A2D2E] flex flex-col h-screen overflow-y-auto">
+            <div
+                className={`${tweet.image ? "md:w-[400px] lg:w-[450px] border-l" : "w-full max-w-2xl border-x"} bg-[#2A2D2E] border-[#2A2D2E] flex flex-col h-screen overflow-y-auto relative`}
+            >
                 {/* Header: Author */}
-                <div className="p-4 border-b border-[#2A2D2E] flex items-center gap-3">
+                <div className="sticky top-0 z-20 bg-[#2A2D2E]/95 backdrop-blur-sm p-4 border-b border-[#2A2D2E] flex items-center gap-3">
                     <img
                         src={
                             tweet.ownerDetails?.avatar ||
@@ -112,7 +129,7 @@ const TweetPage = () => {
                 {/* Content & Stats */}
                 <div className="p-4">
                     {tweet.content && (
-                        <p className="text-sm mb-4 whitespace-pre-wrap leading-relaxed border-b border-[#2A2D2E] pb-4">
+                        <p className="text-base mb-4 whitespace-pre-wrap leading-relaxed border-b border-[#2A2D2E] pb-4">
                             {tweet.content}
                         </p>
                     )}
@@ -146,16 +163,9 @@ const TweetPage = () => {
                     </p>
                 </div>
 
-                {/* Comments Section - Reusing Component */}
-                {/* CommentSection expects 'videoId', but we modified controller to handle tweets.
-                    Our CommentSection component might pass 'videoId' param to API.
-                    We need to check CommentSection.jsx props.
-                 */}
+                {/* Comments Section */}
                 <div className="flex-1 bg-[#1E2021]/20">
-                    <CommentSection
-                        tweetId={tweet._id}
-                        isTweet={true} // Hint for component if needed, but likely we pass different prop or API handles it
-                    />
+                    <CommentSection tweetId={tweet._id} isTweet={true} />
                 </div>
             </div>
         </div>
