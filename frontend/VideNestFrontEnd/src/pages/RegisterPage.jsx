@@ -144,7 +144,7 @@ const RegisterPage = () => {
                                 </span>
                             </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-2 font-['Playfair_Display']">
+                        <h2 className="text-3xl font-bold text-[#e60023] mb-2 font-['Playfair_Display']">
                             Welcome to VidNest
                         </h2>
                         <p className="text-gray-600">Find new ideas to try</p>
@@ -242,7 +242,7 @@ const RegisterPage = () => {
                             Already a member?{" "}
                             <Link
                                 to="/login"
-                                className="text-white font-bold hover:underline"
+                                className="text-[#e60023] font-bold hover:underline"
                             >
                                 Log in
                             </Link>
