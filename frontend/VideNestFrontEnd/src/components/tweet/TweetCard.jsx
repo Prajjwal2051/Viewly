@@ -49,80 +49,83 @@ const TweetCard = ({ tweet }) => {
         }
     }
 
+    const hasImage = !!tweet.image
+
     return (
         <div
             onClick={() =>
+                hasImage &&
                 navigate(`/tweet/${tweet._id}`, {
                     state: { background: location },
                 })
             }
-            className="group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E] hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] transition-all duration-300 cursor-pointer border border-transparent hover:border-white/10 flex flex-col"
+            className={`group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E] transition-all duration-300 border border-transparent flex flex-col ${
+                hasImage
+                    ? "hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] cursor-pointer hover:border-white/10"
+                    : ""
+            }`}
         >
-            {/* TOP SECTION: IMAGE & ACTIONS OVERLAY */}
-            <div className="relative w-full aspect-video isolate overflow-hidden">
-                {/* Image or Placeholder */}
-                {tweet.image ? (
+            {/* TOP SECTION: IMAGE & ACTIONS OVERLAY - Only show if image exists */}
+            {hasImage && (
+                <div className="relative w-full isolate overflow-hidden bg-[#1E2021]">
+                    {/* Image */}
                     <img
                         src={tweet.image?.replace("http://", "https://")}
                         alt={tweet.content}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                ) : (
-                    <div className="w-full h-full bg-[#1E2021] flex items-center justify-center p-6 bg-gradient-to-br from-[#1E2021] to-[#2A2D2E]">
-                        <p className="text-gray-500 text-sm italic">No Image</p>
-                    </div>
-                )}
 
-                {/* HOVER OVERLAY - ACTION ICONS */}
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-6 z-10">
-                    {/* Like Action */}
-                    <button
-                        onClick={handleLike}
-                        className="flex flex-col items-center gap-1 group/btn"
-                        title="Like"
-                    >
-                        <div
-                            className={`p-3 rounded-full transition-all duration-300 ${isLiked ? "bg-red-500 text-white" : "bg-white/20 text-white hover:bg-white/40 hover:scale-110"}`}
+                    {/* HOVER OVERLAY - ACTION ICONS */}
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-6 z-10">
+                        {/* Like Action */}
+                        <button
+                            onClick={handleLike}
+                            className="flex flex-col items-center gap-1 group/btn"
+                            title="Like"
                         >
-                            <Heart
-                                size={20}
-                                fill={isLiked ? "currentColor" : "none"}
-                            />
-                        </div>
-                        <span className="text-xs font-bold text-white drop-shadow-md">
-                            {likesCount}
-                        </span>
-                    </button>
+                            <div
+                                className={`p-3 rounded-full transition-all duration-300 ${isLiked ? "bg-red-500 text-white" : "bg-white/20 text-white hover:bg-white/40 hover:scale-110"}`}
+                            >
+                                <Heart
+                                    size={20}
+                                    fill={isLiked ? "currentColor" : "none"}
+                                />
+                            </div>
+                            <span className="text-xs font-bold text-white drop-shadow-md">
+                                {likesCount}
+                            </span>
+                        </button>
 
-                    {/* Comment Action */}
-                    <button
-                        onClick={handleComment}
-                        className="flex flex-col items-center gap-1 group/btn"
-                        title="Comment"
-                    >
-                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all duration-300">
-                            <MessageCircle size={20} />
-                        </div>
-                        <span className="text-xs font-bold text-white drop-shadow-md">
-                            Comment
-                        </span>
-                    </button>
+                        {/* Comment Action */}
+                        <button
+                            onClick={handleComment}
+                            className="flex flex-col items-center gap-1 group/btn"
+                            title="Comment"
+                        >
+                            <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all duration-300">
+                                <MessageCircle size={20} />
+                            </div>
+                            <span className="text-xs font-bold text-white drop-shadow-md">
+                                Comment
+                            </span>
+                        </button>
 
-                    {/* Share Action */}
-                    <button
-                        onClick={handleShare}
-                        className="flex flex-col items-center gap-1 group/btn"
-                        title="Share"
-                    >
-                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all duration-300">
-                            <Share2 size={20} />
-                        </div>
-                        <span className="text-xs font-bold text-white drop-shadow-md">
-                            Share
-                        </span>
-                    </button>
+                        {/* Share Action */}
+                        <button
+                            onClick={handleShare}
+                            className="flex flex-col items-center gap-1 group/btn"
+                            title="Share"
+                        >
+                            <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all duration-300">
+                                <Share2 size={20} />
+                            </div>
+                            <span className="text-xs font-bold text-white drop-shadow-md">
+                                Share
+                            </span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* BOTTOM SECTION: TEXT & INFO */}
             <div className="p-4 flex flex-col gap-3">

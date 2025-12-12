@@ -130,9 +130,7 @@ const ProfilePage = () => {
                         <p className="text-lg text-gray-500 font-medium">
                             @{user?.username}
                         </p>
-                        <p className="text-gray-400 max-w-lg">
-                            {user?.email}
-                        </p>
+                        <p className="text-gray-400 max-w-lg">{user?.email}</p>
 
                         {/* Stats - Horizontal Stack */}
                         <div className="flex items-center justify-center md:justify-start gap-8 mt-6 pt-6 border-t border-gray-100">

@@ -132,10 +132,7 @@ const DashboardPage = () => {
                     <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
                             <VideoIcon className="text-red-500" size={32} />
-                            <BarChart3
-                                className="text-red-400/30"
-                                size={48}
-                            />
+                            <BarChart3 className="text-red-400/30" size={48} />
                         </div>
                         <p className="text-gray-400 text-sm mb-1">
                             Total Videos

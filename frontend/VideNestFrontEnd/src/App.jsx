@@ -4,7 +4,7 @@
 // Central routing hub that controls which pages users can see.
 // Protects routes requiring login and manages navigation flow.
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     Routes,
     Route,
@@ -12,8 +12,11 @@ import {
     useLocation,
     useNavigate,
 } from "react-router-dom"
-import { useSelector } from "react-redux"
+import { useSelector, useDispatch } from "react-redux"
 import { Toaster } from "react-hot-toast"
+import { loginSuccess, logout } from "./store/slices/authSlice"
+import { getCurrentUser } from "./api/authApi"
+import { Loader2 } from "lucide-react"
 
 // Page Components
 import HomePage from "./pages/HomePage"
@@ -71,7 +74,42 @@ const ProtectedRoute = ({ children }) => {
 function App() {
     const location = useLocation()
     const navigate = useNavigate()
+    const dispatch = useDispatch()
     const background = location.state && location.state.background
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const token = localStorage.getItem("accessToken")
+            if (token) {
+                try {
+                    const response = await getCurrentUser()
+                    const user = response.data || response // Adjust based on API response structure
+                    if (user) {
+                        dispatch(loginSuccess(user))
+                    } else {
+                        dispatch(logout())
+                    }
+                } catch (error) {
+                    console.error("Auth check failed:", error)
+                    dispatch(logout())
+                }
+            } else {
+                dispatch(logout())
+            }
+            setLoading(false)
+        }
+
+        checkAuth()
+    }, [dispatch])
+
+    if (loading) {
+        return (
+            <div className="h-screen w-full flex items-center justify-center bg-[#1E2021]">
+                <Loader2 className="h-10 w-10 animate-spin text-red-600" />
+            </div>
+        )
+    }
 
     return (
         <ThemeProvider>
@@ -229,7 +267,7 @@ function App() {
                                     className="absolute inset-0"
                                     onClick={() => navigate(-1)}
                                 />
-                                <div className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
+                                <div className="relative z-10 w-full max-w-7xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
                                     <TweetPage isModal={true} />
                                 </div>
                             </div>
