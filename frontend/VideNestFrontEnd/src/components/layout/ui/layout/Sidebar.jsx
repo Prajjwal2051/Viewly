@@ -57,7 +57,7 @@ const Sidebar = () => {
                         >
                             {/* Active Indicator */}
                             {active && (
-                                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-red-600 rounded-full animate-pulse" />
+                                <div className="absolute -top-1 inset-x-0 mx-auto w-10 h-1 bg-red-600 rounded-full animate-pulse" />
                             )}
                             <Icon
                                 className={`h-6 w-6 transition-all duration-300 ${active ? "animate-bounce" : ""}`}

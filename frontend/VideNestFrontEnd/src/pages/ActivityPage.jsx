@@ -141,29 +141,29 @@ const ActivityPage = () => {
                                     className="flex gap-4 p-4 bg-[#2A2D2E]/50 rounded-xl border border-[#2A2D2E] hover:bg-[#2A2D2E]/50 transition-colors cursor-pointer"
                                 >
                                     {/* Thumbnail Icon Replacement */}
-                                    <div className="w-56 h-32 bg-[#1E2021] border border-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <div className="w-32 sm:w-56 h-20 sm:h-32 bg-[#1E2021] border border-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <VideoIcon
                                             className="text-red-500"
-                                            size={40}
+                                            size={32}
                                         />
                                     </div>
 
                                     {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-semibold text-white line-clamp-2 mb-2">
+                                    <div className="flex-1 min-w-0 overflow-hidden">
+                                        <h3 className="font-semibold text-white text-sm sm:text-base line-clamp-2 mb-2 break-words">
                                             {video.title}
                                         </h3>
-                                        <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
-                                            <span>
+                                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mb-1 flex-wrap">
+                                            <span className="truncate max-w-[120px] sm:max-w-none">
                                                 {video.owner?.username ||
                                                     "Unknown"}
                                             </span>
                                             <span>•</span>
-                                            <span>
+                                            <span className="whitespace-nowrap">
                                                 {video.views || 0} views
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-gray-500 truncate">
                                             {formatDistanceToNow(
                                                 new Date(video.createdAt),
                                                 { addSuffix: true }
