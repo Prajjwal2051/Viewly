@@ -6,7 +6,7 @@
 
 import { useNavigate, useLocation } from "react-router-dom"
 import { formatDistanceToNow } from "date-fns" // Time formatting library
-import { Eye, Play, Share2, ThumbsUp } from "lucide-react"
+import { Eye, Play, Share2, ThumbsUp, MessageCircle } from "lucide-react"
 
 /**
  * Props:
@@ -44,9 +44,13 @@ const VideoCard = ({ video }) => {
         e.stopPropagation()
         const link = `${window.location.origin}/video/${video._id}`
         navigator.clipboard.writeText(link)
-        // Ideally show a toast here, but toast isn't imported.
-        // Assuming parent might handle or just silent copy for now.
-        // Actually, let's just let it copy.
+        // Show toast notification
+        const toast = document.createElement("div")
+        toast.textContent = "Link copied!"
+        toast.className =
+            "fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-2"
+        document.body.appendChild(toast)
+        setTimeout(() => toast.remove(), 2000)
     }
 
     return (
@@ -76,6 +80,22 @@ const VideoCard = ({ video }) => {
 
                 {/* HOVER OVERLAY - PLAY & ACTIONS */}
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-6 z-10">
+                    {/* Comment Action */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/video/${video._id}`, {
+                                state: { background: location },
+                            })
+                        }}
+                        className="flex flex-col items-center gap-1 group/btn transition-all duration-300 hover:scale-110 active:scale-95"
+                        title="Comment"
+                    >
+                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 transition-all duration-300">
+                            <MessageCircle size={20} />
+                        </div>
+                    </button>
+
                     {/* Play Action */}
                     <button
                         onClick={(e) => {
@@ -84,7 +104,7 @@ const VideoCard = ({ video }) => {
                                 state: { background: location },
                             })
                         }}
-                        className="flex flex-col items-center gap-1 group/btn"
+                        className="flex flex-col items-center gap-1 group/btn transition-all duration-300 hover:scale-125 active:scale-95"
                         title="Play"
                     >
                         <div className="p-3 rounded-full bg-red-600 text-white hover:scale-110 transition-all duration-300 shadow-lg shadow-red-600/40">
@@ -99,10 +119,10 @@ const VideoCard = ({ video }) => {
                     {/* Share Action */}
                     <button
                         onClick={handleShare}
-                        className="flex flex-col items-center gap-1 group/btn"
+                        className="flex flex-col items-center gap-1 group/btn transition-all duration-300 hover:scale-110 active:scale-95"
                         title="Share"
                     >
-                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all duration-300">
+                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 transition-all duration-300">
                             <Share2 size={20} />
                         </div>
                     </button>

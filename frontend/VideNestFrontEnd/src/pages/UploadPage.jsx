@@ -7,6 +7,7 @@ import {
     Image as ImageIcon,
     Loader2,
     Type,
+    ChevronDown,
 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
@@ -97,25 +98,37 @@ const UploadPage = () => {
         <div className="max-w-4xl mx-auto p-6">
             <h1 className="text-3xl font-bold text-white mb-6">Create Post</h1>
 
-            {/* Post Type Toggle */}
-            <div className="flex space-x-4 mb-8">
+            {/* Post Type Toggle with Sliding Animation */}
+            <div className="relative flex bg-[#1E2021] rounded-xl p-1 mb-8">
+                {/* Animated Background Slider */}
+                <div
+                    className={`absolute top-1 bottom-1 w-[calc(50%-0.25rem)] bg-red-600 rounded-lg shadow-lg shadow-red-500/30 transition-transform duration-300 ease-out ${
+                        postType === "tweet"
+                            ? "translate-x-[calc(100%+0.5rem)]"
+                            : "translate-x-0"
+                    }`}
+                />
+
+                {/* Upload Video Button */}
                 <button
                     onClick={() => togglePostType("video")}
-                    className={`flex-1 py-4 rounded-xl flex items-center justify-center space-x-2 transition-all ${
+                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${
                         postType === "video"
-                            ? "bg-red-600 text-white shadow-lg shadow-red-500/30"
-                            : "bg-[#1E2021] text-gray-400 hover:bg-[#2A2D2E]"
+                            ? "text-white"
+                            : "text-gray-400 hover:text-gray-300"
                     }`}
                 >
                     <Film size={20} />
                     <span className="font-semibold">Upload Video</span>
                 </button>
+
+                {/* Create Tweet Button */}
                 <button
                     onClick={() => togglePostType("tweet")}
-                    className={`flex-1 py-4 rounded-xl flex items-center justify-center space-x-2 transition-all ${
+                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${
                         postType === "tweet"
-                            ? "bg-red-600 text-white shadow-lg shadow-red-500/30"
-                            : "bg-[#1E2021] text-gray-400 hover:bg-[#2A2D2E]"
+                            ? "text-white"
+                            : "text-gray-400 hover:text-gray-300"
                     }`}
                 >
                     <Type size={20} />
@@ -281,17 +294,27 @@ const UploadPage = () => {
                                     <label className="block text-sm font-medium text-gray-500 mb-1">
                                         Category
                                     </label>
-                                    <select
-                                        {...register("category")}
-                                        className="w-full bg-[#2A2D2E] border-transparent rounded-2xl p-3 text-white outline-none"
-                                    >
-                                        <option value="General">General</option>
-                                        <option value="Music">Music</option>
-                                        <option value="Gaming">Gaming</option>
-                                        <option value="Technology">
-                                            Technology
-                                        </option>
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            {...register("category")}
+                                            className="w-full bg-[#2A2D2E] border-transparent rounded-2xl p-3 pr-10 text-white outline-none appearance-none cursor-pointer"
+                                        >
+                                            <option value="General">
+                                                General
+                                            </option>
+                                            <option value="Music">Music</option>
+                                            <option value="Gaming">
+                                                Gaming
+                                            </option>
+                                            <option value="Technology">
+                                                Technology
+                                            </option>
+                                        </select>
+                                        <ChevronDown
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                                            size={20}
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-1">

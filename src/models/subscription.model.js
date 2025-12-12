@@ -1,22 +1,23 @@
-import mongoose, {mongo,Schema} from "mongoose"
+import mongoose, { mongo, Schema } from "mongoose"
 
-
-const subscriptionSchema= new mongoose.Schema({
-
-    subscriber:{
-        type:Schema.Types.ObjectId, 
-        ref:"User"
+const subscriptionSchema = new mongoose.Schema(
+    {
+        subscriber: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        },
+        channel: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        },
     },
-    channel:{
-        type:Schema.Types.ObjectId, 
-        ref:"User"
+    {
+        timestamps: true,
     }
+)
 
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"
 
+subscriptionSchema.plugin(mongooseAggregatePaginate)
 
-},{
-    timestamps:true
-})
-
-
-export const subscription= mongoose.model("Subscription",subscriptionSchema)
+export const subscription = mongoose.model("Subscription", subscriptionSchema)

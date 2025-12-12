@@ -59,10 +59,8 @@ const TweetCard = ({ tweet }) => {
                     state: { background: location },
                 })
             }
-            className={`group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E] transition-all duration-300 border border-transparent flex flex-col ${
-                hasImage
-                    ? "hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] cursor-pointer hover:border-white/10"
-                    : ""
+            className={`group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E] transition-all duration-300 border border-transparent flex flex-col hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] hover:border-white/10 ${
+                !hasImage ? "min-h-[300px]" : "cursor-pointer"
             }`}
         >
             {/* TOP SECTION: IMAGE & ACTIONS OVERLAY - Only show if image exists */}
@@ -127,34 +125,111 @@ const TweetCard = ({ tweet }) => {
                 </div>
             )}
 
-            {/* BOTTOM SECTION: TEXT & INFO */}
-            <div className="p-4 flex flex-col gap-3">
-                {/* Content */}
-                {tweet.content && (
-                    <p className="text-gray-100 font-medium text-base line-clamp-3 leading-relaxed">
-                        {tweet.content}
-                    </p>
-                )}
-
-                {/* Author Info */}
-                <div className="flex items-center gap-3 mt-auto pt-3 border-t border-white/5">
-                    <img
-                        src={
-                            tweet.ownerDetails?.avatar ||
-                            "https://via.placeholder.com/30"
-                        }
-                        alt={tweet.ownerDetails?.username}
-                        className="h-8 w-8 rounded-full object-cover border border-white/10"
-                    />
-                    <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-white">
-                            {tweet.ownerDetails?.fullName}
-                        </span>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                            <span>@{tweet.ownerDetails?.username}</span>
-                            <span>•</span>
-                            <span>{formatDate(tweet.createdAt)}</span>
+            {/* TEXT-ONLY OVERLAY ACTIONS */}
+            {!hasImage && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-6 z-10 pointer-events-none group-hover:pointer-events-auto">
+                    {/* Like Action */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            handleLike()
+                        }}
+                        className="flex flex-col items-center gap-1 group/btn transition-transform hover:scale-110"
+                        title="Like"
+                    >
+                        <div
+                            className={`p-3 rounded-full ${isLiked ? "bg-red-600 text-white shadow-lg shadow-red-600/40" : "bg-white/20 text-white hover:bg-white/30"}`}
+                        >
+                            <Heart
+                                size={24}
+                                fill={isLiked ? "currentColor" : "none"}
+                            />
                         </div>
+                    </button>
+
+                    {/* Comment Action */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/tweet/${tweet._id}`, {
+                                state: { background: location },
+                            })
+                        }}
+                        className="flex flex-col items-center gap-1 group/btn transition-transform hover:scale-110"
+                        title="Comment"
+                    >
+                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/30">
+                            <MessageCircle size={24} />
+                        </div>
+                    </button>
+
+                    {/* Share Action */}
+                    <button
+                        onClick={handleShare}
+                        className="flex flex-col items-center gap-1 group/btn transition-transform hover:scale-110"
+                        title="Share"
+                    >
+                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/30">
+                            <Share2 size={24} />
+                        </div>
+                    </button>
+                </div>
+            )}
+
+            {/* BOTTOM SECTION: TEXT & INFO */}
+            <div
+                className={`p-5 flex flex-col gap-4 ${!hasImage ? "flex-1 justify-between h-full relative" : ""}`}
+            >
+                {/* Content */}
+                <p
+                    className={`text-white font-medium leading-snug drop-shadow-md ${!hasImage ? "text-lg line-clamp-6" : "text-base line-clamp-2 mb-2"}`}
+                >
+                    {tweet.content}
+                </p>
+
+                {/* Owner Info & Likes */}
+                <div className="flex items-center justify-between mt-auto pt-2 relative z-20">
+                    <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <img
+                            src={
+                                tweet.ownerDetails?.avatar ||
+                                "https://via.placeholder.com/40"
+                            }
+                            alt={tweet.ownerDetails?.username}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                navigate(
+                                    `/channel/${tweet.ownerDetails?.username}`
+                                )
+                            }}
+                            className="h-10 w-10 rounded-full object-cover border border-white/10 hover:border-red-500 transition-colors"
+                        />
+                        {/* Name & Date */}
+                        <div className="flex flex-col">
+                            <span
+                                className="font-semibold text-white text-sm truncate max-w-[120px] hover:underline"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    navigate(
+                                        `/channel/${tweet.ownerDetails?.username}`
+                                    )
+                                }}
+                            >
+                                {tweet.ownerDetails?.fullName}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                                {formatDate(tweet.createdAt)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Like Count (Footer - Neutral) */}
+                    <div className="flex items-center gap-1.5 text-gray-400">
+                        <div className="p-1.5 rounded-full bg-white/5">
+                            <Heart size={14} />
+                        </div>
+                        <span className="text-sm font-bold">{likesCount}</span>
                     </div>
                 </div>
             </div>

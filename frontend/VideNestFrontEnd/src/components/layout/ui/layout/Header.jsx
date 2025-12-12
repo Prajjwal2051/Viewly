@@ -56,7 +56,7 @@ const Header = () => {
                         {showSearchBar ? (
                             <form onSubmit={handleSearch} className="w-full">
                                 <div className="relative w-full group">
-                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-red-600 transition-colors" />
+                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-red-600 transition-all duration-300 group-hover:scale-110" />
                                     <input
                                         type="text"
                                         placeholder="Search"
@@ -64,7 +64,7 @@ const Header = () => {
                                         onChange={(e) =>
                                             setSearchQuery(e.target.value)
                                         }
-                                        className="w-full pl-12 pr-4 py-3 bg-[#2A2D2E] border border-[#2A2D2E] rounded-full focus:bg-[#1E2021] focus:border-red-600 focus:ring-2 focus:ring-pinterest-red/20 text-white placeholder-gray-500 transition-all duration-200 hover:bg-[#2A2D2E]"
+                                        className="w-full pl-12 pr-4 py-3 bg-[#2A2D2E] border border-[#2A2D2E] rounded-full focus:bg-[#1E2021] focus:border-red-600 focus:ring-2 focus:ring-red-500/20 text-white placeholder-gray-500 transition-all duration-300 hover:bg-[#2A2D2E] focus:scale-105"
                                     />
                                 </div>
                             </form>
@@ -80,17 +80,17 @@ const Header = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => navigate("/activity")}
-                            className="relative hover:bg-[#2A2D2E] rounded-full h-12 w-12"
+                            className="relative hover:bg-[#2A2D2E] rounded-full h-12 w-12 group transition-all duration-300 hover:scale-110 active:scale-95"
                         >
-                            <Bell className="h-6 w-6 text-gray-500 hover:text-red-600" />
-                            <span className="absolute top-3 right-3 h-2 w-2 bg-red-600 rounded-full border-2 border-white"></span>
+                            <Bell className="h-6 w-6 text-gray-500 group-hover:text-red-600 transition-all duration-300 group-hover:animate-pulse" />
+                            <span className="absolute top-3 right-3 h-2 w-2 bg-red-600 rounded-full border-2 border-[#1E2021] animate-pulse"></span>
                         </Button>
 
                         {/* USER MENU */}
                         <div className="relative">
                             <button
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2 p-1 rounded-full hover:bg-[#2A2D2E] focus:outline-none transition-all"
+                                className="flex items-center gap-2 p-1 rounded-full hover:bg-[#2A2D2E] focus:outline-none transition-all duration-300 group"
                             >
                                 <img
                                     src={
@@ -98,7 +98,7 @@ const Header = () => {
                                         "https://via.placeholder.com/40"
                                     }
                                     alt={user?.username}
-                                    className="h-10 w-10 rounded-full object-cover border-2 border-[#2A2D2E]"
+                                    className="h-10 w-10 rounded-full object-cover border-2 border-[#2A2D2E] transition-all duration-300 group-hover:scale-110 group-hover:border-red-600 group-hover:rotate-6"
                                 />
                             </button>
 
@@ -109,7 +109,7 @@ const Header = () => {
                                         onClick={() => setShowUserMenu(false)}
                                     ></div>
 
-                                    <div className="absolute right-0 mt-2 w-64 bg-[#1E2021] rounded-2xl shadow-xl border border-[#2A2D2E] py-2 z-20">
+                                    <div className="absolute right-0 mt-2 w-64 bg-[#1E2021] rounded-2xl shadow-xl border border-[#2A2D2E] py-2 z-20 animate-in slide-in-from-top-2 duration-300">
                                         <div className="px-4 py-4 border-b border-[#2A2D2E]">
                                             <p className="font-bold text-white truncate text-lg">
                                                 {user?.fullName}
@@ -127,7 +127,7 @@ const Header = () => {
                                                     )
                                                     setShowUserMenu(false)
                                                 }}
-                                                className="w-full text-left px-4 py-3 hover:bg-[#2A2D2E] rounded-xl font-medium text-gray-500 hover:text-white transition-colors"
+                                                className="w-full text-left px-4 py-3 hover:bg-[#2A2D2E] rounded-xl font-medium text-gray-500 hover:text-white transition-all duration-300 transform hover:scale-105 hover:translate-x-1"
                                             >
                                                 Your Channel
                                             </button>
@@ -136,7 +136,7 @@ const Header = () => {
                                                     navigate("/dashboard")
                                                     setShowUserMenu(false)
                                                 }}
-                                                className="w-full text-left px-4 py-3 hover:bg-[#2A2D2E] rounded-xl font-medium text-gray-500 hover:text-white transition-colors"
+                                                className="w-full text-left px-4 py-3 hover:bg-[#2A2D2E] rounded-xl font-medium text-gray-500 hover:text-white transition-all duration-300 transform hover:scale-105 hover:translate-x-1"
                                             >
                                                 Studio Dashboard
                                             </button>
@@ -145,7 +145,7 @@ const Header = () => {
                                         <div className="border-t border-[#2A2D2E] p-2">
                                             <button
                                                 onClick={handleLogout}
-                                                className="w-full text-left px-4 py-3 hover:bg-red-50 rounded-xl font-medium text-red-600 hover:text-red-700 transition-colors"
+                                                className="w-full text-left px-4 py-3 hover:bg-red-600/10 rounded-xl font-medium text-red-600 hover:text-red-500 transition-all duration-300 transform hover:scale-105 hover:translate-x-1"
                                             >
                                                 Log out
                                             </button>

@@ -42,7 +42,7 @@ const Sidebar = () => {
     return (
         <>
             {/* MOBILE NAVIGATION - Bottom Bar */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1E2021] border-t border-[#2A2D2E] flex items-center justify-around px-2 z-50 shadow-lg">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1E2021] border-t border-[#2A2D2E] flex items-center justify-around px-2 z-50 shadow-lg backdrop-blur-sm">
                 {navItems.map((item) => {
                     const Icon = item.icon
                     const active = isActive(item.path)
@@ -51,16 +51,20 @@ const Sidebar = () => {
                         <button
                             key={item.id}
                             onClick={() => navigate(item.path)}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all ${
+                            className={`relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 ${
                                 active ? "text-red-600" : "text-gray-400"
                             }`}
                         >
+                            {/* Active Indicator */}
+                            {active && (
+                                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-red-600 rounded-full animate-pulse" />
+                            )}
                             <Icon
-                                className="h-6 w-6"
+                                className={`h-6 w-6 transition-all duration-300 ${active ? "animate-bounce" : ""}`}
                                 strokeWidth={active ? 2.5 : 2}
                             />
                             <span
-                                className={`text-[10px] font-medium ${active ? "text-red-600 font-semibold" : "text-gray-400"}`}
+                                className={`text-[10px] font-medium transition-all duration-300 ${active ? "text-red-600 font-semibold" : "text-gray-400"}`}
                             >
                                 {item.label}
                             </span>
@@ -74,12 +78,12 @@ const Sidebar = () => {
                 {/* LOGO */}
                 <div
                     onClick={() => navigate("/")}
-                    className="mb-8 px-4 cursor-pointer"
+                    className="mb-8 px-4 cursor-pointer group"
                 >
-                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-600 text-white font-bold text-xl xl:hidden">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-600 text-white font-bold text-xl xl:hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
                         V
                     </div>
-                    <h1 className="hidden xl:block text-2xl font-bold text-red-600 tracking-tight">
+                    <h1 className="hidden xl:block text-2xl font-bold text-red-600 tracking-tight transition-all duration-300 group-hover:scale-105">
                         VidNest
                     </h1>
                 </div>
@@ -94,16 +98,20 @@ const Sidebar = () => {
                             <button
                                 key={item.id}
                                 onClick={() => navigate(item.path)}
-                                className={`w-full flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full transition-all duration-200 group
-                                    ${active ? "bg-red-600 text-white" : "text-gray-500 hover:bg-[#2A2D2E]"}
+                                className={`relative w-full flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full transition-all duration-300 group transform hover:scale-105 active:scale-95
+                                    ${active ? "bg-red-600 text-white shadow-lg shadow-red-500/30" : "text-gray-500 hover:bg-[#2A2D2E] hover:text-white"}
                                 `}
                             >
+                                {/* Active Indicator - Desktop */}
+                                {active && (
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full animate-pulse" />
+                                )}
                                 <Icon
-                                    className={`h-6 w-6 transition-transform group-hover:scale-110`}
+                                    className={`h-6 w-6 transition-all duration-300 ${active ? "scale-110" : "group-hover:scale-125 group-hover:rotate-12"}`}
                                     strokeWidth={2.5}
                                 />
                                 <span
-                                    className={`hidden xl:block font-semibold text-base ${active ? "text-white" : "text-gray-500 group-hover:text-white"}`}
+                                    className={`hidden xl:block font-semibold text-base transition-all duration-300 ${active ? "text-white" : "text-gray-500 group-hover:text-white"}`}
                                 >
                                     {item.label}
                                 </span>
@@ -116,10 +124,13 @@ const Sidebar = () => {
                 <div className="w-full px-3 mt-auto">
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full text-gray-400 hover:bg-[#2A2D2E] hover:text-red-600 transition-colors"
+                        className="w-full flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full text-gray-400 hover:bg-red-600/10 hover:text-red-600 transition-all duration-300 group transform hover:scale-105 active:scale-95"
                     >
-                        <LogOut className="h-6 w-6" strokeWidth={2.5} />
-                        <span className="hidden xl:block font-semibold text-base">
+                        <LogOut
+                            className="h-6 w-6 transition-all duration-300 group-hover:rotate-12 group-hover:scale-110"
+                            strokeWidth={2.5}
+                        />
+                        <span className="hidden xl:block font-semibold text-base transition-all duration-300">
                             Log out
                         </span>
                     </button>

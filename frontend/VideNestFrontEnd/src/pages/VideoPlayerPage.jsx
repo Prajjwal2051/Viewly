@@ -8,11 +8,10 @@
 // - Display title, description, and views
 // - Sidebar with more videos
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { getVideoById, getAllVideos } from "../api/videoApi"
-// import { getActivity } from "../api/userApi" // Removed invalid import
 import { toggleVideoLike, getIsVideoLiked } from "../api/likeApi"
 import { toggleSubscription } from "../api/subscriptionApi"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
@@ -25,6 +24,11 @@ import {
     MoreVertical,
     Heart,
     X,
+    Play,
+    Pause,
+    Maximize,
+    Rewind,
+    FastForward,
 } from "lucide-react"
 import toast from "react-hot-toast"
 
@@ -50,6 +54,41 @@ const VideoPlayerPage = ({ isModal = false }) => {
     // Like state for Modal
     const [liked, setLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(0)
+
+    // Video Player Refs & State
+    const videoRef = useRef(null)
+    const [isPlaying, setIsPlaying] = useState(true)
+
+    const handleTogglePlay = () => {
+        if (videoRef.current) {
+            if (isPlaying) {
+                videoRef.current.pause()
+            } else {
+                videoRef.current.play()
+            }
+            setIsPlaying(!isPlaying)
+        }
+    }
+
+    const skip = (seconds) => {
+        if (videoRef.current) {
+            videoRef.current.currentTime += seconds
+        }
+    }
+
+    const toggleFullscreen = () => {
+        if (videoRef.current) {
+            if (!document.fullscreenElement) {
+                videoRef.current.requestFullscreen().catch((err) => {
+                    console.log(
+                        `Error attempting to enable fullscreen: ${err.message}`
+                    )
+                })
+            } else {
+                document.exitFullscreen()
+            }
+        }
+    }
 
     // Fetch Video Details
     useEffect(() => {
@@ -185,24 +224,80 @@ const VideoPlayerPage = ({ isModal = false }) => {
                 </button>
 
                 {/* VIDEO PLAYER - CENTRAL & IMMERSIVE */}
-                <div className="relative w-full h-full max-w-[500px] flex items-center bg-black">
+                <div className="relative w-full h-full max-w-[500px] flex items-center bg-black group">
                     <video
+                        ref={videoRef}
                         src={video.videoFile?.replace("http://", "https://")}
-                        controls
                         autoPlay
                         playsInline
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain cursor-pointer"
                         poster={video.thumbnail}
+                        onClick={handleTogglePlay}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
                         onLoadedData={(e) => {
                             e.target.play().catch(() => {
-                                // Autoplay failed, usually due to browser policy.
-                                // User can click play manually.
                                 console.log(
                                     "Autoplay blocked, waiting for interaction"
                                 )
+                                setIsPlaying(false)
                             })
                         }}
                     />
+
+                    {/* CUSTOM CONTROLS OVERLAY - CENTERED */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-8 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        {/* Rewind -5s */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                skip(-5)
+                            }}
+                            className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
+                            title="Rewind 5s"
+                        >
+                            <Rewind size={32} fill="white" />
+                        </button>
+
+                        {/* Play/Pause Main Button */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                handleTogglePlay()
+                            }}
+                            className="p-5 rounded-full bg-red-600/90 text-white hover:bg-red-600 hover:scale-110 transition-all shadow-lg pointer-events-auto backdrop-blur-sm shadow-red-900/20"
+                        >
+                            {isPlaying ? (
+                                <Pause size={40} fill="white" />
+                            ) : (
+                                <Play size={40} fill="white" className="ml-1" />
+                            )}
+                        </button>
+
+                        {/* Fast Forward +5s */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                skip(5)
+                            }}
+                            className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
+                            title="Forward 5s"
+                        >
+                            <FastForward size={32} fill="white" />
+                        </button>
+                    </div>
+
+                    {/* FULLSCREEN TOGGLE - Top Right */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            toggleFullscreen()
+                        }}
+                        className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all z-20 pointer-events-auto backdrop-blur-sm"
+                        title="Toggle Fullscreen"
+                    >
+                        <Maximize size={24} />
+                    </button>
                 </div>
 
                 {/* RIGHT OVERLAY - ACTIONS BUTTONS */}

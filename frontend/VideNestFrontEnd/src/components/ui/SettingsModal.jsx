@@ -31,16 +31,14 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 {/* Modal Card */}
                 <div className="bg-[#1E2021] rounded-2xl shadow-2xl border border-[#2A2D2E] overflow-hidden">
                     {/* MODAL HEADER - Title and Close Button */}
-                    <div className="flex items-center justify-between p-6 border-b border-[#2A2D2E]
-                        <h2 className="text-2xl font-bold
-                            Settings
-                        </h2>
+                    <div className="flex items-center justify-between p-6 border-b border-[#2A2D2E]">
+                        <h2 className="text-2xl font-bold">Settings</h2>
                         {/* Close Button - Calls onClose to hide modal */}
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-[#2A2D2E] rounded-full transition-colors"
                         >
-                            <X className="w-5 h-5 />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -61,8 +59,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                 }}
                                 className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                                     !isDarkMode
-                                        ? "border-red-600 bg-red-50 // Active state
-                                        : "border-[#2A2D2E] hover:border-gray-300 // Inactive state
+                                        ? "border-red-600 bg-red-500/10" // Active state
+                                        : "border-[#2A2D2E] hover:border-gray-500" // Inactive state
                                 }`}
                             >
                                 {/* Sun Icon - Changes color based on selection */}
@@ -73,10 +71,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                 </div>
                                 {/* Text Content */}
                                 <div className="flex-1 text-left">
-                                    <div className="font-semibold
+                                    <div className="font-semibold text-white">
                                         Light Mode
                                     </div>
-                                    <div className="text-sm text-gray-500
+                                    <div className="text-sm text-gray-500">
                                         Bright and clear
                                     </div>
                                 </div>
@@ -96,8 +94,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                 }}
                                 className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                                     isDarkMode
-                                        ? "border-red-600 bg-red-50 // Active state
-                                        : "border-[#2A2D2E] hover:border-gray-300 // Inactive state
+                                        ? "border-red-600 bg-red-500/10" // Active state
+                                        : "border-[#2A2D2E] hover:border-gray-500" // Inactive state
                                 }`}
                             >
                                 {/* Moon Icon - Changes color based on selection */}
@@ -108,10 +106,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                 </div>
                                 {/* Text Content */}
                                 <div className="flex-1 text-left">
-                                    <div className="font-semibold
+                                    <div className="font-semibold text-white">
                                         Dark Mode
                                     </div>
-                                    <div className="text-sm text-gray-500
+                                    <div className="text-sm text-gray-500">
                                         Easy on the eyes
                                     </div>
                                 </div>

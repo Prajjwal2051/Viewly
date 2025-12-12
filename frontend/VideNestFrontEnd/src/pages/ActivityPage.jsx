@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { getAllVideos } from "../api/videoApi"
 import { getSubscribedChannels } from "../api/subscriptionApi"
 import VideoCard from "../components/video/VideoCard"
@@ -24,6 +24,7 @@ import toast from "react-hot-toast"
 const ActivityPage = () => {
     const { user } = useSelector((state) => state.auth)
     const navigate = useNavigate()
+    const location = useLocation()
 
     const [loading, setLoading] = useState(true)
     const [subscriptionUpdates, setSubscriptionUpdates] = useState([])
@@ -133,16 +134,19 @@ const ActivityPage = () => {
                                 <div
                                     key={video._id}
                                     onClick={() =>
-                                        navigate(`/video/${video._id}`)
+                                        navigate(`/video/${video._id}`, {
+                                            state: { background: location },
+                                        })
                                     }
                                     className="flex gap-4 p-4 bg-[#2A2D2E]/50 rounded-xl border border-[#2A2D2E] hover:bg-[#2A2D2E]/50 transition-colors cursor-pointer"
                                 >
-                                    {/* Thumbnail */}
-                                    <img
-                                        src={video.thumbnail}
-                                        alt={video.title}
-                                        className="w-40 h-24 object-cover rounded-lg flex-shrink-0"
-                                    />
+                                    {/* Thumbnail Icon Replacement */}
+                                    <div className="w-56 h-32 bg-[#1E2021] border border-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <VideoIcon
+                                            className="text-red-500"
+                                            size={40}
+                                        />
+                                    </div>
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
@@ -183,7 +187,7 @@ const ActivityPage = () => {
                 {/* Notifications Placeholder */}
                 <div>
                     <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <Bell className="text-yellow-500" size={28} />
+                        <Bell className="text-red-500" size={28} />
                         Notifications
                     </h2>
                     <div className="text-center py-12 bg-[#2A2D2E]/30 rounded-xl">
