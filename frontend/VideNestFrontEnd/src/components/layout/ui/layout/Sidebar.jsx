@@ -102,10 +102,6 @@ const Sidebar = () => {
                                     ${active ? "bg-red-600 text-white shadow-lg shadow-red-500/30" : "text-gray-500 hover:bg-[#2A2D2E] hover:text-white"}
                                 `}
                             >
-                                {/* Active Indicator - Desktop */}
-                                {active && (
-                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full animate-pulse" />
-                                )}
                                 <Icon
                                     className={`h-6 w-6 transition-all duration-300 ${active ? "scale-110" : "group-hover:scale-125 group-hover:rotate-12"}`}
                                     strokeWidth={2.5}

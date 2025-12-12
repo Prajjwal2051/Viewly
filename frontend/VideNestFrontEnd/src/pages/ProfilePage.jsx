@@ -193,8 +193,17 @@ const ProfilePage = () => {
                 </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex items-center border-b border-[#2A2D2E] mb-8 overflow-x-auto">
+            {/* Navigation Tabs with Sliding Animation */}
+            <div className="relative flex items-center border-b border-[#2A2D2E] mb-8 overflow-x-auto">
+                {/* Animated Background Slider - Desktop Only */}
+                <div
+                    className={`hidden md:block absolute bottom-0 h-0.5 bg-red-600 rounded-t-full transition-all duration-300 ease-out`}
+                    style={{
+                        width: `${(100 / TABS.length) * 0.6}%`, // 60% of tab width for narrower slider
+                        left: `${TABS.findIndex((t) => t.id === activeTab) * (100 / TABS.length) + (100 / TABS.length) * 0.2}%`, // Centered within tab
+                    }}
+                />
+
                 {TABS.map((tab) => {
                     const Icon = tab.icon
                     const isActive = activeTab === tab.id
@@ -202,16 +211,20 @@ const ProfilePage = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-8 py-4 font-medium transition-all relative whitespace-nowrap ${
+                            className={`flex items-center justify-center gap-2 px-8 py-4 font-medium transition-all duration-300 relative whitespace-nowrap flex-1 ${
                                 isActive
                                     ? "text-red-600"
-                                    : "text-gray-500 hover:text-gray-500"
+                                    : "text-gray-500 hover:text-white"
                             }`}
                         >
-                            <Icon size={18} />
+                            <Icon
+                                size={18}
+                                className="transition-transform duration-300 hover:scale-110"
+                            />
                             {tab.label}
+                            {/* Mobile: Individual bottom border */}
                             {isActive && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600 rounded-t-full" />
+                                <div className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-3/5 h-0.5 bg-red-600 rounded-t-full" />
                             )}
                         </button>
                     )
