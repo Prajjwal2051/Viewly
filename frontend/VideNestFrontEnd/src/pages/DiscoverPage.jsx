@@ -56,7 +56,7 @@ const DiscoverPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white pt-6 pb-12">
+        <div className="min-h-screen bg-[#1E2021] text-white pt-6 pb-12">
             <div className="max-w-7xl mx-auto px-4 md:px-6">
                 {/* Header */}
                 <div className="mb-8 flex items-center justify-between">
@@ -71,7 +71,7 @@ const DiscoverPage = () => {
                     </div>
                     <button
                         onClick={handleShuffle}
-                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center gap-2 transition-colors"
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-full flex items-center gap-2 transition-colors"
                     >
                         <Shuffle size={18} />
                         Shuffle
@@ -86,8 +86,8 @@ const DiscoverPage = () => {
                             onClick={() => setActiveCategory(category)}
                             className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${
                                 activeCategory === category
-                                    ? "bg-white text-black"
-                                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                                    ? "bg-[#1E2021] text-black"
+                                    : "bg-[#2A2D2E] text-gray-300 hover:bg-gray-700"
                             }`}
                         >
                             {category}
@@ -117,7 +117,7 @@ const DiscoverPage = () => {
                     ) : (
                         <div className="text-center py-20">
                             <TrendingUp
-                                className="mx-auto mb-4 text-gray-700"
+                                className="mx-auto mb-4 text-gray-500"
                                 size={64}
                             />
                             <h3 className="text-xl font-semibold text-gray-400 mb-2">

@@ -7,7 +7,7 @@
 // Key Features:
 // - animate-pulse: Tailwind class creates pulsing animation
 // - Matching layout: Same structure as VideoCard component
-// - Dark mode support: Uses dark: prefixes for theme compatibility
+// - Dark mode support: Uses prefixes for theme compatibility
 
 /**
  * VIDEO CARD SKELETON COMPONENT
@@ -20,7 +20,7 @@
 const VideoCardSkeleton = () => {
     return (
         // Card container - matches the new aspect ratio and roundedness
-        <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden bg-gray-800 animate-pulse shadow-md">
+        <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden bg-[#2A2D2E] animate-pulse shadow-md">
             {/* Duration Badge Skeleton (Top Right) */}
             <div className="absolute top-3 right-3 h-5 w-12 bg-gray-700 rounded-lg"></div>
 

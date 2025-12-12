@@ -95,7 +95,7 @@ const UploadPage = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            <h1 className="text-3xl font-bold text-white mb-6">
                 Create Post
             </h1>
 
@@ -106,7 +106,7 @@ const UploadPage = () => {
                     className={`flex-1 py-4 rounded-xl flex items-center justify-center space-x-2 transition-all ${
                         postType === "video"
                             ? "bg-red-600 text-white shadow-lg shadow-red-500/30"
-                            : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            : "bg-[#1E2021] text-gray-400 hover:bg-[#2A2D2E]"
                     }`}
                 >
                     <Film size={20} />
@@ -117,7 +117,7 @@ const UploadPage = () => {
                     className={`flex-1 py-4 rounded-xl flex items-center justify-center space-x-2 transition-all ${
                         postType === "tweet"
                             ? "bg-red-600 text-white shadow-lg shadow-red-500/30"
-                            : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            : "bg-[#1E2021] text-gray-400 hover:bg-[#2A2D2E]"
                     }`}
                 >
                     <Type size={20} />
@@ -134,8 +134,8 @@ const UploadPage = () => {
                             <div
                                 className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                                     errors.videoFile
-                                        ? "border-red-500 bg-red-50 dark:bg-red-900/10"
-                                        : "border-gray-300 dark:border-gray-700 hover:border-red-500"
+                                        ? "border-red-500 bg-red-50"
+                                        : "border-gray-300 hover:border-red-500"
                                 }`}
                             >
                                 <input
@@ -152,15 +152,15 @@ const UploadPage = () => {
                                         htmlFor="video-upload"
                                         className="cursor-pointer flex flex-col items-center"
                                     >
-                                        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
+                                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 text-red-600">
                                             <Upload size={32} />
                                         </div>
-                                        <span className="font-semibold text-gray-700 dark:text-gray-200">
+                                        <span className="font-semibold text-gray-500">
                                             Click to upload video
                                         </span>
                                     </label>
                                 ) : (
-                                    <div className="relative rounded-lg overflow-hidden bg-black">
+                                    <div className="relative rounded-lg overflow-hidden bg-[#1E2021]">
                                         <video
                                             src={videoPreview}
                                             className="w-full h-48 object-contain"
@@ -172,7 +172,7 @@ const UploadPage = () => {
                                                 setVideoPreview(null)
                                                 setValue("videoFile", null)
                                             }}
-                                            className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-red-500"
+                                            className="absolute top-2 right-2 p-1 bg-[#1E2021]/50 text-white rounded-full hover:bg-red-500"
                                         >
                                             <X size={16} />
                                         </button>
@@ -190,7 +190,7 @@ const UploadPage = () => {
                                 className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
                                     errors.thumbnail
                                         ? "border-red-500"
-                                        : "border-gray-300 dark:border-gray-700 hover:border-red-500"
+                                        : "border-gray-300 hover:border-red-500"
                                 }`}
                             >
                                 <input
@@ -207,10 +207,10 @@ const UploadPage = () => {
                                         htmlFor="thumbnail-upload"
                                         className="cursor-pointer flex flex-col items-center"
                                     >
-                                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 text-gray-600 dark:text-gray-400">
+                                        <div className="w-12 h-12 bg-[#2A2D2E] rounded-full flex items-center justify-center mb-3 text-gray-400">
                                             <ImageIcon size={24} />
                                         </div>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                                        <span className="font-medium text-gray-500">
                                             Upload Thumbnail
                                         </span>
                                     </label>
@@ -227,7 +227,7 @@ const UploadPage = () => {
                                                 setThumbnailPreview(null)
                                                 setValue("thumbnail", null)
                                             }}
-                                            className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-red-500"
+                                            className="absolute top-2 right-2 p-1 bg-[#1E2021]/50 text-white rounded-full hover:bg-red-500"
                                         >
                                             <X size={16} />
                                         </button>
@@ -242,9 +242,9 @@ const UploadPage = () => {
                         </div>
 
                         {/* Metadata inputs */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
+                        <div className="bg-[#1E2021] rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label className="block text-sm font-medium text-gray-500 mb-1">
                                     Video Title
                                 </label>
                                 <Input
@@ -252,7 +252,7 @@ const UploadPage = () => {
                                         required: "Title is required",
                                     })}
                                     placeholder="Enter title..."
-                                    className="bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl"
+                                    className="bg-[#2A2D2E] border-transparent rounded-2xl"
                                 />
                                 {errors.title && (
                                     <p className="text-red-500 text-sm mt-1">
@@ -261,7 +261,7 @@ const UploadPage = () => {
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label className="block text-sm font-medium text-gray-500 mb-1">
                                     Description
                                 </label>
                                 <textarea
@@ -269,7 +269,7 @@ const UploadPage = () => {
                                         required: "Description is required",
                                     })}
                                     rows="4"
-                                    className="w-full bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl p-4 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-red-600 outline-none resize-none"
+                                    className="w-full bg-[#2A2D2E] border-transparent rounded-2xl p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-red-600 outline-none resize-none"
                                     placeholder="Tell viewers about your video..."
                                 />
                                 {errors.description && (
@@ -280,12 +280,12 @@ const UploadPage = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <label className="block text-sm font-medium text-gray-500 mb-1">
                                         Category
                                     </label>
                                     <select
                                         {...register("category")}
-                                        className="w-full bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl p-3 text-gray-900 dark:text-white outline-none"
+                                        className="w-full bg-[#2A2D2E] border-transparent rounded-2xl p-3 text-white outline-none"
                                     >
                                         <option value="General">General</option>
                                         <option value="Music">Music</option>
@@ -296,13 +296,13 @@ const UploadPage = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <label className="block text-sm font-medium text-gray-500 mb-1">
                                         Tags
                                     </label>
                                     <Input
                                         {...register("tags")}
                                         placeholder="Comma separated..."
-                                        className="bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl"
+                                        className="bg-[#2A2D2E] border-transparent rounded-2xl"
                                     />
                                 </div>
                             </div>
@@ -311,10 +311,10 @@ const UploadPage = () => {
                 ) : (
                     // TWEET CREATION FORM
                     <div className="max-w-2xl mx-auto">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-gray-700 space-y-6">
+                        <div className="bg-[#1E2021] rounded-2xl p-8 shadow-lg border border-gray-100 space-y-6">
                             {/* Tweet Text Area */}
                             <div>
-                                <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                                <label className="block text-lg font-semibold text-white mb-3">
                                     What's happening?
                                 </label>
                                 <textarea
@@ -328,7 +328,7 @@ const UploadPage = () => {
                                     })}
                                     rows="6"
                                     maxLength={280}
-                                    className="w-full bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 text-lg text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none resize-none"
+                                    className="w-full bg-[#2A2D2E] border-2 border-[#2A2D2E] rounded-xl p-4 text-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-red-600 focus:border-transparent outline-none resize-none"
                                     placeholder="Share your thoughts..."
                                 />
                                 <div className="flex justify-between items-center mt-2">
@@ -355,10 +355,10 @@ const UploadPage = () => {
 
                             {/* Optional Image Upload */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-gray-500 mb-2">
                                     Add Image (Optional)
                                 </label>
-                                <div className="border-2 border-dashed rounded-xl p-6 text-center transition-colors border-gray-300 dark:border-gray-600 hover:border-purple-500">
+                                <div className="border-2 border-dashed rounded-xl p-6 text-center transition-colors border-gray-300 hover:border-red-500">
                                     <input
                                         type="file"
                                         id="tweet-image-upload"
@@ -373,10 +373,10 @@ const UploadPage = () => {
                                             htmlFor="tweet-image-upload"
                                             className="cursor-pointer flex flex-col items-center"
                                         >
-                                            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-3 text-purple-600 dark:text-purple-400">
+                                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3 text-red-600">
                                                 <ImageIcon size={24} />
                                             </div>
-                                            <span className="font-medium text-gray-600 dark:text-gray-300">
+                                            <span className="font-medium text-gray-400">
                                                 Click to add image
                                             </span>
                                             <span className="text-xs text-gray-500 mt-1">
@@ -396,7 +396,7 @@ const UploadPage = () => {
                                                     setImagePreview(null)
                                                     setValue("image", null)
                                                 }}
-                                                className="absolute top-2 right-2 p-2 bg-black/70 text-white rounded-full hover:bg-red-500 transition-colors"
+                                                className="absolute top-2 right-2 p-2 bg-[#1E2021]/70 text-white rounded-full hover:bg-red-500 transition-colors"
                                             >
                                                 <X size={18} />
                                             </button>

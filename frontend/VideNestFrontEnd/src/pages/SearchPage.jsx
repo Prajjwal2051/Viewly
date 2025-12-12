@@ -65,7 +65,7 @@ const SearchPage = () => {
     }, [query])
 
     return (
-        <div className="min-h-screen bg-black text-white pt-6 pb-12">
+        <div className="min-h-screen bg-[#1E2021] text-white pt-6 pb-12">
             <div className="max-w-7xl mx-auto px-4 md:px-6">
                 {/* Header */}
                 <div className="mb-8">
@@ -101,7 +101,7 @@ const SearchPage = () => {
                     </>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <SearchIcon className="text-gray-700 mb-4" size={64} />
+                        <SearchIcon className="text-gray-500 mb-4" size={64} />
                         <h3 className="text-2xl font-semibold text-gray-400 mb-2">
                             {query ? "No videos found" : "Enter a search query"}
                         </h3>

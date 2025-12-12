@@ -50,7 +50,7 @@ const TweetPage = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-screen bg-black">
+            <div className="flex justify-center items-center h-screen bg-[#1E2021]">
                 <Loader2 className="w-10 h-10 animate-spin text-white" />
             </div>
         )
@@ -59,12 +59,12 @@ const TweetPage = () => {
     if (!tweet) return null
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col md:flex-row">
+        <div className="min-h-screen bg-[#1E2021] text-white flex flex-col md:flex-row">
             {/* LEFT: Image Viewer */}
-            <div className="flex-1 bg-black flex items-center justify-center relative min-h-[50vh] md:h-screen">
+            <div className="flex-1 bg-[#1E2021] flex items-center justify-center relative min-h-[50vh] md:h-screen">
                 <button
                     onClick={() => navigate(-1)}
-                    className="absolute top-4 left-4 z-10 p-2 bg-black/50 rounded-full hover:bg-black/80 text-white"
+                    className="absolute top-4 left-4 z-10 p-2 bg-[#1E2021]/50 rounded-full hover:bg-[#1E2021]/80 text-white"
                 >
                     <ArrowLeft size={24} />
                 </button>
@@ -78,9 +78,9 @@ const TweetPage = () => {
             </div>
 
             {/* RIGHT: Sidebar (Details & Comments) */}
-            <div className="md:w-[400px] lg:w-[450px] bg-gray-900 border-l border-gray-800 flex flex-col h-screen overflow-y-auto">
+            <div className="md:w-[400px] lg:w-[450px] bg-[#2A2D2E] border-l border-[#2A2D2E] flex flex-col h-screen overflow-y-auto">
                 {/* Header: Author */}
-                <div className="p-4 border-b border-gray-800 flex items-center gap-3">
+                <div className="p-4 border-b border-[#2A2D2E] flex items-center gap-3">
                     <img
                         src={
                             tweet.ownerDetails?.avatar ||
@@ -112,7 +112,7 @@ const TweetPage = () => {
                 {/* Content & Stats */}
                 <div className="p-4">
                     {tweet.content && (
-                        <p className="text-sm mb-4 whitespace-pre-wrap leading-relaxed border-b border-gray-800 pb-4">
+                        <p className="text-sm mb-4 whitespace-pre-wrap leading-relaxed border-b border-[#2A2D2E] pb-4">
                             {tweet.content}
                         </p>
                     )}
@@ -123,7 +123,7 @@ const TweetPage = () => {
                             className={`flex items-center gap-2 transition-colors ${
                                 isLiked
                                     ? "text-red-500"
-                                    : "text-white hover:text-red-500"
+                                    : "text-white hover:text-red-600"
                             }`}
                         >
                             <Heart
@@ -151,7 +151,7 @@ const TweetPage = () => {
                     Our CommentSection component might pass 'videoId' param to API.
                     We need to check CommentSection.jsx props.
                  */}
-                <div className="flex-1 bg-black/20">
+                <div className="flex-1 bg-[#1E2021]/20">
                     <CommentSection
                         tweetId={tweet._id}
                         isTweet={true} // Hint for component if needed, but likely we pass different prop or API handles it

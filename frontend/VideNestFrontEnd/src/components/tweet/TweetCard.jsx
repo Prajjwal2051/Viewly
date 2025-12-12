@@ -37,7 +37,7 @@ const TweetCard = ({ tweet }) => {
     }
 
     return (
-        <div className="relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-gray-900">
+        <div className="relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E]">
             {/* BACKGROUND IMAGE - Natural Aspect Ratio */}
             {tweet.image ? (
                 <img
@@ -46,7 +46,7 @@ const TweetCard = ({ tweet }) => {
                     className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                 />
             ) : (
-                <div className="w-full h-48 bg-gray-800 flex items-center justify-center p-4">
+                <div className="w-full h-48 bg-[#2A2D2E] flex items-center justify-center p-4">
                     <p className="text-white text-center">{tweet.content}</p>
                 </div>
             )}
@@ -89,7 +89,7 @@ const TweetCard = ({ tweet }) => {
                         className={`flex items-center gap-1.5 px-2 py-1 rounded-full backdrop-blur-sm transition-colors ${
                             isLiked
                                 ? "bg-red-500/20 text-red-500"
-                                : "bg-white/10 text-white hover:bg-white/20"
+                                : "bg-[#1E2021]/10 text-white hover:bg-[#1E2021]/20"
                         }`}
                     >
                         <Heart

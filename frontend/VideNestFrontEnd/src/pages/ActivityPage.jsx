@@ -83,12 +83,12 @@ const ActivityPage = () => {
     }, [user, navigate])
 
     return (
-        <div className="min-h-screen bg-black text-white pt-6 pb-12">
+        <div className="min-h-screen bg-[#1E2021] text-white pt-6 pb-12">
             <div className="max-w-7xl mx-auto px-4 md:px-6">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                        <Bell className="text-blue-500" size={36} />
+                        <Bell className="text-red-500" size={36} />
                         Activity
                     </h1>
                     <p className="text-gray-400">
@@ -100,7 +100,7 @@ const ActivityPage = () => {
                 {subscriptionUpdates.length > 0 && (
                     <div className="mb-12">
                         <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                            <Users className="text-purple-500" size={28} />
+                            <Users className="text-red-500" size={28} />
                             Latest from Subscriptions
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -114,7 +114,7 @@ const ActivityPage = () => {
                 {/* Recent Tweets Section */}
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <MessageSquare className="text-purple-500" size={28} />
+                        <MessageSquare className="text-red-500" size={28} />
                         Recent Tweets
                     </h2>
                     <TweetList limit={5} />
@@ -135,7 +135,7 @@ const ActivityPage = () => {
                                     onClick={() =>
                                         navigate(`/video/${video._id}`)
                                     }
-                                    className="flex gap-4 p-4 bg-gray-900/50 rounded-xl border border-gray-800 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                                    className="flex gap-4 p-4 bg-[#2A2D2E]/50 rounded-xl border border-[#2A2D2E] hover:bg-[#2A2D2E]/50 transition-colors cursor-pointer"
                                 >
                                     {/* Thumbnail */}
                                     <img
@@ -170,9 +170,9 @@ const ActivityPage = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12 bg-gray-900/30 rounded-xl">
+                        <div className="text-center py-12 bg-[#2A2D2E]/30 rounded-xl">
                             <VideoIcon
-                                className="mx-auto mb-4 text-gray-700"
+                                className="mx-auto mb-4 text-gray-500"
                                 size={48}
                             />
                             <p className="text-gray-500">No recent activity</p>
@@ -186,15 +186,15 @@ const ActivityPage = () => {
                         <Bell className="text-yellow-500" size={28} />
                         Notifications
                     </h2>
-                    <div className="text-center py-12 bg-gray-900/30 rounded-xl">
+                    <div className="text-center py-12 bg-[#2A2D2E]/30 rounded-xl">
                         <Bell
-                            className="mx-auto mb-4 text-gray-700"
+                            className="mx-auto mb-4 text-gray-500"
                             size={48}
                         />
                         <p className="text-gray-500">
                             Notification system coming soon!
                         </p>
-                        <p className="text-sm text-gray-600 mt-2">
+                        <p className="text-sm text-gray-400 mt-2">
                             You'll be notified about likes, comments, and new
                             subscribers
                         </p>

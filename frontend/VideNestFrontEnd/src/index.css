@@ -1,8 +1,7 @@
 /* ============================================
-   GLOBAL STYLES - TAILWIND V4 & CUSTOM CSS
+   GLOBAL STYLES - DARK THEME
    ============================================
-   Imports Tailwind utilities and defines custom styles.
-   Handles mobile navigation spacing and scrollbar styling.
+   Dark theme with custom background color
 */
 
 /* Google Fonts Import */
@@ -18,11 +17,11 @@ body {
     /* Smoother font rendering across browsers */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #000000; /* Pure Black */
+    background-color: #1e2021; /* Softer dark background */
     @apply transition-colors duration-200 text-white;
 }
 
-/* Mobile-specific: Add bottom padding to avoid content hiding under fixed nav */
+/* Mobile-specific: Add bottom padding for fixed bottom nav */
 @media (max-width: 768px) {
     main {
         padding-bottom: 5rem !important;
@@ -57,30 +56,30 @@ body {
     animation-delay: 600ms;
 }
 
-/* CUSTOM SCROLLBAR - Webkit browsers (Chrome, Safari, Edge) */
+/* CUSTOM SCROLLBAR - Dark theme */
 ::-webkit-scrollbar {
-    width: 8px; /* Thin scrollbar width */
+    width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1; /* Light gray track */
+    background: #2a2d2e;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #888; /* Medium gray thumb */
-    border-radius: 4px; /* Rounded corners */
+    background: #4a4d4e;
+    border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555; /* Darker on hover */
+    background: #5a5d5e;
 }
 
 /* UTILITY: Hide scrollbar while keeping scroll functionality */
 .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
 }

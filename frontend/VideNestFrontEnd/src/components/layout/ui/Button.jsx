@@ -26,9 +26,9 @@ const Button = ({
     // Variant styles - different looks for different contexts
     const variants = {
         default: "bg-red-600 text-white hover:bg-red-700 font-bold", // Primary actions - Pinterest Red
-        ghost: "hover:bg-gray-800 text-gray-300 hover:text-white", // Subtle actions - Dark Mode
+        ghost: "hover:bg-[#2A2D2E] text-gray-300 hover:text-white", // Subtle actions - Dark Mode
         outline:
-            "border border-gray-700 text-gray-300 hover:bg-gray-900 hover:text-white", // Secondary actions
+            "border border-gray-700 text-gray-300 hover:bg-[#2A2D2E] hover:text-white", // Secondary actions
     }
 
     // Size styles - controls padding and text size

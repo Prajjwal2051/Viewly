@@ -106,10 +106,10 @@ const LoginPage = () => {
                                 </span>
                             </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2 font-['Playfair_Display']">
+                        <h2 className="text-3xl font-bold text-[#e60023] mb-2 font-['Playfair_Display']">
                             Welcome to VidNest
                         </h2>
-                        <p className="text-gray-500">Find new ideas to try</p>
+                        <p className="text-gray-600">Find new ideas to try</p>
                     </div>
 
                     {/* Login Form */}
@@ -122,7 +122,7 @@ const LoginPage = () => {
                             value={formData.usernameOrEmail}
                             onChange={handleChange}
                             required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                             disabled={loading}
                         />
 
@@ -134,14 +134,14 @@ const LoginPage = () => {
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                             disabled={loading}
                         />
 
                         <div className="text-right">
                             <a
                                 href="#"
-                                className="text-sm text-gray-500 hover:text-gray-900 font-medium"
+                                className="text-sm text-gray-600 hover:text-white font-medium"
                             >
                                 Forgot your password?
                             </a>
@@ -168,11 +168,11 @@ const LoginPage = () => {
                                 Privacy Policy
                             </span>
                         </p>
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-gray-600 text-sm">
                             Not on VidNest yet?{" "}
                             <Link
                                 to="/register"
-                                className="text-gray-900 font-bold hover:underline"
+                                className="text-[#e60023] font-bold hover:underline"
                             >
                                 Sign up
                             </Link>

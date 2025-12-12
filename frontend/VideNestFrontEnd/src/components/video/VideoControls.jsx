@@ -100,7 +100,7 @@ const VideoControls = ({ videoId, ownerId, video, onSubscribeToggle }) => {
                     className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
                         liked
                             ? "bg-red-600/20 text-red-500"
-                            : "bg-gray-800 hover:bg-gray-700 text-white"
+                            : "bg-[#2A2D2E] hover:bg-gray-700 text-white"
                     }`}
                 >
                     <ThumbsUp
@@ -113,7 +113,7 @@ const VideoControls = ({ videoId, ownerId, video, onSubscribeToggle }) => {
                 {/* SHARE BUTTON */}
                 <button
                     onClick={handleShare}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#2A2D2E] hover:bg-gray-700 text-white rounded-full transition-colors"
                 >
                     <Share2 size={20} />
                     <span className="font-medium text-sm">Share</span>

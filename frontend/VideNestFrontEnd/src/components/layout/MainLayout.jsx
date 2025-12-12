@@ -18,7 +18,7 @@ import Sidebar from "./ui/layout/Sidebar.jsx"
  */
 const MainLayout = ({ children }) => {
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-[#1E2021] text-white">
             {/* SIDEBAR - Responsive (bottom on mobile, left on desktop) */}
             <Sidebar />
 

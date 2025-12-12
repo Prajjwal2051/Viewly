@@ -61,14 +61,14 @@ const TweetList = ({ userId, limit }) => {
     if (loading) {
         return (
             <div className="flex justify-center p-8">
-                <Loader2 className="animate-spin text-purple-600" size={32} />
+                <Loader2 className="animate-spin text-red-600" size={32} />
             </div>
         )
     }
 
     if (error) {
         return (
-            <div className="text-center p-8 text-red-500 bg-red-50 dark:bg-red-900/10 rounded-xl">
+            <div className="text-center p-8 text-red-500 bg-red-50 rounded-xl">
                 {error}
             </div>
         )
@@ -76,10 +76,8 @@ const TweetList = ({ userId, limit }) => {
 
     if (tweets.length === 0) {
         return (
-            <div className="text-center p-12 bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
-                <p className="text-gray-500 dark:text-gray-400 text-lg">
-                    No posts yet.
-                </p>
+            <div className="text-center p-12 bg-[#2A2D2E] rounded-xl border border-dashed border-gray-300">
+                <p className="text-gray-500 text-lg">No posts yet.</p>
             </div>
         )
     }

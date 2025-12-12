@@ -42,7 +42,7 @@ const VideoCard = ({ video }) => {
     return (
         <div
             onClick={() => navigate(`/video/${video._id}`)}
-            className="relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer group shadow-lg bg-gray-900"
+            className="relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer group shadow-lg bg-[#2A2D2E]"
         >
             {/* BACKGROUND IMAGE - Natural Aspect Ratio */}
             <img
@@ -55,7 +55,7 @@ const VideoCard = ({ video }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
 
             {/* DURATION BADGE - Top Right now for cleanliness */}
-            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2 py-1 rounded-lg">
+            <div className="absolute top-3 right-3 bg-[#1E2021]/60 backdrop-blur-md text-white text-xs font-medium px-2 py-1 rounded-lg">
                 {Math.floor(video.duration / 60)}:
                 {String(video.duration % 60).padStart(2, "0")}
             </div>
@@ -86,7 +86,7 @@ const VideoCard = ({ video }) => {
                     {/* Text Info */}
                     <div className="flex-1 min-w-0">
                         <p
-                            className="text-xs text-gray-200 truncate hover:underline"
+                            className="text-xs text-gray-400 truncate hover:underline"
                             onClick={(e) => {
                                 e.stopPropagation()
                                 navigate(`/channel/${video.owner?.username}`)
@@ -99,7 +99,7 @@ const VideoCard = ({ video }) => {
                                 <Eye className="h-2.5 w-2.5" />
                                 {formatViews(video.views)}
                             </span>
-                            <span className="w-0.5 h-0.5 rounded-full bg-gray-500"></span>
+                            <span className="w-0.5 h-0.5 rounded-full bg-[#2A2D2E]0"></span>
                             <span>{formatDate(video.createdAt)}</span>
                         </div>
                     </div>

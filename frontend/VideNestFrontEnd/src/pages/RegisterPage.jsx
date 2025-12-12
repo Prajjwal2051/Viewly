@@ -144,10 +144,10 @@ const RegisterPage = () => {
                                 </span>
                             </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2 font-['Playfair_Display']">
+                        <h2 className="text-3xl font-bold text-white mb-2 font-['Playfair_Display']">
                             Welcome to VidNest
                         </h2>
-                        <p className="text-gray-500">Find new ideas to try</p>
+                        <p className="text-gray-600">Find new ideas to try</p>
                     </div>
 
                     {/* Register Form */}
@@ -159,7 +159,7 @@ const RegisterPage = () => {
                             value={formData.username}
                             onChange={handleChange}
                             required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                             disabled={loading}
                         />
                         <Input
@@ -169,7 +169,7 @@ const RegisterPage = () => {
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                             disabled={loading}
                         />
                         <Input
@@ -179,7 +179,7 @@ const RegisterPage = () => {
                             value={formData.fullName}
                             onChange={handleChange}
                             required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                             disabled={loading}
                         />
                         <Input
@@ -189,7 +189,7 @@ const RegisterPage = () => {
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                             disabled={loading}
                         />
                         <Input
@@ -199,12 +199,12 @@ const RegisterPage = () => {
                             value={formData.confirmPassword}
                             onChange={handleChange}
                             required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
                             disabled={loading}
                         />
 
                         <div className="bg-gray-100 rounded-2xl p-2">
-                            <label className="block text-xs text-gray-500 px-2 mb-1">
+                            <label className="block text-xs text-gray-600 px-2 mb-1">
                                 Avatar
                             </label>
                             <input
@@ -212,7 +212,7 @@ const RegisterPage = () => {
                                 name="avatar"
                                 accept="image/*"
                                 onChange={handleFileChange}
-                                className="w-full text-sm text-gray-500 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer"
+                                className="w-full text-sm text-gray-600 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer"
                                 required
                                 disabled={loading}
                             />
@@ -238,11 +238,11 @@ const RegisterPage = () => {
                                 Privacy Policy
                             </span>
                         </p>
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-gray-600 text-sm">
                             Already a member?{" "}
                             <Link
                                 to="/login"
-                                className="text-gray-900 font-bold hover:underline"
+                                className="text-white font-bold hover:underline"
                             >
                                 Log in
                             </Link>

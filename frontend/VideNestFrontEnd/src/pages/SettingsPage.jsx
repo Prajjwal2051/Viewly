@@ -32,11 +32,11 @@ const SettingsPage = () => {
             </h1>
 
             {/* APPEARANCE SECTION - Theme Toggle */}
-            <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
+            <section className="bg-[#1E2021] dark:bg-[#2A2D2E] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
                 <div className="p-6">
                     {/* Section Header */}
                     <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
-                        <Smartphone className="w-5 h-5 text-purple-600" />
+                        <Smartphone className="w-5 h-5 text-red-600" />
                         Appearance
                     </h2>
 
@@ -46,7 +46,7 @@ const SettingsPage = () => {
                         <div className="flex items-center gap-4">
                             {/* Icon changes based on current theme */}
                             <div
-                                className={`p-2 rounded-lg ${isDarkMode ? "bg-purple-900/30 text-purple-400" : "bg-orange-100 text-orange-600"}`}
+                                className={`p-2 rounded-lg ${isDarkMode ? "bg-red-900/30 text-red-400" : "bg-orange-100 text-orange-600"}`}
                             >
                                 {isDarkMode ? (
                                     <Moon className="w-6 h-6" />
@@ -67,13 +67,13 @@ const SettingsPage = () => {
                         {/* Right Side - Toggle Switch Button */}
                         <button
                             onClick={toggleTheme}
-                            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-                                isDarkMode ? "bg-purple-600" : "bg-gray-200"
+                            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                                isDarkMode ? "bg-red-600" : "bg-gray-200"
                             }`}
                         >
                             {/* Sliding Circle Inside Toggle */}
                             <span
-                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                className={`inline-block h-5 w-5 transform rounded-full bg-[#1E2021] transition-transform ${
                                     isDarkMode
                                         ? "translate-x-6"
                                         : "translate-x-1"
@@ -85,11 +85,11 @@ const SettingsPage = () => {
             </section>
 
             {/* ACCOUNT SETTINGS SECTION - Future Features (Placeholder) */}
-            <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <section className="bg-[#1E2021] dark:bg-[#2A2D2E] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div className="p-6">
                     {/* Section Header */}
                     <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
-                        <User className="w-5 h-5 text-blue-600" />
+                        <User className="w-5 h-5 text-red-600" />
                         Account Preferences
                     </h2>
 

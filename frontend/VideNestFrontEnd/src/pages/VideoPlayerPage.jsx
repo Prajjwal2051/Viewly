@@ -114,7 +114,7 @@ const VideoPlayerPage = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-[80vh] bg-black">
+            <div className="flex justify-center items-center h-[80vh] bg-[#1E2021]">
                 <Loader2 className="w-10 h-10 animate-spin text-red-600" />
             </div>
         )
@@ -123,17 +123,17 @@ const VideoPlayerPage = () => {
     if (!video) return null
 
     return (
-        <div className="min-h-screen bg-black text-white pt-4 pb-12">
+        <div className="min-h-screen bg-[#1E2021] text-white pt-4 pb-12">
             <div className="max-w-[1800px] mx-auto px-4 md:px-6 flex flex-col lg:flex-row gap-6">
                 {/* LEFT COLUMN: Main Video Player & Details */}
                 <div className="flex-1 lg:w-[70%]">
                     {/* 1. Video Player */}
-                    <div className="bg-black">
+                    <div className="bg-[#1E2021]">
                         <video
                             src={video.videoFile}
                             controls
                             autoPlay
-                            className="w-full aspect-video max-h-[80vh] object-contain bg-black"
+                            className="w-full aspect-video max-h-[80vh] object-contain bg-[#1E2021]"
                             poster={video.thumbnail}
                         />
                     </div>
@@ -152,7 +152,7 @@ const VideoPlayerPage = () => {
                         />
 
                         {/* Channel & Description Area */}
-                        <div className="mt-6 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
+                        <div className="mt-6 p-4 bg-[#2A2D2E]/50 rounded-xl border border-[#2A2D2E]">
                             <div className="flex items-center gap-4 mb-4">
                                 <img
                                     src={
@@ -183,8 +183,8 @@ const VideoPlayerPage = () => {
                                     }
                                     className={`ml-auto px-6 py-2 font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                         isSubscribed
-                                            ? "bg-gray-800 text-white hover:bg-gray-700"
-                                            : "bg-white text-black hover:bg-gray-200"
+                                            ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
+                                            : "bg-[#1E2021] text-black hover:bg-gray-200"
                                     }`}
                                 >
                                     {subscribing
@@ -214,10 +214,10 @@ const VideoPlayerPage = () => {
                     {loadingRelated
                         ? Array.from({ length: 5 }).map((_, i) => (
                               <div key={i} className="flex gap-2">
-                                  <div className="w-40 h-24 bg-gray-800 rounded-lg animate-pulse" />
+                                  <div className="w-40 h-24 bg-[#2A2D2E] rounded-lg animate-pulse" />
                                   <div className="flex-1 space-y-2">
-                                      <div className="h-4 bg-gray-800 rounded w-3/4" />
-                                      <div className="h-3 bg-gray-800 rounded w-1/2" />
+                                      <div className="h-4 bg-[#2A2D2E] rounded w-3/4" />
+                                      <div className="h-3 bg-[#2A2D2E] rounded w-1/2" />
                                   </div>
                               </div>
                           ))
@@ -232,16 +232,16 @@ const VideoPlayerPage = () => {
                                       onClick={() =>
                                           navigate(`/video/${relatedVideo._id}`)
                                       }
-                                      className="flex gap-3 cursor-pointer group hover:bg-gray-900/50 p-2 rounded-lg transition-colors"
+                                      className="flex gap-3 cursor-pointer group hover:bg-[#2A2D2E]/50 p-2 rounded-lg transition-colors"
                                   >
                                       {/* Thumbnail */}
-                                      <div className="relative w-40 min-w-[160px] h-24 rounded-lg overflow-hidden bg-gray-800">
+                                      <div className="relative w-40 min-w-[160px] h-24 rounded-lg overflow-hidden bg-[#2A2D2E]">
                                           <img
                                               src={relatedVideo.thumbnail}
                                               alt={relatedVideo.title}
                                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                           />
-                                          <div className="absolute bottom-1 right-1 bg-black/80 px-1 rounded text-xs text-white">
+                                          <div className="absolute bottom-1 right-1 bg-[#1E2021]/80 px-1 rounded text-xs text-white">
                                               {String(
                                                   Math.floor(
                                                       relatedVideo.duration || 0
@@ -258,7 +258,7 @@ const VideoPlayerPage = () => {
 
                                       {/* Info */}
                                       <div className="flex flex-col gap-1 min-w-0">
-                                          <h4 className="font-semibold text-sm line-clamp-2 text-white group-hover:text-red-500 transition-colors">
+                                          <h4 className="font-semibold text-sm line-clamp-2 text-white group-hover:text-red-600 transition-colors">
                                               {relatedVideo.title}
                                           </h4>
                                           <p className="text-xs text-gray-400">

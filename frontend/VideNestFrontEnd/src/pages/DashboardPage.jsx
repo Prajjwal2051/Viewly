@@ -107,14 +107,14 @@ const DashboardPage = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-screen bg-black">
+            <div className="flex justify-center items-center h-screen bg-[#1E2021]">
                 <Loader2 className="w-12 h-12 animate-spin text-red-600" />
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-black text-white pt-6 pb-12">
+        <div className="min-h-screen bg-[#1E2021] text-white pt-6 pb-12">
             <div className="max-w-7xl mx-auto px-4 md:px-6">
                 {/* Header */}
                 <div className="mb-8">
@@ -129,11 +129,11 @@ const DashboardPage = () => {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Total Videos */}
-                    <div className="bg-gradient-to-br from-purple-900/20 to-purple-600/10 border border-purple-800/30 rounded-xl p-6">
+                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <VideoIcon className="text-purple-500" size={32} />
+                            <VideoIcon className="text-red-500" size={32} />
                             <BarChart3
-                                className="text-purple-400/30"
+                                className="text-red-400/30"
                                 size={48}
                             />
                         </div>
@@ -146,10 +146,10 @@ const DashboardPage = () => {
                     </div>
 
                     {/* Total Views */}
-                    <div className="bg-gradient-to-br from-blue-900/20 to-blue-600/10 border border-blue-800/30 rounded-xl p-6">
+                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <Eye className="text-blue-500" size={32} />
-                            <BarChart3 className="text-blue-400/30" size={48} />
+                            <Eye className="text-red-500" size={32} />
+                            <BarChart3 className="text-red-400/30" size={48} />
                         </div>
                         <p className="text-gray-400 text-sm mb-1">
                             Total Views
@@ -175,15 +175,15 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Videos Table */}
-                <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
-                    <div className="p-6 border-b border-gray-800">
+                <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                    <div className="p-6 border-b border-[#2A2D2E]">
                         <h2 className="text-2xl font-bold">Your Videos</h2>
                     </div>
 
                     {videos.length === 0 ? (
                         <div className="p-12 text-center">
                             <VideoIcon
-                                className="mx-auto mb-4 text-gray-600"
+                                className="mx-auto mb-4 text-gray-400"
                                 size={48}
                             />
                             <h3 className="text-xl font-semibold text-gray-400 mb-2">
@@ -202,7 +202,7 @@ const DashboardPage = () => {
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-800/50">
+                                <thead className="bg-[#2A2D2E]/50">
                                     <tr>
                                         <th className="text-left p-4 font-semibold text-gray-300">
                                             Video
@@ -231,7 +231,7 @@ const DashboardPage = () => {
                                     {videos.map((video) => (
                                         <tr
                                             key={video._id}
-                                            className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors"
+                                            className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E]/30 transition-colors"
                                         >
                                             <td className="p-4">
                                                 <div className="flex items-center gap-4">
@@ -242,7 +242,7 @@ const DashboardPage = () => {
                                                     />
                                                     <div className="flex-1 min-w-0">
                                                         <h4
-                                                            className="font-semibold text-white line-clamp-2 cursor-pointer hover:text-red-500"
+                                                            className="font-semibold text-white line-clamp-2 cursor-pointer hover:text-red-600"
                                                             onClick={() =>
                                                                 navigate(
                                                                     `/video/${video._id}`
@@ -292,7 +292,7 @@ const DashboardPage = () => {
                                                             deleting ===
                                                             video._id
                                                         }
-                                                        className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-500 disabled:opacity-50"
+                                                        className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
                                                         title="Delete"
                                                     >
                                                         {deleting ===

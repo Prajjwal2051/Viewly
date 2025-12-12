@@ -153,7 +153,7 @@ const CommentSection = ({ videoId, tweetId }) => {
                                                 onClick={() =>
                                                     handleDelete(comment._id)
                                                 }
-                                                className="text-gray-500 hover:text-red-500 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="text-gray-500 hover:text-red-600 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
                                             >
                                                 Delete
                                             </button>

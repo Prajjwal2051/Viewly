@@ -106,38 +106,38 @@ const ProfilePage = () => {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             {/* Profile Header Card */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 mb-8">
+            <div className="bg-[#1E2021] rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
                 <div className="flex flex-col md:flex-row items-center gap-8">
                     {/* Avatar */}
                     <div className="relative group">
-                        <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-purple-500 to-pink-500">
+                        <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-red-500 to-pink-500">
                             <img
                                 src={
                                     user?.avatar ||
                                     "https://via.placeholder.com/150"
                                 }
                                 alt={user?.username}
-                                className="w-full h-full rounded-full object-cover border-4 border-white dark:border-gray-900"
+                                className="w-full h-full rounded-full object-cover border-4 border-white"
                             />
                         </div>
                     </div>
 
                     {/* User Info */}
                     <div className="flex-1 text-center md:text-left space-y-2">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-['Playfair_Display']">
+                        <h1 className="text-3xl font-bold text-white font-Playfair_Display">
                             {user?.fullName}
                         </h1>
-                        <p className="text-lg text-gray-500 dark:text-gray-400 font-medium">
+                        <p className="text-lg text-gray-500 font-medium">
                             @{user?.username}
                         </p>
-                        <p className="text-gray-600 dark:text-gray-300 max-w-lg">
+                        <p className="text-gray-400 max-w-lg">
                             {user?.email}
                         </p>
 
                         {/* Stats - Horizontal Stack */}
-                        <div className="flex items-center justify-center md:justify-start gap-8 mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                        <div className="flex items-center justify-center md:justify-start gap-8 mt-6 pt-6 border-t border-gray-100">
                             <div className="text-center md:text-left">
-                                <span className="block text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                <span className="block text-2xl font-bold text-white">
                                     {loading ? (
                                         <Loader2 className="inline-block w-6 h-6 animate-spin" />
                                     ) : (
@@ -151,7 +151,7 @@ const ProfilePage = () => {
                                 </span>
                             </div>
                             <div className="text-center md:text-left">
-                                <span className="block text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                <span className="block text-2xl font-bold text-white">
                                     {loading ? (
                                         <Loader2 className="inline-block w-6 h-6 animate-spin" />
                                     ) : (
@@ -170,7 +170,7 @@ const ProfilePage = () => {
                         {isOwnProfile ? (
                             <button
                                 onClick={() => navigate("/settings")}
-                                className="px-6 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-medium rounded-full transition-colors"
+                                className="px-6 py-2 bg-[#2A2D2E] hover:bg-gray-200 text-white font-medium rounded-full transition-colors"
                             >
                                 Edit Profile
                             </button>
@@ -180,8 +180,8 @@ const ProfilePage = () => {
                                 disabled={subscribing}
                                 className={`px-6 py-2 font-semibold rounded-full transition-colors disabled:opacity-50 ${
                                     isSubscribed
-                                        ? "bg-gray-800 text-white hover:bg-gray-700"
-                                        : "bg-purple-600 text-white hover:bg-purple-700"
+                                        ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
+                                        : "bg-red-600 text-white hover:bg-red-700"
                                 }`}
                             >
                                 {subscribing
@@ -196,7 +196,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex items-center border-b border-gray-200 dark:border-gray-800 mb-8 overflow-x-auto">
+            <div className="flex items-center border-b border-[#2A2D2E] mb-8 overflow-x-auto">
                 {TABS.map((tab) => {
                     const Icon = tab.icon
                     const isActive = activeTab === tab.id
@@ -206,14 +206,14 @@ const ProfilePage = () => {
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-8 py-4 font-medium transition-all relative whitespace-nowrap ${
                                 isActive
-                                    ? "text-purple-600 dark:text-purple-400"
-                                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                                    ? "text-red-600"
+                                    : "text-gray-500 hover:text-gray-500"
                             }`}
                         >
                             <Icon size={18} />
                             {tab.label}
                             {isActive && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400 rounded-t-full" />
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600 rounded-t-full" />
                             )}
                         </button>
                     )
@@ -225,7 +225,7 @@ const ProfilePage = () => {
                 {activeTab === "videos" &&
                     (loading ? (
                         <div className="flex justify-center py-20">
-                            <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+                            <Loader2 className="w-12 h-12 animate-spin text-red-600" />
                         </div>
                     ) : userVideos.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -250,7 +250,7 @@ const ProfilePage = () => {
                             {isOwnProfile && (
                                 <button
                                     onClick={() => navigate("/upload")}
-                                    className="mt-4 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-full transition-colors"
+                                    className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full transition-colors"
                                 >
                                     Upload Video
                                 </button>
@@ -279,7 +279,7 @@ const ProfilePage = () => {
                                 {isOwnProfile && (
                                     <button
                                         onClick={() => navigate("/upload")}
-                                        className="mt-4 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-full transition-colors"
+                                        className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full transition-colors"
                                     >
                                         Post Tweet
                                     </button>
@@ -290,11 +290,11 @@ const ProfilePage = () => {
                 )}
 
                 {activeTab === "about" && (
-                    <div className="bg-white dark:bg-gray-900 rounded-xl p-8 border border-gray-100 dark:border-gray-800">
-                        <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+                    <div className="bg-[#1E2021] rounded-xl p-8 border border-gray-100">
+                        <h3 className="text-xl font-bold mb-4 text-white">
                             About
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-300">
+                        <p className="text-gray-400">
                             Joined{" "}
                             {new Date(
                                 user?.createdAt || Date.now()

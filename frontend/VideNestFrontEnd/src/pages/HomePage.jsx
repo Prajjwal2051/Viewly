@@ -90,7 +90,7 @@ const HomePage = () => {
     }, [activeCategory])
 
     return (
-        <div className="min-h-screen bg-black pb-20">
+        <div className="min-h-screen bg-[#1E2021] pb-20">
             {/* CATEGORY FILTERS */}
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 md:px-8 lg:px-12 mt-8">
                 {categories.map((category) => {
@@ -101,8 +101,8 @@ const HomePage = () => {
                             onClick={() => setActiveCategory(category.name)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
                                 isActive
-                                    ? "bg-white text-black shadow-lg"
-                                    : "bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white"
+                                    ? "bg-[#1E2021] text-black shadow-lg"
+                                    : "bg-[#2A2D2E] text-gray-400 hover:bg-[#2A2D2E] hover:text-white"
                             }`}
                         >
                             {category.icon}
@@ -139,7 +139,7 @@ const HomePage = () => {
                             )
                         )
                     ) : (
-                        <div className="col-span-full text-center py-20 bg-gray-900 rounded-2xl break-inside-avoid">
+                        <div className="col-span-full text-center py-20 bg-[#2A2D2E] rounded-2xl break-inside-avoid">
                             <p className="text-gray-400 text-lg">
                                 No content found.
                             </p>
