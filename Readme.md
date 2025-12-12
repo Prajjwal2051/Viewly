@@ -1,103 +1,121 @@
 # 🎬 VidNest
 
-A modern video sharing platform backend built with Node.js and Express.js, featuring comprehensive user management, authentication, and video handling capabilities.
+> **⚠️ IMPORTANT NOTICE**: This is a personal learning project. **DO NOT COPY OR PLAGIARIZE** this code for academic submissions, portfolios, or commercial use. Build your own version to truly understand the concepts.
+
+A full-stack video sharing platform (YouTube clone) built with Node.js, Express.js, MongoDB, and React. Features include authentication, video upload/streaming, comments, likes, playlists, subscriptions, and a responsive frontend.
 
 ## ✨ Features
 
-### 🔐 Authentication & Security
-- **User Registration & Login**: Secure authentication with JWT tokens
-- **Token Management**: Access tokens (short-lived) and refresh tokens (long-lived)
-- **Password Security**: Bcrypt hashing with configurable salt rounds
-- **HTTP-Only Cookies**: XSS protection for token storage
-- **Session Management**: Secure logout with token invalidation
+### 🎥 **Video Management**
+- Upload videos with thumbnails to Cloudinary
+- Stream videos with metadata (title, description, category, tags)
+- View count tracking and video analytics
+- Filter and search videos by category, tags, date, duration
+- Video privacy controls (public/private)
 
-### 👤 User Management
-- **Profile Management**: Update name, email, avatar, and cover images
-- **Password Change**: Secure password updates with old password verification
-- **Channel Profiles**: Public channel pages with subscriber statistics
-- **Watch History**: Track and retrieve user's video viewing history
+### 👤 **User & Channel System**
+- JWT-based authentication (access + refresh tokens)
+- User profiles with avatar and cover image
+- Channel pages with subscriber statistics
+- Watch history tracking
+- Password change and profile updates
 
-### 📁 File Handling
-- **Image Uploads**: Profile avatars and cover images
-- **Cloud Storage**: Cloudinary integration for media storage
-- **Multer Middleware**: Efficient multipart/form-data handling
-- **Temporary Storage**: Local temp folder before cloud upload
+### 💬 **Social Features**
+- Comment on videos with nested replies
+- Like/unlike videos and comments
+- Subscribe/unsubscribe to channels
+- Real-time notification system
+- Tweet-like posts with images
 
-### 🎯 Advanced Features
-- **MongoDB Aggregation**: Efficient data fetching with nested pipelines
-- **Subscription System**: Channel subscriptions and follower counts
-- **User Analytics**: Subscriber counts and channel statistics
-- **Watch History Tracking**: Complete video history with owner details
+### 📂 **Content Organization**
+- Create and manage playlists
+- Add/remove videos from playlists
+- Public and private playlist support
+- Dashboard with channel analytics
+
+### 🔒 **Security**
+- Bcrypt password hashing
+- HTTP-only cookies for tokens
+- JWT verification middleware
+- CORS configuration
+- Input validation and sanitization
 
 ## 🚀 Tech Stack
 
-### Core Technologies
-- **Runtime**: Node.js (ES6 Modules)
-- **Framework**: Express.js v5.1.0
-- **Database**: MongoDB v8.19.0 with Mongoose ODM
-- **Language**: JavaScript (ES6+)
+### **Backend**
+| Technology | Purpose |
+|------------|---------|
+| **Node.js + Express.js** | REST API server |
+| **MongoDB + Mongoose** | Database with aggregation pipelines |
+| **JWT** | Authentication (access + refresh tokens) |
+| **Bcrypt** | Password hashing |
+| **Multer** | File upload handling |
+| **Cloudinary** | Video and image storage |
+| **Cookie-parser** | HTTP-only cookie management |
 
-### Authentication & Security
-- **JWT**: jsonwebtoken v9.0.2 (Access & Refresh tokens)
-- **Password Hashing**: bcrypt v6.0.0
-- **Cookie Handling**: cookie-parser v1.4.7
-- **CORS**: cors v2.8.5
+### **Frontend**
+| Technology | Purpose |
+|------------|---------|
+| **React 19** | UI library |
+| **Vite** | Build tool |
+| **Redux Toolkit** | State management |
+| **React Router v7** | Client-side routing |
+| **Tailwind CSS v4** | Styling |
+| **Axios** | HTTP requests |
+| **React Hook Form** | Form handling |
+| **Lucide React** | Icons |
 
-### File Management
-- **File Upload**: Multer v2.0.2 (multipart/form-data)
-- **Cloud Storage**: Cloudinary v2.7.0 (images & videos)
-- **Temporary Storage**: Local file system
-
-### Database Features
-- **Aggregation**: mongoose-aggregate-paginate-v2 v1.1.4
-- **Models**: User, Video, Subscription schemas
-- **Indexes**: Optimized queries for username and email
-
-### Development Tools
-- **Hot Reload**: nodemon v3.1.10
-- **Code Formatting**: Prettier v3.6.2
-- **Environment**: dotenv v17.2.3
+### **DevOps & Tools**
+- **Nodemon** - Development hot reload
+- **Prettier** - Code formatting
+- **Jest + Supertest** - API testing
+- **dotenv** - Environment variables
 
 ## 📁 Project Structure
 
 ```
 VidNest/
-├── src/
-│   ├── app.js                      # Express app configuration (CORS, cookies, routes)
-│   ├── index.js                    # Server entry point with DB connection
-│   ├── constants.js                # Application constants (DB_NAME)
+├── src/                                    # Backend source code
+│   ├── controllers/                        # Business logic
+│   │   ├── user.controller.js              # Auth, profile, watch history
+│   │   ├── video.controller.js             # Upload, CRUD, streaming
+│   │   ├── comment.controller.js           # Comments with replies
+│   │   ├── like.controller.js              # Like/unlike videos & comments
+│   │   ├── playlist.controller.js          # Playlist management
+│   │   ├── subscription.controller.js      # Subscribe/unsubscribe
+│   │   ├── tweet.controller.js             # Social posts
+│   │   ├── notification.controller.js      # User notifications
+│   │   ├── dashboard.controller.js         # Channel analytics
+│   │   └── search.controller.js            # Advanced video search
 │   │
-│   ├── controllers/
-│   │   └── user.controller.js      # User management controllers
+│   ├── models/                             # MongoDB schemas
+│   │   ├── user.model.js                   # User + auth
+│   │   ├── video.model.js                  # Video metadata
+│   │   ├── comment.model.js                # Comments
+│   │   ├── like.model.js                   # Likes
+│   │   ├── playlist.model.js               # Playlists
+│   │   ├── subscription.model.js           # Subscriptions
+│   │   ├── tweet.model.js                  # Tweets
+│   │   └── notification.model.js           # Notifications
 │   │
-│   ├── db/
-│   │   └── db_connection.js        # MongoDB connection configuration
-│   │
-│   ├── middlewares/
-│   │   ├── auth.middleware.js      # JWT verification middleware
-│   │   └── multer.middleware.js    # File upload middleware
-│   │
-│   ├── models/
-│   │   ├── user.model.js           # User schema (auth, profile, watch history)
-│   │   ├── video.model.js          # Video schema
-│   │   └── subscription.model.js   # Subscription schema (channel follows)
-│   │
-│   ├── routes/
-│   │   └── user.routes.js          # User API routes
-│   │
-│   └── utils/
-│       ├── ApiError.js             # Custom error class
-│       ├── ApiResponse.js          # Standardized API response
-│       ├── asyncHandler.js         # Async error wrapper
-│       └── cloudnary.js            # Cloudinary upload utility
+│   ├── routes/                             # API endpoints
+│   ├── middlewares/                        # Auth & file upload
+│   ├── utils/                              # Helper functions
+│   ├── db/                                 # Database connection
+│   ├── app.js                              # Express setup
+│   └── index.js                            # Server entry point
 │
-├── public/
-│   └── temp/                       # Temporary file storage before cloud upload
-│
-├── .env                            # Environment variables (not in git)
-├── .gitignore                      # Git ignore rules
-├── package.json                    # Dependencies and scripts
-└── README.md                       # Project documentation
+├── frontend/VideNestFrontEnd/              # React frontend
+│   ├── src/
+│   │   ├── components/                     # Reusable UI components
+│   │   ├── pages/                          # Route pages
+│   │   ├── store/                          # Redux state management
+│   │   ├── api/                            # API client & endpoints
+│   │   └── utils/                          # Frontend utilities
+│   │
+├── public/temp/                            # Temporary file uploads
+├── .env                                    # Environment variables
+└── package.json                            # Dependencies
 ```
 
 ## 🛠️ Installation
@@ -208,48 +226,96 @@ When uploading files (avatar/cover image):
 
 ## 🌐 API Endpoints
 
-### Base URL
-```
-http://localhost:8000/api/v1
-```
+**Base URL:** `http://localhost:8000/api/v1`
 
-### 🔓 Public Routes (No Authentication Required)
-
-#### User Authentication
-```http
-POST   /users/register          # Create new user account
-POST   /users/login             # Authenticate and get tokens
-POST   /users/refresh-token     # Get new access token using refresh token
+### **Authentication** 🔐
+```
+POST   /users/register           # Register new user (+ avatar upload)
+POST   /users/login              # Login and get tokens
+POST   /users/logout             # Logout (requires auth)
+POST   /users/refresh-token      # Refresh access token
 ```
 
-#### Channel Information
-```http
-GET    /users/c/:username       # Get channel profile with subscriber stats
+### **User Management** 👤
+```
+GET    /users/current-user       # Get authenticated user
+GET    /users/c/:username        # Get channel profile (public)
+GET    /users/watch-history      # Get watch history
+POST   /users/change-password    # Change password
+PATCH  /users/update-account     # Update profile details
+PATCH  /users/avatar             # Update avatar image
+PATCH  /users/cover-image        # Update cover image
 ```
 
-### 🔒 Protected Routes (Authentication Required)
-
-#### Session Management
-```http
-POST   /users/logout            # Clear tokens and end session
+### **Videos** 🎥
+```
+GET    /videos                   # Get all videos (with filters)
+GET    /videos/:videoId          # Get video by ID
+POST   /videos                   # Upload video (+ thumbnail)
+PATCH  /videos/:videoId          # Update video
+DELETE /videos/:videoId          # Delete video
 ```
 
-#### User Profile
-```http
-GET    /users/current-user      # Get authenticated user's profile
-POST   /users/change-password   # Change user password
-PATCH  /users/update-account    # Update fullName and email
+### **Comments** 💬
+```
+GET    /comments/:videoId        # Get video comments
+POST   /comments                 # Add comment
+PATCH  /comments/:commentId      # Update comment
+DELETE /comments/:commentId      # Delete comment
 ```
 
-#### File Uploads
-```http
-PATCH  /users/avatar             # Update profile picture (multipart/form-data)
-PATCH  /users/cover-image        # Update cover image (multipart/form-data)
+### **Likes** ❤️
+```
+POST   /likes/toggle/v/:videoId     # Toggle video like
+POST   /likes/toggle/c/:commentId   # Toggle comment like
+GET    /likes/videos                # Get liked videos
+GET    /likes/comments              # Get liked comments
 ```
 
-#### User Activity
-```http
-GET    /users/watch-history     # Get user's video watch history
+### **Playlists** 📂
+```
+GET    /playlists                    # Get user playlists
+GET    /playlists/:playlistId       # Get playlist details
+POST   /playlists                   # Create playlist
+PATCH  /playlists/:playlistId       # Update playlist
+DELETE /playlists/:playlistId       # Delete playlist
+POST   /playlists/:playlistId/video/:videoId   # Add video to playlist
+DELETE /playlists/:playlistId/video/:videoId   # Remove video from playlist
+```
+
+### **Subscriptions** 🔔
+```
+POST   /subscriptions/c/:channelId            # Toggle subscription
+GET    /subscriptions/c/:channelId/subscribers # Get channel subscribers
+GET    /subscriptions/subscribed               # Get subscribed channels
+```
+
+### **Search** 🔍
+```
+GET    /search?query=...&category=...&sortBy=...  # Advanced video search
+```
+
+### **Dashboard** 📊
+```
+GET    /dashboard/stats/:channelId   # Get channel statistics
+```
+
+### **Notifications** 🔔
+```
+GET    /notifications               # Get user notifications
+PATCH  /notifications/:id/read      # Mark notification as read
+PATCH  /notifications/mark-all-read # Mark all as read
+DELETE /notifications/:id           # Delete notification
+```
+
+### **Tweets** 🐦
+```
+GET    /tweets                  # Get all tweets
+GET    /tweets/:tweetId         # Get tweet by ID
+GET    /tweets/user/:userId     # Get user tweets
+POST   /tweets                  # Create tweet (+ image)
+PATCH  /tweets/:tweetId         # Update tweet
+DELETE /tweets/:tweetId         # Delete tweet
 ```
 
 ### 📋 Request/Response Examples
@@ -355,50 +421,88 @@ GET /api/v1/users/c/johndoe
 ```
 </details>
 
-## 🎓 Learning Resources
+## 🎓 Key Learning Concepts
 
 This project demonstrates:
-- **RESTful API Design**: Following REST principles
-- **JWT Authentication**: Access and refresh token patterns
-- **MongoDB Aggregation**: Complex queries with nested pipelines
-- **File Upload**: Multer + Cloudinary integration
-- **Middleware Patterns**: Authentication and error handling
-- **ES6 Modules**: Modern JavaScript with import/export
-- **Async/Await**: Clean asynchronous code
-- **Security Best Practices**: Password hashing, HTTP-only cookies
+
+### **Backend Architecture**
+- RESTful API design with Express.js
+- JWT authentication (access + refresh token pattern)
+- MongoDB aggregation pipelines for complex queries
+- File upload handling (Multer → local → Cloudinary)
+- Custom error handling with ApiError class
+- Async/await with try-catch wrappers
+- Middleware chaining (auth, file upload, validation)
+
+### **Database Design**
+- Schema design with Mongoose
+- Model relationships (one-to-many, many-to-many)
+- Indexes for query optimization
+- Aggregation pipelines with $lookup, $match, $project
+- Pagination with mongoose-aggregate-paginate-v2
+
+### **Security Practices**
+- Password hashing with bcrypt
+- JWT token generation and verification
+- HTTP-only cookies for token storage
+- CORS configuration
+- Input validation and sanitization
+- Protected routes with middleware
+
+### **Frontend Development**
+- Component-based architecture with React
+- State management with Redux Toolkit
+- Client-side routing with React Router
+- Form handling with React Hook Form
+- API integration with Axios interceptors
+- Responsive design with Tailwind CSS
+- Toast notifications for user feedback
+
+## ⚠️ Academic Integrity Warning
+
+**THIS PROJECT IS FOR EDUCATIONAL REFERENCE ONLY**
+
+🚫 **DO NOT:**
+- Copy this code for college/university assignments
+- Submit this as your own work in any academic setting
+- Use this for job portfolio without significant modifications
+- Plagiarize any part of this codebase
+
+✅ **INSTEAD:**
+- Use it as a **learning reference** to understand concepts
+- Build your **own version** from scratch
+- Learn the **architecture and patterns** used here
+- Create something **unique** with your own implementation
+
+**Copying code is cheating yourself of learning. Build it yourself to truly understand!**
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here's how you can help:
+This is a personal learning project, but suggestions and feedback are welcome:
+- Report bugs via GitHub Issues
+- Suggest features or improvements
+- Share what you learned from this project
+- Build your own version and share your experience!
 
-### How to Contribute
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Make your changes** (follow the existing code style)
-4. **Test your changes** thoroughly
-5. **Commit your changes**
-   ```bash
-   git commit -m 'Add some amazing feature'
-   ```
-6. **Push to the branch**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-7. **Open a Pull Request**
+## 📝 License & Usage
 
-### Contribution Guidelines
-- Follow the existing code structure and naming conventions
-- Add comprehensive comments for new features
-- Update README if adding new endpoints or features
-- Ensure all environment variables are documented
-- Test API endpoints before submitting PR
+This project is licensed under the **ISC License** for educational purposes only.
 
-## 📝 License
+**Usage Terms:**
+- ✅ Study the code to learn
+- ✅ Use as reference for your own projects
+- ✅ Learn from the architecture and patterns
+- ❌ Do not copy for academic submissions
+- ❌ Do not plagiarize for portfolios
+- ❌ Do not use commercially without permission
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+**If you found this helpful, please:**
+- ⭐ Star the repository
+- 🍴 Fork and build your own version
+- 📢 Share what you learned
+- 🐛 Report issues to help improve it
 
 ## 🙋‍♂️ Author
 
@@ -406,38 +510,35 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - GitHub: [@Prajjwal2051](https://github.com/Prajjwal2051)
 - Project: [VidNest](https://github.com/Prajjwal2051/VidNest)
 
-## 🎯 Roadmap
+## 🎯 Features Status
 
-### Phase 1: Core Features (In Progress)
-- [x] User authentication and authorization
-- [x] Profile management (avatar, cover image)
-- [x] Channel profiles with subscriber stats
+### ✅ Completed Features
+- [x] User authentication (register, login, logout, refresh token)
+- [x] User profile management (avatar, cover image, password change)
+- [x] Video upload, update, delete with Cloudinary
+- [x] Video streaming with metadata
+- [x] Advanced video search with filters
+- [x] Comments system with CRUD operations
+- [x] Like/unlike videos and comments
+- [x] Subscribe/unsubscribe to channels
+- [x] User playlists (create, update, delete, add/remove videos)
+- [x] Notification system
 - [x] Watch history tracking
-- [x] JWT token management
-- [x] File upload with Cloudinary
+- [x] Channel dashboard with analytics
+- [x] Tweet-like posts with images
+- [x] Frontend UI with React + Redux + Tailwind
 
-### Phase 2: Video Management (Upcoming)
-- [ ] Video upload and processing
-- [ ] Video streaming
-- [ ] Video metadata (title, description, tags)
-- [ ] Video thumbnails
-- [ ] Video privacy settings
-
-### Phase 3: Social Features (Planned)
-- [ ] Comments system
-- [ ] Like/Dislike functionality
-- [ ] Subscription/Unsubscription
-- [ ] Notifications
-- [ ] User playlists
-
-### Phase 4: Advanced Features (Future)
+### 🚧 Potential Improvements
 - [ ] Real-time notifications with WebSockets
-- [ ] Live streaming functionality
-- [ ] Advanced video analytics
-- [ ] Video transcription and captions
-- [ ] Multi-language support
 - [ ] Video recommendations algorithm
-- [ ] Mobile application (React Native)
+- [ ] Live streaming capability
+- [ ] Video transcription/captions
+- [ ] Advanced analytics dashboard
+- [ ] Mobile responsive enhancements
+- [ ] Progressive Web App (PWA)
+- [ ] Video quality selection
+- [ ] Comment replies (nested comments)
+- [ ] Direct messaging between users
 
 ## � Common Issues & Solutions
 
@@ -478,24 +579,28 @@ MONGODB_URI=mongodb://localhost:27017
 - Token might be expired, use refresh token endpoint
 </details>
 
-## �🐛 Bug Reports & Feature Requests
+## 💡 What I Learned Building This
 
-Found a bug or want to request a feature? Please open an issue on our [GitHub Issues](https://github.com/Prajjwal2051/VidNest/issues) page.
+Building VidNest taught me:
+1. **Full-stack architecture** - Connecting frontend and backend
+2. **JWT authentication** - Secure token-based auth flow
+3. **MongoDB aggregations** - Complex data queries and relationships
+4. **File uploads** - Multer + Cloudinary integration
+5. **Redux state management** - Managing global app state
+6. **API design** - RESTful endpoints and proper HTTP methods
+7. **Error handling** - Graceful error responses and validation
+8. **React patterns** - Component composition and reusability
+9. **Debugging** - Console logging and testing strategies
+10. **Project structure** - Organizing large codebases
 
-### Reporting a Bug
-Include:
-- Description of the issue
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment (OS, Node version, etc.)
+## 🐛 Known Issues
 
-## 💡 Support
+- Video processing might take time for large files
+- Notification real-time updates require page refresh
+- Mobile UI needs further optimization
+- Some edge cases in pagination
 
-If you find this project helpful:
-- ⭐ **Star** the repository
-- 🐛 **Report** bugs and issues
-- 💡 **Suggest** new features
-- 🤝 **Contribute** code improvements
+**Feel free to report bugs via GitHub Issues**
 
 ## 📧 Contact
 
@@ -507,12 +612,16 @@ For questions or collaboration:
 
 <div align="center">
 
-**Built with ❤️ by [Prajjwal](https://github.com/Prajjwal2051)**
+### 🎓 Built as a Learning Project
 
-*A comprehensive video platform backend demonstrating modern Node.js development practices*
+**Developer:** [Prajjwal](https://github.com/Prajjwal2051)
+
+*A full-stack video sharing platform demonstrating modern web development practices*
+
+**⚠️ Remember: Don't copy, build your own! Learning happens through doing, not copying.**
 
 [![GitHub Stars](https://img.shields.io/github/stars/Prajjwal2051/VidNest?style=social)](https://github.com/Prajjwal2051/VidNest/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/Prajjwal2051/VidNest?style=social)](https://github.com/Prajjwal2051/VidNest/network/members)
-[![GitHub Issues](https://img.shields.io/github/issues/Prajjwal2051/VidNest)](https://github.com/Prajjwal2051/VidNest/issues)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
 </div>
