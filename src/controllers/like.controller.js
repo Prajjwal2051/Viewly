@@ -7,6 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { Video } from "../models/video.model.js"
 import { Comment } from "../models/comment.model.js"
 import { like } from "../models/like.model.js"
+import { Tweet } from "../models/tweet.model.js"
 import mongoose from "mongoose"
 
 // ============================================
@@ -584,12 +585,58 @@ const getIsVideoLiked = asyncHandler(async (req, res) => {
         )
 })
 
+const toggleTweetLike = asyncHandler(async (req, res) => {
+    const { tweetId } = req.params
+    const userId = req.user._id
+
+    if (!mongoose.isValidObjectId(tweetId)) {
+        throw new ApiError(400, "Invalid tweet id")
+    }
+
+    const existingTweet = await Tweet.findById(tweetId)
+    if (!existingTweet) {
+        throw new ApiError(404, "Tweet not found")
+    }
+
+    const existingLike = await like.findOne({
+        tweet: tweetId,
+        likedBy: userId,
+    })
+
+    if (existingLike) {
+        await like.deleteOne({ _id: existingLike._id })
+        await Tweet.findByIdAndUpdate(tweetId, { $inc: { likes: -1 } })
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    { isliked: false },
+                    "Like removed successfully"
+                )
+            )
+    } else {
+        await like.create({ tweet: tweetId, likedBy: userId })
+        await Tweet.findByIdAndUpdate(tweetId, { $inc: { likes: 1 } })
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    { isliked: true },
+                    "Tweet liked successfully"
+                )
+            )
+    }
+})
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
 export {
     toggleVideoLike, // POST /likes/toggle/v/:videoId - Toggle like on a video
     toggleCommentLike, // POST /likes/toggle/c/:commentId - Toggle like on a comment
+    toggleTweetLike, // POST /likes/toggle/t/:tweetId - Toggle like on a tweet
     getLikedVideos, // GET /likes/videos - Get all videos liked by authenticated user
     getLikedComments, // GET /likes/comments - Get all comments liked by authenticated user
     getIsVideoLiked, // GET /likes/status/v/:videoId - Check if video is liked

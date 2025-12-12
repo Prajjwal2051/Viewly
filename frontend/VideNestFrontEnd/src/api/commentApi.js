@@ -13,11 +13,28 @@ export const getVideoComments = async (videoId, page = 1, limit = 10) => {
 }
 
 /**
- * ADD COMMENT
- * Adds a new comment to a video
+ * GET TWEET COMMENTS
+ * Fetches paginated comments for a tweet
  */
-export const addComment = async (content, videoId) => {
-    const response = await apiClient.post("/comments", { content, videoId })
+export const getTweetComments = async (tweetId, page = 1, limit = 10) => {
+    const response = await apiClient.get(`/comments/t/${tweetId}`, {
+        params: { page, limit },
+    })
+    return response.data
+}
+
+/**
+ * ADD COMMENT
+ * Adds a new comment to a video OR tweet
+ * - Pass videoId for video comments
+ * - Pass tweetId for tweet comments (and null for videoId)
+ */
+export const addComment = async (content, videoId, tweetId = null) => {
+    const payload = { content }
+    if (videoId) payload.videoId = videoId
+    if (tweetId) payload.tweetId = tweetId
+
+    const response = await apiClient.post("/comments", payload)
     return response.data
 }
 

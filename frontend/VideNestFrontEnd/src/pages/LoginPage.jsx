@@ -11,6 +11,7 @@ import toast from "react-hot-toast"
 import Input from "../components/layout/ui/Input"
 import Button from "../components/layout/ui/Button"
 import authBgBright from "../assets/auth_bg_bright.png"
+console.log("Login Background Path:", authBgBright)
 
 const LoginPage = () => {
     // Form state handling

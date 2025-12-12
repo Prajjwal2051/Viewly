@@ -1,144 +1,94 @@
 // ============================================
-// HOME PAGE - ENHANCED VIDEO FEED
+// HOME PAGE - ENHANCED VIDEO & PHOTO FEED
 // ============================================
-// Modern home page with hero section, category filters, and video grid.
-// Features: trending videos, category filtering, infinite scroll.
+// Modern home page with masonry layout for mixed content.
+// Features: mixed feed (videos + tweets), category filtering, Pinterest-style layout.
 
 import { useState, useEffect } from "react"
 import { getAllVideos } from "../api/videoApi"
+import { getAllTweets } from "../api/tweetApi"
 import VideoCard from "../components/video/VideoCard"
+import TweetCard from "../components/tweet/TweetCard"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
 import toast from "react-hot-toast"
 import {
     Loader2,
-    Play,
-    TrendingUp,
     Film,
+    TrendingUp,
     Gamepad2,
     Music,
     Code,
     BookOpen,
     Dumbbell,
+    Image as ImageIcon,
 } from "lucide-react"
 
 const HomePage = () => {
     // State management
-    const [videos, setVideos] = useState([]) // Array of video objects
-    const [loading, setLoading] = useState(true) // Loading spinner control
-    const [page, setPage] = useState(1) // Current page number
-    const [hasMore, setHasMore] = useState(true) // Whether more videos exist
-    const [activeCategory, setActiveCategory] = useState("All") // Active category filter
+    const [mixedFeed, setMixedFeed] = useState([]) // Combined list
+    const [loading, setLoading] = useState(true)
+    const [activeCategory, setActiveCategory] = useState("All")
 
-    // Category options with icons
+    // Category options
     const categories = [
         { name: "All", icon: <Film className="w-4 h-4" /> },
+        { name: "Photos", icon: <ImageIcon className="w-4 h-4" /> },
         { name: "Trending", icon: <TrendingUp className="w-4 h-4" /> },
         { name: "Gaming", icon: <Gamepad2 className="w-4 h-4" /> },
         { name: "Music", icon: <Music className="w-4 h-4" /> },
         { name: "Coding", icon: <Code className="w-4 h-4" /> },
-        { name: "Education", icon: <BookOpen className="w-4 h-4" /> },
-        { name: "Fitness", icon: <Dumbbell className="w-4 h-4" /> },
     ]
 
-    /**
-     * FETCH VIDEOS ON PAGE OR CATEGORY CHANGE
-     * Triggers when component mounts, page changes, or category changes
-     */
     useEffect(() => {
-        const fetchVideos = async () => {
+        const fetchData = async () => {
             try {
-                // If category changed, reset list
-                if (page === 1) setLoading(true)
+                setLoading(true)
 
-                // Fetch videos (simulating category filter if needed)
-                const response = await getAllVideos({
-                    page,
-                    limit: 12,
+                // Fetch Videos (Page 1)
+                const videoResponse = await getAllVideos({
+                    page: 1,
+                    limit: 15,
                     category:
-                        activeCategory === "All" ? undefined : activeCategory,
+                        activeCategory !== "All" && activeCategory !== "Photos"
+                            ? activeCategory
+                            : undefined,
                 })
+                const videos =
+                    videoResponse.videos || videoResponse.data?.videos || []
 
-                // Assuming API returns { docs, hasNextPage } or similar
-                // Adjust based on actual API response structure
-                const newVideos = response.videos || response.data?.videos || []
-
-                if (page === 1) {
-                    setVideos(newVideos)
-                } else {
-                    setVideos((prev) => [...prev, ...newVideos])
+                // Fetch Tweets (Always fetch for mixed feed)
+                let tweets = []
+                try {
+                    const tweetResponse = await getAllTweets()
+                    tweets = tweetResponse.data || []
+                    tweets = tweets.map((t) => ({ ...t, isTweet: true }))
+                } catch (err) {
+                    console.error("Failed to fetch tweets", err)
                 }
 
-                setHasMore(
-                    response.pagination?.hasNextPage || newVideos.length === 12
-                )
+                // If "Photos" category selected, only show tweets
+                if (activeCategory === "Photos") {
+                    setMixedFeed(tweets)
+                } else {
+                    // Merge and Sort by Date for ALL other categories
+                    const merged = [...videos, ...tweets].sort(
+                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                    )
+                    setMixedFeed(merged)
+                }
             } catch (error) {
-                console.error("Failed to fetch videos:", error)
-                toast.error("Could not load videos")
+                console.error("Failed to fetch feed:", error)
+                toast.error("Could not load feed")
             } finally {
                 setLoading(false)
             }
         }
 
-        fetchVideos()
-    }, [page, activeCategory])
-
-    /**
-     * HANDLE CATEGORY CHANGE
-     * Resets page to 1 and updates selected category
-     */
-    const handleCategoryChange = (categoryName) => {
-        setActiveCategory(categoryName)
-        setPage(1)
-        setVideos([])
-    }
-
-    /**
-     * LOAD MORE HANDLER
-     * Increments page number to fetch next page
-     */
-    const handleLoadMore = () => {
-        if (!loading && hasMore) {
-            setPage((prev) => prev + 1)
-        }
-    }
+        fetchData()
+    }, [activeCategory])
 
     return (
         <div className="min-h-screen bg-black pb-20">
-            {/* HERO SECTION */}
-            <div className="px-4 md:px-8 lg:px-12 pt-6">
-                <div className="relative h-[400px] w-full overflow-hidden bg-gradient-to-r from-gray-900 via-[#0a0a0a] to-black rounded-[2.5rem] border border-gray-800 shadow-2xl">
-                    {/* Background Effects */}
-                    <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none opacity-60"></div>
-                    <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-red-900/10 rounded-full blur-[100px] pointer-events-none opacity-40"></div>
-
-                    {/* Hero Content */}
-                    <div className="absolute inset-0 flex flex-col justify-center items-start text-left relative z-10 pl-10 md:pl-20 lg:pl-32 pr-4 pt-8">
-                        <div className="max-w-4xl text-white space-y-8">
-                            <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tighter drop-shadow-xl animate-fadeInUp delay-200">
-                                Welcome to{" "}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-600">
-                                    VidNest
-                                </span>
-                            </h1>
-                            <p className="text-lg md:text-xl text-gray-300 max-w-xl animate-fadeInUp delay-400 leading-relaxed">
-                                Discover, share, and connect through the power
-                                of video. Join our community of creators today
-                                and start watching.
-                            </p>
-                            <div className="flex gap-4 pt-4 animate-fadeInUp delay-600">
-                                <button className="px-8 py-4 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg shadow-red-900/20 flex items-center gap-2">
-                                    <Play className="fill-current w-5 h-5" />
-                                    Explore Now
-                                </button>
-                                <button className="px-8 py-4 bg-white/5 backdrop-blur-sm text-white rounded-full font-semibold hover:bg-white/10 transition border border-white/10 hover:border-white/20">
-                                    Learn More
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {/* CATEGORY FILTERS */}
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 md:px-8 lg:px-12 mt-8">
                 {categories.map((category) => {
@@ -146,11 +96,11 @@ const HomePage = () => {
                     return (
                         <button
                             key={category.name}
-                            onClick={() => handleCategoryChange(category.name)}
+                            onClick={() => setActiveCategory(category.name)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
                                 isActive
-                                    ? "bg-red-600 text-white shadow-lg"
-                                    : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+                                    ? "bg-white text-black shadow-lg"
+                                    : "bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white"
                             }`}
                         >
                             {category.icon}
@@ -160,85 +110,41 @@ const HomePage = () => {
                 })}
             </div>
 
-            {/* SECTION TITLE */}
-            <div className="flex items-center justify-between px-4 md:px-8 lg:px-12 mt-8 mb-6">
-                <h2 className="text-2xl font-bold text-white">
-                    {activeCategory === "All"
-                        ? "All Videos"
-                        : `${activeCategory} Videos`}
+            {/* FEED TITLE */}
+            <div className="px-4 md:px-8 lg:px-12 mt-8 mb-6">
+                <h2 className="text-xl font-bold text-white mb-1">
+                    {activeCategory === "All" ? "For You" : activeCategory}
                 </h2>
-                <span className="text-sm text-gray-500">
-                    {videos.length} {videos.length === 1 ? "video" : "videos"}
-                </span>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">
+                    {mixedFeed.length} Items Found
+                </p>
             </div>
 
-            {/* VIDEO GRID */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 md:px-8 lg:px-12">
-                {loading && page === 1
-                    ? // Show skeleton cards on initial load
-                      Array.from({ length: 8 }).map((_, index) => (
-                          <VideoCardSkeleton key={index} />
-                      ))
-                    : videos.map((video) => (
-                          <VideoCard key={video._id} video={video} />
-                      ))}
+            {/* MASONRY GRID LAYOUT */}
+            <div className="px-4 md:px-8 lg:px-12">
+                <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+                    {loading ? (
+                        Array.from({ length: 8 }).map((_, i) => (
+                            <VideoCardSkeleton key={i} />
+                        ))
+                    ) : mixedFeed.length > 0 ? (
+                        mixedFeed.map((item) =>
+                            // Render based on type
+                            item.isTweet || item.image ? (
+                                <TweetCard key={item._id} tweet={item} />
+                            ) : (
+                                <VideoCard key={item._id} video={item} />
+                            )
+                        )
+                    ) : (
+                        <div className="col-span-full text-center py-20 bg-gray-900 rounded-2xl break-inside-avoid">
+                            <p className="text-gray-400 text-lg">
+                                No content found.
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
-
-            {/* LOADING SPINNER - Only for "Load More" */}
-            {loading && page > 1 && (
-                <div className="flex justify-center items-center py-12">
-                    <div className="text-center">
-                        <Loader2 className="h-10 w-10 animate-spin text-red-600 mx-auto mb-3" />
-                        <p className="text-gray-400">Loading more videos...</p>
-                    </div>
-                </div>
-            )}
-
-            {/* LOAD MORE BUTTON */}
-            {!loading && hasMore && videos.length > 0 && (
-                <div className="flex justify-center mt-8">
-                    <button
-                        onClick={handleLoadMore}
-                        className="px-8 py-3 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-all shadow-lg"
-                    >
-                        Load More Videos
-                    </button>
-                </div>
-            )}
-
-            {/* END MESSAGE */}
-            {!loading && !hasMore && videos.length > 0 && (
-                <div className="text-center py-8">
-                    <div className="inline-block px-6 py-3 bg-gray-800 rounded-full">
-                        <p className="text-gray-400 font-medium">
-                            🎉 You've watched them all!
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            {/* EMPTY STATE */}
-            {!loading && videos.length === 0 && (
-                <div className="text-center py-16">
-                    <div className="inline-block p-6 bg-gray-800 rounded-full mb-4">
-                        <Film className="h-16 w-16 text-gray-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">
-                        No videos found
-                    </h3>
-                    <p className="text-gray-400 mb-6">
-                        {activeCategory !== "All"
-                            ? `No ${activeCategory} videos available yet.`
-                            : "Be the first to upload amazing content!"}
-                    </p>
-                    <button
-                        onClick={() => handleCategoryChange("All")}
-                        className="px-6 py-3 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-colors"
-                    >
-                        Browse All Videos
-                    </button>
-                </div>
-            )}
         </div>
     )
 }

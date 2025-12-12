@@ -19,31 +19,22 @@
  */
 const VideoCardSkeleton = () => {
     return (
-        // Card container - animate-pulse creates shimmer effect
-        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md animate-pulse border dark:border-gray-700">
-            {/* Thumbnail skeleton - 16:9 aspect ratio */}
-            <div className="aspect-video bg-gray-300 dark:bg-gray-700"></div>
+        // Card container - matches the new aspect ratio and roundedness
+        <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden bg-gray-800 animate-pulse shadow-md">
+            {/* Duration Badge Skeleton (Top Right) */}
+            <div className="absolute top-3 right-3 h-5 w-12 bg-gray-700 rounded-lg"></div>
 
-            {/* Info section skeleton - matches VideoCard padding */}
-            <div className="p-4">
-                <div className="flex gap-3">
-                    {/* Avatar skeleton - circular, matches avatar size */}
-                    <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-700 shrink-0"></div>
+            {/* Bottom Content Area Skeleton */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
+                {/* Title Lines */}
+                <div className="h-4 bg-gray-700 rounded w-3/4"></div>
 
-                    <div className="flex-1 space-y-2">
-                        {/* Title skeleton - 2 lines to match line-clamp-2 */}
-                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
-                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
-
-                        {/* Channel name skeleton */}
-                        <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
-
-                        {/* Stats skeleton - matches video stats layout (views, likes, date) */}
-                        <div className="flex gap-3">
-                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-16"></div>
-                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-12"></div>
-                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-20"></div>
-                        </div>
+                {/* Avatar and Text Row */}
+                <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-gray-700 shrink-0"></div>
+                    <div className="flex-1 space-y-1">
+                        <div className="h-2.5 bg-gray-700 rounded w-1/2"></div>
+                        <div className="h-2 bg-gray-700 rounded w-1/3"></div>
                     </div>
                 </div>
             </div>

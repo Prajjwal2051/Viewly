@@ -3,6 +3,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js"
 import {
     toggleVideoLike,
     toggleCommentLike,
+    toggleTweetLike,
     getLikedComments,
     getLikedVideos,
 } from "../controllers/like.controller.js"
@@ -19,6 +20,9 @@ router.get("/status/video/:videoId", verifyJWT, getIsVideoLiked)
 
 // Like/unlike a comment
 router.post("/comment/:commentId", verifyJWT, toggleCommentLike)
+
+// Like/unlike a tweet
+router.post("/tweet/:tweetId", verifyJWT, toggleTweetLike)
 
 // Get all videos liked by current user (the one logged in)
 router.get("/videos", verifyJWT, getLikedVideos)

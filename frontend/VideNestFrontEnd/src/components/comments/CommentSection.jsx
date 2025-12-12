@@ -3,14 +3,15 @@ import { useSelector } from "react-redux"
 import { Loader2, Send, Trash2, Edit2, MoreVertical } from "lucide-react"
 import {
     getVideoComments,
+    getTweetComments,
     addComment,
     deleteComment,
     updateComment,
 } from "../../api/commentApi"
 import toast from "react-hot-toast"
-import Input from "../layout/ui/Input" // Utilizing our reusable Input/TextArea if compatible, or standard HTML
+import Input from "../layout/ui/Input"
 
-const CommentSection = ({ videoId }) => {
+const CommentSection = ({ videoId, tweetId }) => {
     const { user } = useSelector((state) => state.auth)
     const [comments, setComments] = useState([])
     const [loading, setLoading] = useState(true)
@@ -23,10 +24,13 @@ const CommentSection = ({ videoId }) => {
     useEffect(() => {
         const fetchComments = async () => {
             try {
-                const data = await getVideoComments(videoId, 1, 10)
-                // Adjust based on actual API response structure (data.docs or data.comments)
-                // Our mock plan said response.data which is ApiResponse object
-                // The actual controller returns { docs: [], totalDocs: ... } inside data
+                let data
+                if (tweetId) {
+                    data = await getTweetComments(tweetId, 1, 10)
+                } else if (videoId) {
+                    data = await getVideoComments(videoId, 1, 10)
+                }
+
                 setComments(data?.comments || [])
                 setHasMore(data?.hasNextPage)
             } catch (error) {
@@ -35,8 +39,8 @@ const CommentSection = ({ videoId }) => {
                 setLoading(false)
             }
         }
-        if (videoId) fetchComments()
-    }, [videoId])
+        if (videoId || tweetId) fetchComments()
+    }, [videoId, tweetId])
 
     // Add Comment
     const handleSubmit = async (e) => {
@@ -50,10 +54,9 @@ const CommentSection = ({ videoId }) => {
 
         setSubmitting(true)
         try {
-            const addedComment = await addComment(newComment, videoId)
-            // Backend returns the created comment with populated owner
-            // Add to top of list
-            // FIXED: addedComment is already the unwrapped data from api helper
+            // Pass both, let api helper handle nulls
+            const addedComment = await addComment(newComment, videoId, tweetId)
+
             setComments((prev) => [addedComment, ...prev])
             setNewComment("")
             toast.success("Comment added")

@@ -12,6 +12,10 @@ const likeSchema = new mongoose.Schema(
             type: Schema.Types.ObjectId,
             ref: "Comment",
         },
+        tweet: {
+            type: Schema.Types.ObjectId,
+            ref: "Tweet",
+        },
         likedBy: {
             type: Schema.Types.ObjectId,
             ref: "User",
@@ -27,5 +31,6 @@ likeSchema.plugin(mongooseAggregatePaginate)
 // and we also need to ensure that a particular user likes a video or comment only once
 likeSchema.index({ video: 1, likedBy: 1 }, { unique: true, sparse: true })
 likeSchema.index({ comment: 1, likedBy: 1 }, { unique: true, sparse: true })
+likeSchema.index({ tweet: 1, likedBy: 1 }, { unique: true, sparse: true })
 
 export const like = mongoose.model("Like", likeSchema)

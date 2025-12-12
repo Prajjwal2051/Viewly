@@ -1,4 +1,4 @@
-import mongoose, { mongo, Schema} from "mongoose"
+import mongoose, { mongo, Schema } from "mongoose"
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"
 
 const commentSchema = new mongoose.Schema(
@@ -13,7 +13,10 @@ const commentSchema = new mongoose.Schema(
         video: {
             type: Schema.Types.ObjectId,
             ref: "Video",
-            required: true,
+        },
+        tweet: {
+            type: Schema.Types.ObjectId,
+            ref: "Tweet",
         },
         owner: {
             type: Schema.Types.ObjectId,

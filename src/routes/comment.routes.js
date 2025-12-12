@@ -1,16 +1,20 @@
-import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { 
+import { Router } from "express"
+import { verifyJWT } from "../middlewares/auth.middleware.js"
+import {
     addComment,
     deleteComment,
     getAllComment,
-    updateComment 
-} from "../controllers/comment.controller.js";
+    getTweetComments,
+    updateComment,
+} from "../controllers/comment.controller.js"
 
 const router = Router()
 
 // GET /api/v1/comments/:videoId - public - get paginated comments for a specific video
 router.get("/:videoId", getAllComment)
+
+// GET /api/v1/comments/t/:tweetId - public - get paginated comments for a specific tweet
+router.get("/t/:tweetId", getTweetComments)
 
 // POST /api/v1/comments - private - add a new comment to a video
 router.post("/", verifyJWT, addComment)

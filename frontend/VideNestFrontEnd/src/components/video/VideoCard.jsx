@@ -40,67 +40,66 @@ const VideoCard = ({ video }) => {
     }
 
     return (
-        // Card container - clickable, expands shadow on hover, 'group' enables child hover effects
         <div
             onClick={() => navigate(`/video/${video._id}`)}
-            className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow cursor-pointer group border dark:border-gray-700"
+            className="relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer group shadow-lg bg-gray-900"
         >
-            {/* VIDEO THUMBNAIL - 16:9 aspect ratio with duration badge */}
-            <div className="relative aspect-video bg-gray-200">
-                {/* Thumbnail image - scales up slightly on card hover (group-hover) */}
-                <img
-                    src={
-                        video.thumbNail || "https://via.placeholder.com/640x360"
-                    }
-                    alt={video.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                {/* Duration badge - positioned at bottom-right, shows MM:SS format */}
-                <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-                    {Math.floor(video.duration / 60)}:
-                    {String(video.duration % 60).padStart(2, "0")}
-                </div>
+            {/* BACKGROUND IMAGE - Natural Aspect Ratio */}
+            <img
+                src={video.thumbNail || "https://via.placeholder.com/640x360"}
+                alt={video.title}
+                className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+
+            {/* GRADIENT OVERLAY - Improves text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
+
+            {/* DURATION BADGE - Top Right now for cleanliness */}
+            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2 py-1 rounded-lg">
+                {Math.floor(video.duration / 60)}:
+                {String(video.duration % 60).padStart(2, "0")}
             </div>
 
-            {/* VIDEO INFO SECTION - Title, channel, and stats */}
-            <div className="p-4">
-                {/* Channel avatar + video details in flex layout */}
-                <div className="flex gap-3">
-                    {/* Channel avatar - clickable, stops event propagation to avoid triggering video click */}
+            {/* CONTENT OVERLAY - Bottom */}
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+                {/* Title */}
+                <h3 className="text-white font-bold text-sm line-clamp-2 leading-snug mb-2 drop-shadow-md group-hover:text-red-400 transition-colors">
+                    {video.title}
+                </h3>
+
+                {/* Author & Stats Row */}
+                <div className="flex items-center gap-2">
+                    {/* Avatar */}
                     <img
                         src={
                             video.owner?.avatar ||
                             "https://via.placeholder.com/40"
                         }
                         alt={video.owner?.username}
-                        className="h-10 w-10 rounded-full object-cover shrink-0"
+                        className="h-6 w-6 rounded-full object-cover border border-white/20"
                         onClick={(e) => {
-                            e.stopPropagation() // Prevents video click when clicking avatar
+                            e.stopPropagation()
                             navigate(`/channel/${video.owner?.username}`)
                         }}
                     />
 
+                    {/* Text Info */}
                     <div className="flex-1 min-w-0">
-                        {/* Video title - max 2 lines with ellipsis (line-clamp-2) */}
-                        <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1">
-                            {video.title}
-                        </h3>
-
-                        {/* Channel name - clickable text */}
-                        <p className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
+                        <p
+                            className="text-xs text-gray-200 truncate hover:underline"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                navigate(`/channel/${video.owner?.username}`)
+                            }}
+                        >
                             {video.owner?.fullName || video.owner?.username}
                         </p>
-
-                        {/* Video statistics - views, likes, upload time */}
-                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <span className="flex items-center gap-1">
-                                <Eye className="h-3 w-3" />
-                                {formatViews(video.views)} views
+                        <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-0.5">
+                            <span className="flex items-center gap-0.5">
+                                <Eye className="h-2.5 w-2.5" />
+                                {formatViews(video.views)}
                             </span>
-                            <span className="flex items-center gap-1">
-                                <ThumbsUp className="h-3 w-3" />
-                                {formatViews(video.likes)}
-                            </span>
+                            <span className="w-0.5 h-0.5 rounded-full bg-gray-500"></span>
                             <span>{formatDate(video.createdAt)}</span>
                         </div>
                     </div>

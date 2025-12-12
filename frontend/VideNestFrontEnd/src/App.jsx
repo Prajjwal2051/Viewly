@@ -15,6 +15,8 @@ import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import SettingsPage from "./pages/SettingsPage"
 import UploadPage from "./pages/UploadPage"
+import ProfilePage from "./pages/ProfilePage"
+import TweetPage from "./pages/TweetPage"
 import VideoPlayerPage from "./pages/VideoPlayerPage"
 import NotFoundPage from "./pages/NotFoundPage"
 
@@ -114,29 +116,42 @@ function App() {
                         }
                     />
 
-                    {/* Additional protected routes - uncomment when pages are created
-                <Route
-                    path="/activity"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <ActivityPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/profile"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <ProfilePage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-                <Route path="/video/:id" element={<VideoDetailPage />} />
-                */}
+                    {/* TWEET DETAIL PAGE */}
+                    <Route
+                        path="/tweet/:tweetId"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <TweetPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* USER PROFILE PAGE */}
+                    <Route
+                        path="/profile"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ProfilePage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* CHANNEL PAGE (Public Profile) */}
+                    <Route
+                        path="/channel/:username"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ProfilePage />{" "}
+                                    {/* Reusing ProfilePage for now, ideally ChannelPage */}
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
 
                     {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
                     <Route path="*" element={<NotFoundPage />} />
