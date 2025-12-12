@@ -13,7 +13,7 @@ const tweetSchema = new Schema(
         },
         image: {
             type: String, // Cloudinary URL
-            required: true,
+            required: false, // Optional for text-only tweets
         },
         likes: {
             type: Number,

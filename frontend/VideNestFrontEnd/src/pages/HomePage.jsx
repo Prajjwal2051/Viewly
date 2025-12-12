@@ -21,6 +21,7 @@ import {
     BookOpen,
     Dumbbell,
     Image as ImageIcon,
+    MessageSquare,
 } from "lucide-react"
 
 const HomePage = () => {
@@ -32,7 +33,7 @@ const HomePage = () => {
     // Category options
     const categories = [
         { name: "All", icon: <Film className="w-4 h-4" /> },
-        { name: "Photos", icon: <ImageIcon className="w-4 h-4" /> },
+        { name: "Tweets", icon: <MessageSquare className="w-4 h-4" /> }, // Renamed from Photos to Tweets, and icon changed
         { name: "Trending", icon: <TrendingUp className="w-4 h-4" /> },
         { name: "Gaming", icon: <Gamepad2 className="w-4 h-4" /> },
         { name: "Music", icon: <Music className="w-4 h-4" /> },
@@ -49,7 +50,7 @@ const HomePage = () => {
                     page: 1,
                     limit: 15,
                     category:
-                        activeCategory !== "All" && activeCategory !== "Photos"
+                        activeCategory !== "All" && activeCategory !== "Tweets"
                             ? activeCategory
                             : undefined,
                 })
@@ -60,14 +61,15 @@ const HomePage = () => {
                 let tweets = []
                 try {
                     const tweetResponse = await getAllTweets()
-                    tweets = tweetResponse.data || []
+                    // API returns array directly
+                    tweets = Array.isArray(tweetResponse) ? tweetResponse : []
                     tweets = tweets.map((t) => ({ ...t, isTweet: true }))
                 } catch (err) {
                     console.error("Failed to fetch tweets", err)
                 }
 
-                // If "Photos" category selected, only show tweets
-                if (activeCategory === "Photos") {
+                // If "Tweets" category selected, only show tweets
+                if (activeCategory === "Tweets") {
                     setMixedFeed(tweets)
                 } else {
                     // Merge and Sort by Date for ALL other categories

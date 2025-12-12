@@ -28,28 +28,38 @@ const createTweet = asyncHandler(async (req, res) => {
     console.log("\n[STEP 1] 📝 Extracting Data")
     console.log("   ➜ Content:", content || "(no caption)")
 
-    // STEP 2: Check for image file (Required for Photo Post)
+    // Validate: content is required
+    if (!content || content.trim() === "") {
+        console.log("   ❌ Validation Failed: Content is required")
+        throw new ApiError(400, "Tweet content is required")
+    }
+
+    // STEP 2: Check for image file (OPTIONAL for tweets)
     const imageLocalPath = req.file?.path
-    console.log("   ➜ Image File:", imageLocalPath ? "Provided" : "Missing")
+    console.log(
+        "   ➜ Image File:",
+        imageLocalPath ? "Provided" : "Not provided (optional)"
+    )
 
-    if (!imageLocalPath) {
-        console.log("   ❌ Validation Failed: Image is required")
-        throw new ApiError(400, "Image is required for a photo post")
+    let imageUrl = null
+    if (imageLocalPath) {
+        console.log("\n[STEP 2] ☁️ Uploading Image to Cloudinary")
+        const image = await uploadOnCloudinary(imageLocalPath)
+
+        if (!image) {
+            console.log("   ❌ Cloudinary Upload Failed")
+            throw new ApiError(500, "Failed to upload image")
+        }
+        imageUrl = image.url
+        console.log("   ✓ Image Uploaded:", imageUrl)
+    } else {
+        console.log("\n[STEP 2] ⏭️ Skipping image upload (no image provided)")
     }
-
-    console.log("\n[STEP 2] ☁️ Uploading Image to Cloudinary")
-    const image = await uploadOnCloudinary(imageLocalPath)
-
-    if (!image) {
-        console.log("   ❌ Cloudinary Upload Failed")
-        throw new ApiError(500, "Failed to upload image")
-    }
-    console.log("   ✓ Image Uploaded:", image.url)
 
     console.log("\n[STEP 3] 💾 Saving Tweet to Database")
     const tweet = await Tweet.create({
-        content: content || "",
-        image: image.url,
+        content: content,
+        image: imageUrl, // Will be null if no image
         owner: req.user?._id,
         likes: 0, // Initialize likes count
     })

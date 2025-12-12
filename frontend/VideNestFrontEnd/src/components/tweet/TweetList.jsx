@@ -1,28 +1,47 @@
 import React, { useEffect, useState } from "react"
 import TweetCard from "./TweetCard"
-import { getUserTweets } from "../../api/tweetApi"
+import { getUserTweets, getAllTweets } from "../../api/tweetApi"
 import { Loader2 } from "lucide-react"
 
-const TweetList = ({ userId }) => {
+const TweetList = ({ userId, limit }) => {
     const [tweets, setTweets] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
     useEffect(() => {
         const fetchTweets = async () => {
-            if (!userId) return
             try {
                 setLoading(true)
-                const data = await getUserTweets(userId)
-                // Backend getUserTweets returns ApiResponse(200, tweets, message)
-                // where tweets is the aggregation result array
-                // So data structure is: { statusCode: 200, data: [...tweets array...], message: "..." }
-                // We need to extract data.data which is the tweets array
+                let data
+
+                // If userId provided, fetch user-specific tweets
+                // Otherwise, fetch all tweets
+                if (userId) {
+                    data = await getUserTweets(userId)
+                } else {
+                    data = await getAllTweets()
+                }
+
                 console.log("📥 Received tweet data:", data)
 
-                const tweetList = Array.isArray(data.data) ? data.data : []
+                // Extract tweets array from response
+                // API might return array directly OR wrapped in { data: [...] }
+                let tweetList = []
+                if (Array.isArray(data)) {
+                    // Data is already the array
+                    tweetList = data
+                } else if (Array.isArray(data.data)) {
+                    // Data is wrapped in { data: [...] }
+                    tweetList = data.data
+                }
+
                 console.log("✅ Extracted tweets:", tweetList.length, "posts")
-                setTweets(tweetList)
+
+                // Apply limit if specified
+                const finalTweets = limit
+                    ? tweetList.slice(0, limit)
+                    : tweetList
+                setTweets(finalTweets)
             } catch (err) {
                 console.error("❌ Error fetching tweets:", err)
                 console.error("   Error details:", {
@@ -30,14 +49,14 @@ const TweetList = ({ userId }) => {
                     response: err.response,
                     data: err.response?.data,
                 })
-                setError("Failed to load community posts.")
+                setError("Failed to load tweets.")
             } finally {
                 setLoading(false)
             }
         }
 
         fetchTweets()
-    }, [userId])
+    }, [userId, limit])
 
     if (loading) {
         return (
@@ -66,7 +85,7 @@ const TweetList = ({ userId }) => {
     }
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {tweets.map((tweet) => (
                 <TweetCard key={tweet._id} tweet={tweet} />
             ))}

@@ -1,8 +1,9 @@
 // ============================================
 // MAIN LAYOUT - PAGE WRAPPER COMPONENT
 // ============================================
-// Wraps all protected pages with consistent Header + Navigation.
-// Creates the app shell: header at top, nav at bottom, content in middle.
+// Wraps all protected pages with consistent navigation.
+// Mobile: Bottom navigation bar
+// Desktop: Left sidebar navigation
 
 import Header from "./ui/layout/Header.jsx"
 import Sidebar from "./ui/layout/Sidebar.jsx"
@@ -12,18 +13,17 @@ import Sidebar from "./ui/layout/Sidebar.jsx"
  * - children: The page content to render (HomePage, ProfilePage, etc.)
  *
  * Layout Structure:
- * - Sidebar: Fixed left navigation
- * - Header: Fixed top bar (offset by sidebar width)
- * - Main: Content area (offset by sidebar and header)
+ * Mobile: Bottom nav bar, content fills screen
+ * Desktop: Sidebar left, Header top, content offset by sidebar
  */
 const MainLayout = ({ children }) => {
     return (
         <div className="min-h-screen bg-black text-white">
-            {/* SIDEBAR - Fixed left */}
+            {/* SIDEBAR - Responsive (bottom on mobile, left on desktop) */}
             <Sidebar />
 
-            {/* MAIN WRAPPER - Offset by sidebar width */}
-            <div className="pl-20 xl:pl-64 min-h-screen transition-all duration-300">
+            {/* MAIN WRAPPER - Responsive padding */}
+            <div className="md:pl-20 xl:pl-64 pb-16 md:pb-0 min-h-screen transition-all duration-300">
                 {/* HEADER - Sticky at top */}
                 <Header />
 

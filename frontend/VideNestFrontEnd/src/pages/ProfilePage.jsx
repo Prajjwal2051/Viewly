@@ -1,19 +1,107 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
-import { Grid, Image as ImageIcon, Film, User } from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
+import { Grid, Film, User, Loader2, MessageSquare } from "lucide-react"
+import VideoCard from "../components/video/VideoCard"
 import TweetList from "../components/tweet/TweetList"
+import { getAllVideos } from "../api/videoApi"
+import { toggleSubscription } from "../api/subscriptionApi"
+import toast from "react-hot-toast"
 
 // Tab Configuration
 const TABS = [
     { id: "videos", label: "Videos", icon: Film },
-    { id: "community", label: "Community", icon: ImageIcon },
+    { id: "tweets", label: "Tweets", icon: MessageSquare },
     { id: "about", label: "About", icon: User },
 ]
 
 const ProfilePage = () => {
-    // Get current user from Redux store
     const { user } = useSelector((state) => state.auth)
+    const { username } = useParams()
+    const navigate = useNavigate()
+
     const [activeTab, setActiveTab] = useState("videos")
+    const [loading, setLoading] = useState(true)
+    const [userVideos, setUserVideos] = useState([])
+    const [stats, setStats] = useState({ subscribers: 0, videos: 0 })
+    const [isSubscribed, setIsSubscribed] = useState(false)
+    const [subscribing, setSubscribing] = useState(false)
+
+    // Determine if viewing own profile or someone else's
+    const isOwnProfile = !username || username === user?.username
+    const profileUser = isOwnProfile ? user : null // For now, use current user
+
+    // Fetch profile data
+    useEffect(() => {
+        const fetchProfileData = async () => {
+            try {
+                setLoading(true)
+
+                // Fetch all videos and filter by user
+                const response = await getAllVideos()
+                const allVideos = response.data?.videos || response.videos || []
+
+                // Filter user's videos
+                const filtered = allVideos.filter(
+                    (v) => v.owner?._id === user._id || v.owner === user._id
+                )
+
+                setUserVideos(filtered)
+
+                // Set stats
+                setStats({
+                    subscribers: user?.subscribersCount || 0,
+                    videos: filtered.length,
+                })
+            } catch (error) {
+                console.error("Failed to load profile data:", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        if (user) {
+            fetchProfileData()
+        }
+    }, [user])
+
+    // Subscribe handler
+    const handleSubscribe = async () => {
+        if (!user) {
+            toast.error("Please login to subscribe")
+            navigate("/login")
+            return
+        }
+
+        setSubscribing(true)
+        const wasSubscribed = isSubscribed
+
+        // Optimistic update
+        setIsSubscribed(!wasSubscribed)
+        setStats((prev) => ({
+            ...prev,
+            subscribers: wasSubscribed
+                ? prev.subscribers - 1
+                : prev.subscribers + 1,
+        }))
+
+        try {
+            await toggleSubscription(profileUser._id)
+            toast.success(wasSubscribed ? "Unsubscribed" : "Subscribed!")
+        } catch (error) {
+            // Revert on error
+            setIsSubscribed(wasSubscribed)
+            setStats((prev) => ({
+                ...prev,
+                subscribers: wasSubscribed
+                    ? prev.subscribers + 1
+                    : prev.subscribers - 1,
+            }))
+            toast.error("Failed to update subscription")
+        } finally {
+            setSubscribing(false)
+        }
+    }
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
@@ -50,18 +138,28 @@ const ProfilePage = () => {
                         <div className="flex items-center justify-center md:justify-start gap-8 mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
                             <div className="text-center md:text-left">
                                 <span className="block text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    0
+                                    {loading ? (
+                                        <Loader2 className="inline-block w-6 h-6 animate-spin" />
+                                    ) : (
+                                        stats.subscribers.toLocaleString()
+                                    )}
                                 </span>
                                 <span className="text-sm text-gray-500">
-                                    Subscribers
+                                    {stats.subscribers === 1
+                                        ? "Subscriber"
+                                        : "Subscribers"}
                                 </span>
                             </div>
                             <div className="text-center md:text-left">
                                 <span className="block text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    0
+                                    {loading ? (
+                                        <Loader2 className="inline-block w-6 h-6 animate-spin" />
+                                    ) : (
+                                        stats.videos.toLocaleString()
+                                    )}
                                 </span>
                                 <span className="text-sm text-gray-500">
-                                    Videos
+                                    {stats.videos === 1 ? "Video" : "Videos"}
                                 </span>
                             </div>
                         </div>
@@ -69,9 +167,30 @@ const ProfilePage = () => {
 
                     {/* Action Buttons */}
                     <div className="flex gap-3">
-                        <button className="px-6 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-medium rounded-full transition-colors">
-                            Edit Profile
-                        </button>
+                        {isOwnProfile ? (
+                            <button
+                                onClick={() => navigate("/settings")}
+                                className="px-6 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-medium rounded-full transition-colors"
+                            >
+                                Edit Profile
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSubscribe}
+                                disabled={subscribing}
+                                className={`px-6 py-2 font-semibold rounded-full transition-colors disabled:opacity-50 ${
+                                    isSubscribed
+                                        ? "bg-gray-800 text-white hover:bg-gray-700"
+                                        : "bg-purple-600 text-white hover:bg-purple-700"
+                                }`}
+                            >
+                                {subscribing
+                                    ? "Loading..."
+                                    : isSubscribed
+                                      ? "Subscribed"
+                                      : "Subscribe"}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -103,23 +222,68 @@ const ProfilePage = () => {
 
             {/* Tab Content */}
             <div className="min-h-[400px]">
-                {activeTab === "videos" && (
-                    <div className="text-center py-20 text-gray-500">
-                        <Grid size={48} className="mx-auto mb-4 opacity-20" />
-                        <h3 className="text-xl font-medium mb-2">
-                            No videos yet
-                        </h3>
-                        <p>Videos you upload will appear here.</p>
-                    </div>
-                )}
+                {activeTab === "videos" &&
+                    (loading ? (
+                        <div className="flex justify-center py-20">
+                            <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+                        </div>
+                    ) : userVideos.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {userVideos.map((video) => (
+                                <VideoCard key={video._id} video={video} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-20 text-gray-500">
+                            <Grid
+                                size={48}
+                                className="mx-auto mb-4 opacity-20"
+                            />
+                            <h3 className="text-xl font-medium mb-2">
+                                No videos yet
+                            </h3>
+                            <p>
+                                {isOwnProfile
+                                    ? "Videos you upload will appear here."
+                                    : "This user hasn't uploaded any videos yet."}
+                            </p>
+                            {isOwnProfile && (
+                                <button
+                                    onClick={() => navigate("/upload")}
+                                    className="mt-4 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-full transition-colors"
+                                >
+                                    Upload Video
+                                </button>
+                            )}
+                        </div>
+                    ))}
 
-                {activeTab === "community" && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {activeTab === "tweets" && (
+                    <div>
                         {user?._id ? (
                             <TweetList userId={user._id} />
                         ) : (
-                            <div className="text-center text-red-500">
-                                User ID missing
+                            <div className="text-center py-20 text-gray-500">
+                                <MessageSquare
+                                    size={48}
+                                    className="mx-auto mb-4 opacity-20"
+                                />
+                                <h3 className="text-xl font-medium mb-2">
+                                    No tweets yet
+                                </h3>
+                                <p>
+                                    {isOwnProfile
+                                        ? "Tweets you post will appear here."
+                                        : "This user hasn't posted any tweets yet."}
+                                </p>
+                                {isOwnProfile && (
+                                    <button
+                                        onClick={() => navigate("/upload")}
+                                        className="mt-4 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-full transition-colors"
+                                    >
+                                        Post Tweet
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

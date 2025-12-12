@@ -63,12 +63,15 @@ const UploadPage = () => {
                 await uploadVideo(formData)
                 toast.success("Video uploaded successfully!")
             } else {
-                // Handle Tweet/Photo Post
-                await createTweet({
-                    content: data.description, // using description field as content
-                    image: data.image,
-                })
-                toast.success("Post created successfully!")
+                // Handle Tweet Post
+                const formData = new FormData()
+                formData.append("content", data.content)
+                if (data.image) {
+                    formData.append("image", data.image)
+                }
+
+                await createTweet(formData)
+                toast.success("Tweet posted successfully!")
             }
 
             navigate("/")
@@ -117,8 +120,8 @@ const UploadPage = () => {
                             : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                 >
-                    <ImageIcon size={20} />
-                    <span className="font-semibold">Post Video / Photo</span>
+                    <Type size={20} />
+                    <span className="font-semibold">Create Tweet</span>
                 </button>
             </div>
 
@@ -306,80 +309,101 @@ const UploadPage = () => {
                         </div>
                     </div>
                 ) : (
-                    // TWEET / PHOTO POST FORM
-                    <div className="max-w-2xl mx-auto space-y-8">
-                        <div
-                            className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                                errors.image
-                                    ? "border-red-500"
-                                    : "border-gray-300 dark:border-gray-700 hover:border-red-500"
-                            }`}
-                        >
-                            <input
-                                type="file"
-                                id="image-upload"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => handleFileChange(e, "image")}
-                            />
-                            {!imagePreview ? (
-                                <label
-                                    htmlFor="image-upload"
-                                    className="cursor-pointer flex flex-col items-center"
-                                >
-                                    <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
-                                        <ImageIcon size={32} />
-                                    </div>
-                                    <span className="font-semibold text-gray-700 dark:text-gray-200">
-                                        Upload Photo
-                                    </span>
-                                    <span className="text-sm text-gray-500 mt-2">
-                                        JPG, PNG, GIF
-                                    </span>
+                    // TWEET CREATION FORM
+                    <div className="max-w-2xl mx-auto">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-gray-700 space-y-6">
+                            {/* Tweet Text Area */}
+                            <div>
+                                <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                                    What's happening?
                                 </label>
-                            ) : (
-                                <div className="relative rounded-lg overflow-hidden">
-                                    <img
-                                        src={imagePreview}
-                                        alt="Preview"
-                                        className="w-full max-h-96 object-contain"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setImagePreview(null)
-                                            setValue("image", null)
-                                        }}
-                                        className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-red-500"
+                                <textarea
+                                    {...register("content", {
+                                        required: "Tweet content is required",
+                                        maxLength: {
+                                            value: 280,
+                                            message:
+                                                "Tweet must be 280 characters or less",
+                                        },
+                                    })}
+                                    rows="6"
+                                    maxLength={280}
+                                    className="w-full bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 text-lg text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none resize-none"
+                                    placeholder="Share your thoughts..."
+                                />
+                                <div className="flex justify-between items-center mt-2">
+                                    <span
+                                        className={`text-sm font-medium ${
+                                            (watch("content")?.length || 0) >
+                                            280
+                                                ? "text-red-500"
+                                                : (watch("content")?.length ||
+                                                        0) > 250
+                                                  ? "text-yellow-500"
+                                                  : "text-gray-500"
+                                        }`}
                                     >
-                                        <X size={16} />
-                                    </button>
+                                        {watch("content")?.length || 0} / 280
+                                    </span>
+                                    {errors.content && (
+                                        <p className="text-red-500 text-sm">
+                                            {errors.content.message}
+                                        </p>
+                                    )}
                                 </div>
-                            )}
-                            {errors.image && (
-                                <p className="text-red-500 text-sm mt-2">
-                                    Image is required for photo posts
-                                </p>
-                            )}
-                        </div>
+                            </div>
 
-                        <div>
-                            <label className="block text-lg font-medium text-gray-900 dark:text-white mb-2">
-                                Caption
-                            </label>
-                            <textarea
-                                {...register("description", {
-                                    required: "Caption is required",
-                                })}
-                                rows="3"
-                                className="w-full bg-gray-100 dark:bg-gray-700 border-transparent rounded-2xl p-4 text-xl text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-red-600 outline-none resize-none"
-                                placeholder="What's on your mind?"
-                            />
-                            {errors.description && (
-                                <p className="text-red-500 text-sm mt-1">
-                                    {errors.description.message}
-                                </p>
-                            )}
+                            {/* Optional Image Upload */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Add Image (Optional)
+                                </label>
+                                <div className="border-2 border-dashed rounded-xl p-6 text-center transition-colors border-gray-300 dark:border-gray-600 hover:border-purple-500">
+                                    <input
+                                        type="file"
+                                        id="tweet-image-upload"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) =>
+                                            handleFileChange(e, "image")
+                                        }
+                                    />
+                                    {!imagePreview ? (
+                                        <label
+                                            htmlFor="tweet-image-upload"
+                                            className="cursor-pointer flex flex-col items-center"
+                                        >
+                                            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-3 text-purple-600 dark:text-purple-400">
+                                                <ImageIcon size={24} />
+                                            </div>
+                                            <span className="font-medium text-gray-600 dark:text-gray-300">
+                                                Click to add image
+                                            </span>
+                                            <span className="text-xs text-gray-500 mt-1">
+                                                JPG, PNG, GIF (Optional)
+                                            </span>
+                                        </label>
+                                    ) : (
+                                        <div className="relative rounded-lg overflow-hidden">
+                                            <img
+                                                src={imagePreview}
+                                                alt="Tweet preview"
+                                                className="w-full max-h-80 object-contain rounded-lg"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setImagePreview(null)
+                                                    setValue("image", null)
+                                                }}
+                                                className="absolute top-2 right-2 p-2 bg-black/70 text-white rounded-full hover:bg-red-500 transition-colors"
+                                            >
+                                                <X size={18} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -400,7 +424,7 @@ const UploadPage = () => {
                             <span>
                                 {postType === "video"
                                     ? "Publish Video"
-                                    : "Post Photo"}
+                                    : "Post Tweet"}
                             </span>
                         </>
                     )}

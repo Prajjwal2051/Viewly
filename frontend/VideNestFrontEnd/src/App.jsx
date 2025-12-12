@@ -16,8 +16,11 @@ import RegisterPage from "./pages/RegisterPage"
 import SettingsPage from "./pages/SettingsPage"
 import UploadPage from "./pages/UploadPage"
 import ProfilePage from "./pages/ProfilePage"
-import TweetPage from "./pages/TweetPage"
 import VideoPlayerPage from "./pages/VideoPlayerPage"
+import DashboardPage from "./pages/DashboardPage"
+import SearchPage from "./pages/SearchPage"
+import DiscoverPage from "./pages/DiscoverPage"
+import ActivityPage from "./pages/ActivityPage"
 import NotFoundPage from "./pages/NotFoundPage"
 
 // Context
@@ -116,13 +119,25 @@ function App() {
                         }
                     />
 
-                    {/* TWEET DETAIL PAGE */}
+                    {/* DISCOVER PAGE - Content Discovery */}
                     <Route
-                        path="/tweet/:tweetId"
+                        path="/discover"
                         element={
                             <ProtectedRoute>
                                 <MainLayout>
-                                    <TweetPage />
+                                    <DiscoverPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* ACTIVITY PAGE - Notifications & Activity */}
+                    <Route
+                        path="/activity"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ActivityPage />
                                 </MainLayout>
                             </ProtectedRoute>
                         }
@@ -135,6 +150,30 @@ function App() {
                             <ProtectedRoute>
                                 <MainLayout>
                                     <ProfilePage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* DASHBOARD PAGE - Creator Stats & Video Management */}
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <DashboardPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* SEARCH PAGE - Video Search Results */}
+                    <Route
+                        path="/search"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SearchPage />
                                 </MainLayout>
                             </ProtectedRoute>
                         }

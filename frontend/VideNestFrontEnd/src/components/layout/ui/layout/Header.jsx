@@ -91,7 +91,7 @@ const Header = () => {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => navigate("/notifications")}
+                            onClick={() => navigate("/activity")}
                             className="relative hover:bg-gray-900 rounded-full h-12 w-12"
                         >
                             <Bell className="h-6 w-6 text-gray-400 hover:text-white" />

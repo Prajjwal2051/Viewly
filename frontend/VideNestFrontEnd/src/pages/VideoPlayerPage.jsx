@@ -10,9 +10,11 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { useSelector } from "react-redux"
 import { getVideoById, getAllVideos } from "../api/videoApi"
+import { toggleSubscription } from "../api/subscriptionApi"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
-import VideoCard from "../components/video/VideoCard" // Reusing existing card
+import VideoCard from "../components/video/VideoCard"
 import {
     Loader2,
     ThumbsUp,
@@ -26,14 +28,20 @@ import VideoControls from "../components/video/VideoControls"
 import CommentSection from "../components/comments/CommentSection"
 
 const VideoPlayerPage = () => {
-    const { videoId } = useParams() // Get video ID from URL
+    const { videoId } = useParams()
     const navigate = useNavigate()
+    const { user } = useSelector((state) => state.auth)
 
     // State
     const [video, setVideo] = useState(null)
     const [loading, setLoading] = useState(true)
     const [relatedVideos, setRelatedVideos] = useState([])
     const [loadingRelated, setLoadingRelated] = useState(true)
+
+    // Subscription state
+    const [isSubscribed, setIsSubscribed] = useState(false)
+    const [subscribing, setSubscribing] = useState(false)
+    const [subscriberCount, setSubscriberCount] = useState(0)
 
     // Fetch Video Details
     useEffect(() => {
@@ -42,17 +50,12 @@ const VideoPlayerPage = () => {
                 setLoading(true)
                 const videoData = await getVideoById(videoId)
 
-                // Ensure we handle the structure correctly
-                // verifyApi in previous turn showed getVideoById returns response.data
-                // which typically has { data: { videoObject } } or just { videoObject }
-                // Let's assume standard ApiResponse wrapper: { statusCode, data, message }
-                // So videoData.data should be the video object.
-                // Or if the helper already unwrapped it.
-                // Let's inspect videoApi.js again visually or safeguard.
-                // "return response.data" in videoApi.js means we get the full payload.
                 const fetchedVideo =
                     videoData.data || videoData.video || videoData
                 setVideo(fetchedVideo)
+
+                // Set initial subscriber count
+                setSubscriberCount(fetchedVideo.owner?.subscribersCount || 0)
 
                 // Fetch Related
                 const relatedData = await getAllVideos({ limit: 10 })
@@ -76,6 +79,39 @@ const VideoPlayerPage = () => {
         }
     }, [videoId, navigate])
 
+    // Subscribe Handler
+    const handleSubscribe = async () => {
+        if (!user) {
+            toast.error("Please login to subscribe")
+            navigate("/login")
+            return
+        }
+
+        if (user._id === video.owner._id) {
+            toast.error("You cannot subscribe to your own channel")
+            return
+        }
+
+        setSubscribing(true)
+        const wasSubscribed = isSubscribed
+
+        // Optimistic update
+        setIsSubscribed(!wasSubscribed)
+        setSubscriberCount((prev) => (wasSubscribed ? prev - 1 : prev + 1))
+
+        try {
+            await toggleSubscription(video.owner._id)
+            toast.success(wasSubscribed ? "Unsubscribed" : "Subscribed!")
+        } catch (error) {
+            // Revert on error
+            setIsSubscribed(wasSubscribed)
+            setSubscriberCount((prev) => (wasSubscribed ? prev + 1 : prev - 1))
+            toast.error("Failed to update subscription")
+        } finally {
+            setSubscribing(false)
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-[80vh] bg-black">
@@ -92,16 +128,14 @@ const VideoPlayerPage = () => {
                 {/* LEFT COLUMN: Main Video Player & Details */}
                 <div className="flex-1 lg:w-[70%]">
                     {/* 1. Video Player */}
-                    <div className="relative w-full pb-[56.25%] bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-900">
+                    <div className="bg-black">
                         <video
                             src={video.videoFile}
-                            poster={video.thumbnail}
-                            className="absolute top-0 left-0 w-full h-full object-contain"
                             controls
                             autoPlay
-                        >
-                            Your browser does not support the video tag.
-                        </video>
+                            className="w-full aspect-video max-h-[80vh] object-contain bg-black"
+                            poster={video.thumbnail}
+                        />
                     </div>
 
                     {/* 2. Video Info & Controls */}
@@ -134,13 +168,30 @@ const VideoPlayerPage = () => {
                                             "Unknown Channel"}
                                     </h3>
                                     <p className="text-sm text-gray-400">
-                                        {/* Subscriber count would ideally come from subscription api or video owner details */}
-                                        {video.owner?.subscribersCount || 0}{" "}
-                                        subscribers
+                                        {subscriberCount.toLocaleString()}{" "}
+                                        {subscriberCount === 1
+                                            ? "subscriber"
+                                            : "subscribers"}
                                     </p>
                                 </div>
-                                <button className="ml-auto px-6 py-2 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors">
-                                    Subscribe
+                                {/* Subscribe Button */}
+                                <button
+                                    onClick={handleSubscribe}
+                                    disabled={
+                                        subscribing ||
+                                        user?._id === video.owner?._id
+                                    }
+                                    className={`ml-auto px-6 py-2 font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                        isSubscribed
+                                            ? "bg-gray-800 text-white hover:bg-gray-700"
+                                            : "bg-white text-black hover:bg-gray-200"
+                                    }`}
+                                >
+                                    {subscribing
+                                        ? "Loading..."
+                                        : isSubscribed
+                                          ? "Subscribed"
+                                          : "Subscribe"}
                                 </button>
                             </div>
 

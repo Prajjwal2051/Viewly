@@ -36,16 +36,8 @@ const TweetCard = ({ tweet }) => {
         }
     }
 
-    const handleClick = () => {
-        // TODO: Create detail route /tweet/:tweetId
-        navigate(`/tweet/${tweet._id}`)
-    }
-
     return (
-        <div
-            onClick={handleClick}
-            className="relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer group shadow-lg bg-gray-900"
-        >
+        <div className="relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-gray-900">
             {/* BACKGROUND IMAGE - Natural Aspect Ratio */}
             {tweet.image ? (
                 <img

@@ -1,14 +1,9 @@
 import apiClient from "./client"
 
 // Create a new tweet (photo post)
-export const createTweet = async (data) => {
+export const createTweet = async (formData) => {
     try {
-        const formData = new FormData()
-        formData.append("content", data.content)
-        if (data.image) {
-            formData.append("image", data.image)
-        }
-
+        // formData is already a FormData object from UploadPage
         const response = await apiClient.post("/tweets", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
