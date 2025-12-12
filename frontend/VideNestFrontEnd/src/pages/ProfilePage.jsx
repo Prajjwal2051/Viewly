@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { Grid, Film, User, Loader2, MessageSquare } from "lucide-react"
 import VideoCard from "../components/video/VideoCard"
 import TweetList from "../components/tweet/TweetList"
+import EmptyState from "../components/ui/EmptyState"
 import { getAllVideos } from "../api/videoApi"
 import { toggleSubscription } from "../api/subscriptionApi"
 import toast from "react-hot-toast"
@@ -105,8 +106,20 @@ const ProfilePage = () => {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
+            {/* Cover Photo Banner */}
+            <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden mb-8 bg-gradient-to-r from-red-600 via-pink-600 to-purple-600">
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+                {/* Decorative Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]" />
+                </div>
+            </div>
+
             {/* Profile Header Card */}
-            <div className="bg-[#1E2021] rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
+            <div className="bg-[#1E2021] rounded-2xl shadow-sm border border-gray-100 p-8 mb-8 -mt-24 relative z-10">
+                
                 <div className="flex flex-col md:flex-row items-center gap-8">
                     {/* Avatar */}
                     <div className="relative group">
@@ -161,6 +174,15 @@ const ProfilePage = () => {
                                 </span>
                             </div>
                         </div>
+
+                        {/* Bio Section */}
+                        {user?.bio && (
+                            <div className="mt-6 pt-6 border-t border-gray-100">
+                                <p className="text-gray-400 leading-relaxed">
+                                    {user.bio}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Action Buttons */}
@@ -245,28 +267,20 @@ const ProfilePage = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-20 text-gray-500">
-                            <Grid
-                                size={48}
-                                className="mx-auto mb-4 opacity-20"
-                            />
-                            <h3 className="text-xl font-medium mb-2">
-                                No videos yet
-                            </h3>
-                            <p>
-                                {isOwnProfile
+                        <EmptyState
+                            icon={Film}
+                            title="No videos yet"
+                            description={
+                                isOwnProfile
                                     ? "Videos you upload will appear here."
-                                    : "This user hasn't uploaded any videos yet."}
-                            </p>
-                            {isOwnProfile && (
-                                <button
-                                    onClick={() => navigate("/upload")}
-                                    className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full transition-colors"
-                                >
-                                    Upload Video
-                                </button>
-                            )}
-                        </div>
+                                    : "This user hasn't uploaded any videos yet."
+                            }
+                            actionLabel={isOwnProfile ? "Upload Video" : null}
+                            onAction={
+                                isOwnProfile ? () => navigate("/upload") : null
+                            }
+                            animated={true}
+                        />
                     ))}
 
                 {activeTab === "tweets" && (

@@ -11,6 +11,7 @@ import VideoCard from "../components/video/VideoCard"
 import TweetCard from "../components/tweet/TweetCard"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
 import TweetCardSkeleton from "../components/tweet/TweetCardSkeleton"
+import EmptyState from "../components/ui/EmptyState"
 import toast from "react-hot-toast"
 import {
     Loader2,
@@ -144,10 +145,17 @@ const HomePage = () => {
                             )
                         )
                     ) : (
-                        <div className="col-span-full text-center py-20 bg-[#2A2D2E] rounded-2xl break-inside-avoid">
-                            <p className="text-gray-400 text-lg">
-                                No content found.
-                            </p>
+                        <div className="col-span-full break-inside-avoid">
+                            <EmptyState
+                                icon={
+                                    activeCategory === "Tweets"
+                                        ? MessageSquare
+                                        : Film
+                                }
+                                title={`No ${activeCategory.toLowerCase()} found`}
+                                description={`Check back later for new ${activeCategory.toLowerCase()} content`}
+                                animated={true}
+                            />
                         </div>
                     )}
                 </div>

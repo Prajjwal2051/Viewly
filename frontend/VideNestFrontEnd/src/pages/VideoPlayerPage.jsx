@@ -29,6 +29,10 @@ import {
     Maximize,
     Rewind,
     FastForward,
+    Volume2,
+    VolumeX,
+    Settings,
+    PictureInPicture,
 } from "lucide-react"
 import toast from "react-hot-toast"
 
@@ -58,6 +62,13 @@ const VideoPlayerPage = ({ isModal = false }) => {
     // Video Player Refs & State
     const videoRef = useRef(null)
     const [isPlaying, setIsPlaying] = useState(true)
+    const [progress, setProgress] = useState(0)
+    const [currentTime, setCurrentTime] = useState(0)
+    const [duration, setDuration] = useState(0)
+    const [volume, setVolume] = useState(1)
+    const [isMuted, setIsMuted] = useState(false)
+    const [playbackSpeed, setPlaybackSpeed] = useState(1)
+    const [showSpeedMenu, setShowSpeedMenu] = useState(false)
 
     const handleTogglePlay = () => {
         if (videoRef.current) {
@@ -89,6 +100,82 @@ const VideoPlayerPage = ({ isModal = false }) => {
             }
         }
     }
+
+    const handleProgressChange = (e) => {
+        const newTime = (e.target.value / 100) * duration
+        if (videoRef.current) {
+            videoRef.current.currentTime = newTime
+        }
+        setProgress(e.target.value)
+    }
+
+    const handleVolumeChange = (e) => {
+        const newVolume = e.target.value
+        setVolume(newVolume)
+        if (videoRef.current) {
+            videoRef.current.volume = newVolume
+        }
+        setIsMuted(newVolume === 0)
+    }
+
+    const toggleMute = () => {
+        if (videoRef.current) {
+            const newMuted = !isMuted
+            setIsMuted(newMuted)
+            videoRef.current.muted = newMuted
+        }
+    }
+
+    const handleSpeedChange = (speed) => {
+        setPlaybackSpeed(speed)
+        if (videoRef.current) {
+            videoRef.current.playbackRate = speed
+        }
+        setShowSpeedMenu(false)
+    }
+
+    const togglePictureInPicture = async () => {
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture()
+            } else if (videoRef.current) {
+                await videoRef.current.requestPictureInPicture()
+            }
+        } catch (error) {
+            console.log("PiP error:", error)
+        }
+    }
+
+    const formatTime = (seconds) => {
+        if (!seconds || isNaN(seconds)) return "0:00"
+        const mins = Math.floor(seconds / 60)
+        const secs = Math.floor(seconds % 60)
+        return `${mins}:${secs.toString().padStart(2, "0")}`
+    }
+
+    // Update progress as video plays
+    useEffect(() => {
+        const video = videoRef.current
+        if (!video) return
+
+        const updateProgress = () => {
+            const currentProgress = (video.currentTime / video.duration) * 100
+            setProgress(currentProgress)
+            setCurrentTime(video.currentTime)
+        }
+
+        const updateDuration = () => {
+            setDuration(video.duration)
+        }
+
+        video.addEventListener("timeupdate", updateProgress)
+        video.addEventListener("loadedmetadata", updateDuration)
+
+        return () => {
+            video.removeEventListener("timeupdate", updateProgress)
+            video.removeEventListener("loadedmetadata", updateDuration)
+        }
+    }, [])
 
     // Fetch Video Details
     useEffect(() => {
@@ -246,58 +333,177 @@ const VideoPlayerPage = ({ isModal = false }) => {
                     />
 
                     {/* CUSTOM CONTROLS OVERLAY - CENTERED */}
-                    <div className="absolute inset-0 flex items-center justify-center gap-8 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                        {/* Rewind -5s */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                skip(-5)
-                            }}
-                            className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
-                            title="Rewind 5s"
-                        >
-                            <Rewind size={32} fill="white" />
-                        </button>
+                    <div className="absolute inset-0 flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {/* Top Controls - Fullscreen & PiP */}
+                        <div className="absolute top-4 right-4 flex gap-2 z-20">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    togglePictureInPicture()
+                                }}
+                                className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-sm"
+                                title="Picture in Picture"
+                            >
+                                <PictureInPicture size={20} />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    toggleFullscreen()
+                                }}
+                                className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-sm"
+                                title="Fullscreen"
+                            >
+                                <Maximize size={20} />
+                            </button>
+                        </div>
 
-                        {/* Play/Pause Main Button */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                handleTogglePlay()
-                            }}
-                            className="p-5 rounded-full bg-red-600/90 text-white hover:bg-red-600 hover:scale-110 transition-all shadow-lg pointer-events-auto backdrop-blur-sm shadow-red-900/20"
-                        >
-                            {isPlaying ? (
-                                <Pause size={40} fill="white" />
-                            ) : (
-                                <Play size={40} fill="white" className="ml-1" />
-                            )}
-                        </button>
+                        {/* Center Controls - Play/Pause & Skip */}
+                        <div className="flex-1 flex items-center justify-center gap-8 pointer-events-none">
+                            {/* Rewind -5s */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    skip(-5)
+                                }}
+                                className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
+                                title="Rewind 5s"
+                            >
+                                <Rewind size={32} fill="white" />
+                            </button>
 
-                        {/* Fast Forward +5s */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                skip(5)
-                            }}
-                            className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
-                            title="Forward 5s"
-                        >
-                            <FastForward size={32} fill="white" />
-                        </button>
+                            {/* Play/Pause Main Button */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleTogglePlay()
+                                }}
+                                className="p-5 rounded-full bg-red-600/90 text-white hover:bg-red-600 hover:scale-110 transition-all shadow-lg pointer-events-auto backdrop-blur-sm shadow-red-900/20"
+                            >
+                                {isPlaying ? (
+                                    <Pause size={40} fill="white" />
+                                ) : (
+                                    <Play
+                                        size={40}
+                                        fill="white"
+                                        className="ml-1"
+                                    />
+                                )}
+                            </button>
+
+                            {/* Fast Forward +5s */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    skip(5)
+                                }}
+                                className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
+                                title="Forward 5s"
+                            >
+                                <FastForward size={32} fill="white" />
+                            </button>
+                        </div>
+
+                        {/* Bottom Controls - Progress, Volume, Speed */}
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                            {/* Progress Bar */}
+                            <div className="mb-3">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={progress}
+                                    onChange={handleProgressChange}
+                                    className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-all"
+                                    style={{
+                                        background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${progress}%, rgba(255,255,255,0.3) ${progress}%, rgba(255,255,255,0.3) 100%)`,
+                                    }}
+                                />
+                            </div>
+
+                            {/* Controls Row */}
+                            <div className="flex items-center justify-between text-white text-sm">
+                                {/* Left: Time */}
+                                <div className="flex items-center gap-2">
+                                    <span className="font-mono">
+                                        {formatTime(currentTime)} /{" "}
+                                        {formatTime(duration)}
+                                    </span>
+                                </div>
+
+                                {/* Right: Volume & Speed */}
+                                <div className="flex items-center gap-4">
+                                    {/* Volume Control */}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                toggleMute()
+                                            }}
+                                            className="p-1 hover:scale-110 transition-transform"
+                                        >
+                                            {isMuted || volume === 0 ? (
+                                                <VolumeX size={20} />
+                                            ) : (
+                                                <Volume2 size={20} />
+                                            )}
+                                        </button>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="1"
+                                            step="0.1"
+                                            value={isMuted ? 0 : volume}
+                                            onChange={handleVolumeChange}
+                                            className="w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
+                                        />
+                                    </div>
+
+                                    {/* Playback Speed */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                setShowSpeedMenu(!showSpeedMenu)
+                                            }}
+                                            className="flex items-center gap-1 px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                                        >
+                                            <Settings size={16} />
+                                            <span className="text-xs">
+                                                {playbackSpeed}x
+                                            </span>
+                                        </button>
+
+                                        {showSpeedMenu && (
+                                            <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
+                                                {[
+                                                    0.5, 0.75, 1, 1.25, 1.5, 2,
+                                                ].map((speed) => (
+                                                    <button
+                                                        key={speed}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleSpeedChange(
+                                                                speed
+                                                            )
+                                                        }}
+                                                        className={`block w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors ${
+                                                            playbackSpeed ===
+                                                            speed
+                                                                ? "bg-red-600 text-white"
+                                                                : "text-gray-300"
+                                                        }`}
+                                                    >
+                                                        {speed}x
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    {/* FULLSCREEN TOGGLE - Top Right */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            toggleFullscreen()
-                        }}
-                        className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all z-20 pointer-events-auto backdrop-blur-sm"
-                        title="Toggle Fullscreen"
-                    >
-                        <Maximize size={24} />
-                    </button>
                 </div>
 
                 {/* RIGHT OVERLAY - ACTIONS BUTTONS */}
