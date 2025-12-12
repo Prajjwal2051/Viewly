@@ -10,6 +10,7 @@ import { getAllTweets } from "../api/tweetApi"
 import VideoCard from "../components/video/VideoCard"
 import TweetCard from "../components/tweet/TweetCard"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
+import TweetCardSkeleton from "../components/tweet/TweetCardSkeleton"
 import toast from "react-hot-toast"
 import {
     Loader2,
@@ -126,9 +127,13 @@ const HomePage = () => {
             <div className="px-4 md:px-8 lg:px-12">
                 <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
                     {loading ? (
-                        Array.from({ length: 8 }).map((_, i) => (
-                            <VideoCardSkeleton key={i} />
-                        ))
+                        Array.from({ length: 8 }).map((_, i) =>
+                            i % 3 === 0 ? (
+                                <TweetCardSkeleton key={i} />
+                            ) : (
+                                <VideoCardSkeleton key={i} />
+                            )
+                        )
                     ) : mixedFeed.length > 0 ? (
                         mixedFeed.map((item) =>
                             // Render based on type

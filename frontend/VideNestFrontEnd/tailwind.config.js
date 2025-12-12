@@ -13,6 +13,21 @@ export default {
                 "3xl": ["2rem", { lineHeight: "2.35rem" }], // Increased from 1.875rem
                 "4xl": ["2.5rem", { lineHeight: "2.6rem" }], // Increased from 2.25rem
             },
+            keyframes: {
+                shimmer: {
+                    "0%": { backgroundPosition: "-200% 0" },
+                    "100%": { backgroundPosition: "200% 0" },
+                },
+                heartPop: {
+                    "0%": { transform: "scale(1)" },
+                    "50%": { transform: "scale(1.3)" },
+                    "100%": { transform: "scale(1)" },
+                },
+            },
+            animation: {
+                shimmer: "shimmer 2s infinite linear",
+                heartPop: "heartPop 0.3s ease-out",
+            },
         },
     },
     plugins: [],
