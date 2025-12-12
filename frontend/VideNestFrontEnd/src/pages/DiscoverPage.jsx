@@ -78,16 +78,30 @@ const DiscoverPage = () => {
                     </button>
                 </div>
 
-                {/* Category Filters */}
-                <div className="flex items-center gap-3 mb-8 overflow-x-auto pb-2">
+                {/* Category Filters with Sliding Animation */}
+                <div className="relative flex items-center gap-3 mb-8 overflow-x-auto pb-2">
+                    {/* Animated Background Slider */}
+                    <div
+                        className="absolute bottom-2 h-10 bg-red-600 rounded-full shadow-lg shadow-red-500/30 transition-all duration-300 ease-out"
+                        style={{
+                            width: CATEGORIES.find((c) => c === activeCategory)
+                                ? `${document.getElementById(`discover-cat-${activeCategory}`)?.offsetWidth || 0}px`
+                                : "0px",
+                            left: CATEGORIES.find((c) => c === activeCategory)
+                                ? `${document.getElementById(`discover-cat-${activeCategory}`)?.offsetLeft || 0}px`
+                                : "0px",
+                        }}
+                    />
+
                     {CATEGORIES.map((category) => (
                         <button
+                            id={`discover-cat-${category}`}
                             key={category}
                             onClick={() => setActiveCategory(category)}
-                            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${
+                            className={`relative z-10 px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-300 ${
                                 activeCategory === category
-                                    ? "bg-[#1E2021] text-black"
-                                    : "bg-[#2A2D2E] text-gray-300 hover:bg-gray-700"
+                                    ? "text-white"
+                                    : "bg-[#2A2D2E] text-gray-300 hover:bg-[#2F3233] hover:text-white"
                             }`}
                         >
                             {category}

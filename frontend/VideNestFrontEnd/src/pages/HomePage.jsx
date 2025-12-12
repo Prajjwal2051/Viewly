@@ -93,18 +93,32 @@ const HomePage = () => {
 
     return (
         <div className="min-h-screen bg-[#1E2021] pb-20">
-            {/* CATEGORY FILTERS */}
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 md:px-8 lg:px-12 mt-8">
+            {/* CATEGORY FILTERS with Sliding Animation */}
+            <div className="relative flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 md:px-8 lg:px-12 mt-8">
+                {/* Animated Background Slider */}
+                <div
+                    className="absolute bottom-2 h-10 bg-red-600 rounded-full shadow-lg shadow-red-500/30 transition-all duration-300 ease-out"
+                    style={{
+                        width: categories.find((c) => c.name === activeCategory)
+                            ? `${document.getElementById(`cat-${activeCategory}`)?.offsetWidth || 0}px`
+                            : "0px",
+                        left: categories.find((c) => c.name === activeCategory)
+                            ? `${document.getElementById(`cat-${activeCategory}`)?.offsetLeft || 0}px`
+                            : "0px",
+                    }}
+                />
+
                 {categories.map((category) => {
                     const isActive = activeCategory === category.name
                     return (
                         <button
+                            id={`cat-${category.name}`}
                             key={category.name}
                             onClick={() => setActiveCategory(category.name)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
+                            className={`relative z-10 flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-300 ${
                                 isActive
-                                    ? "bg-[#1E2021] text-black shadow-lg"
-                                    : "bg-[#2A2D2E] text-gray-400 hover:bg-[#2A2D2E] hover:text-white"
+                                    ? "text-white"
+                                    : "bg-[#2A2D2E] text-gray-400 hover:bg-[#2F3233] hover:text-white"
                             }`}
                         >
                             {category.icon}
