@@ -32,6 +32,8 @@ import DiscoverPage from "./pages/DiscoverPage"
 import ActivityPage from "./pages/ActivityPage"
 import NotFoundPage from "./pages/NotFoundPage"
 import TweetPage from "./pages/TweetPage"
+import PlaylistsPage from "./pages/PlaylistsPage"
+import PlaylistDetailPage from "./pages/PlaylistDetailPage"
 
 // Context
 import { ThemeProvider } from "./context/ThemeContext"
@@ -186,6 +188,30 @@ function App() {
                         <ProtectedRoute>
                             <MainLayout>
                                 <ActivityPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* PLAYLISTS PAGE - User's playlists */}
+                <Route
+                    path="/playlists"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <PlaylistsPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* PLAYLIST DETAIL PAGE - Single playlist view */}
+                <Route
+                    path="/playlists/:playlistId"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <PlaylistDetailPage />
                             </MainLayout>
                         </ProtectedRoute>
                     }

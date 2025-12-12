@@ -4,19 +4,22 @@
 // Sticky top navigation with search, notifications, and user menu.
 // Pinterest Theme: White background, Pinterest red accents
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
-import { Search, Bell } from "lucide-react"
+import { Search, Bell, ListVideo, Plus } from "lucide-react"
 import Button from "../Button"
 import Input from "../Input"
 import { logout } from "../../../../store/slices/authSlice.js"
 import { logoutUser } from "../../../../api/authApi"
+import { getUserPlaylists } from "../../../../api/playlistApi"
 import toast from "react-hot-toast"
 
 const Header = () => {
     const [showUserMenu, setShowUserMenu] = useState(false)
+    const [showPlaylistMenu, setShowPlaylistMenu] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
+    const [playlists, setPlaylists] = useState([])
 
     const navigate = useNavigate()
     const location = useLocation()
@@ -27,6 +30,35 @@ const Header = () => {
         ["/", "/discover", "/search"].some((path) =>
             location.pathname.startsWith(path)
         ) || location.pathname.startsWith("/video/")
+
+    // Fetch user's playlists
+    useEffect(() => {
+        const fetchPlaylists = async () => {
+            if (user) {
+                try {
+                    console.log(
+                        "[Header] Fetching playlists for user:",
+                        user._id
+                    )
+                    const response = await getUserPlaylists(user._id, 1, 5) // Get first 5 playlists
+                    console.log("[Header] Playlists response:", response)
+                    setPlaylists(response.data?.playlists || [])
+                    console.log(
+                        "[Header] Playlists set:",
+                        response.data?.playlists?.length || 0
+                    )
+                } catch (error) {
+                    console.error("[Header] Error fetching playlists:", error)
+                    console.error(
+                        "[Header] Error details:",
+                        error.response?.data || error.message
+                    )
+                    // Silently fail - don't show toast for header dropdown
+                }
+            }
+        }
+        fetchPlaylists()
+    }, [user])
 
     const handleSearch = (e) => {
         e.preventDefault()
@@ -85,6 +117,115 @@ const Header = () => {
                             <Bell className="h-6 w-6 text-gray-500 group-hover:text-red-600 transition-all duration-300 group-hover:animate-pulse" />
                             <span className="absolute top-3 right-3 h-2 w-2 bg-red-600 rounded-full border-2 border-[#1E2021] animate-pulse"></span>
                         </Button>
+
+                        {/* PLAYLISTS DROPDOWN */}
+                        <div
+                            className="relative"
+                            onMouseEnter={() => setShowPlaylistMenu(true)}
+                            onMouseLeave={() => setShowPlaylistMenu(false)}
+                        >
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="relative hover:bg-[#2A2D2E] rounded-full h-12 w-12 group transition-all duration-300 hover:scale-110 active:scale-95"
+                            >
+                                <ListVideo className="h-6 w-6 text-gray-500 group-hover:text-red-600 transition-all duration-300" />
+                            </Button>
+
+                            {/* Playlist Dropdown Menu */}
+                            {showPlaylistMenu && (
+                                <div className="absolute right-0 top-full mt-2 w-80 bg-[#1E2021] border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                                    <div className="p-4 border-b border-gray-700">
+                                        <h3 className="font-semibold text-white flex items-center gap-2">
+                                            <ListVideo
+                                                size={18}
+                                                className="text-red-600"
+                                            />
+                                            Your Playlists
+                                        </h3>
+                                    </div>
+
+                                    {/* Create New Playlist */}
+                                    <button
+                                        onClick={() => {
+                                            navigate("/playlists")
+                                            setShowPlaylistMenu(false)
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2A2D2E] transition-colors border-b border-gray-700"
+                                    >
+                                        <div className="p-2 bg-red-600 rounded-full">
+                                            <Plus
+                                                size={16}
+                                                className="text-white"
+                                            />
+                                        </div>
+                                        <span className="text-white font-medium">
+                                            Create New Playlist
+                                        </span>
+                                    </button>
+
+                                    {/* Playlist List */}
+                                    <div className="max-h-64 overflow-y-auto">
+                                        {playlists.length > 0 ? (
+                                            playlists.map((playlist) => (
+                                                <button
+                                                    key={playlist._id}
+                                                    onClick={() => {
+                                                        navigate(
+                                                            `/playlists/${playlist._id}`
+                                                        )
+                                                        setShowPlaylistMenu(
+                                                            false
+                                                        )
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2A2D2E] transition-colors text-left"
+                                                >
+                                                    <div className="w-10 h-10 bg-[#2A2D2E] rounded-lg flex items-center justify-center flex-shrink-0">
+                                                        <ListVideo
+                                                            size={18}
+                                                            className="text-gray-400"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-white font-medium truncate">
+                                                            {playlist.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {playlist.videoCount ||
+                                                                0}{" "}
+                                                            videos
+                                                        </p>
+                                                    </div>
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-8 text-center">
+                                                <ListVideo
+                                                    className="mx-auto mb-2 text-gray-600"
+                                                    size={32}
+                                                />
+                                                <p className="text-gray-400 text-sm">
+                                                    No playlists yet
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* View All Link */}
+                                    {playlists.length > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                navigate("/playlists")
+                                                setShowPlaylistMenu(false)
+                                            }}
+                                            className="w-full px-4 py-3 text-center text-red-600 hover:bg-[#2A2D2E] transition-colors border-t border-gray-700 font-medium"
+                                        >
+                                            View All Playlists
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
                         {/* USER MENU */}
                         <div className="relative">

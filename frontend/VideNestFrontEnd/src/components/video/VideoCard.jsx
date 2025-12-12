@@ -6,7 +6,16 @@
 
 import { useNavigate, useLocation } from "react-router-dom"
 import { formatDistanceToNow } from "date-fns" // Time formatting library
-import { Eye, Play, Share2, ThumbsUp, MessageCircle } from "lucide-react"
+import {
+    Eye,
+    Play,
+    Share2,
+    ThumbsUp,
+    MessageCircle,
+    ListPlus,
+} from "lucide-react"
+import { useState } from "react"
+import AddToPlaylistModal from "../playlist/AddToPlaylistModal"
 
 /**
  * Props:
@@ -15,6 +24,7 @@ import { Eye, Play, Share2, ThumbsUp, MessageCircle } from "lucide-react"
 const VideoCard = ({ video }) => {
     const navigate = useNavigate()
     const location = useLocation()
+    const [showPlaylistModal, setShowPlaylistModal] = useState(false)
 
     /**
      * FORMAT VIEWS HELPER
@@ -126,6 +136,20 @@ const VideoCard = ({ video }) => {
                             <Share2 size={20} />
                         </div>
                     </button>
+
+                    {/* Add to Playlist Action */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            setShowPlaylistModal(true)
+                        }}
+                        className="flex flex-col items-center gap-1 group/btn transition-all duration-300 hover:scale-110 active:scale-95"
+                        title="Add to Playlist"
+                    >
+                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 transition-all duration-300">
+                            <ListPlus size={20} />
+                        </div>
+                    </button>
                 </div>
             </div>
 
@@ -169,6 +193,14 @@ const VideoCard = ({ video }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Add to Playlist Modal */}
+            <AddToPlaylistModal
+                isOpen={showPlaylistModal}
+                onClose={() => setShowPlaylistModal(false)}
+                videoId={video._id}
+                videoTitle={video.title}
+            />
         </div>
     )
 }

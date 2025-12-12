@@ -33,7 +33,9 @@ import {
     VolumeX,
     Settings,
     PictureInPicture,
+    ListPlus,
 } from "lucide-react"
+import AddToPlaylistModal from "../components/playlist/AddToPlaylistModal"
 import toast from "react-hot-toast"
 
 import VideoControls from "../components/video/VideoControls"
@@ -69,6 +71,7 @@ const VideoPlayerPage = ({ isModal = false }) => {
     const [isMuted, setIsMuted] = useState(false)
     const [playbackSpeed, setPlaybackSpeed] = useState(1)
     const [showSpeedMenu, setShowSpeedMenu] = useState(false)
+    const [showPlaylistModal, setShowPlaylistModal] = useState(false)
 
     const handleTogglePlay = () => {
         if (videoRef.current) {
@@ -546,6 +549,22 @@ const VideoPlayerPage = ({ isModal = false }) => {
                         </div>
                         <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
                             Share
+                        </span>
+                    </button>
+
+                    {/* Add to Playlist Action */}
+                    <button
+                        className="flex flex-col items-center gap-1 group"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            setShowPlaylistModal(true)
+                        }}
+                    >
+                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
+                            <ListPlus size={28} />
+                        </div>
+                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
+                            Save
                         </span>
                     </button>
 
