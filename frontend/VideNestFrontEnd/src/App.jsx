@@ -235,6 +235,21 @@ function App() {
                             </div>
                         }
                     />
+
+                    <Route
+                        path="/video/:videoId"
+                        element={
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                <div
+                                    className="absolute inset-0"
+                                    onClick={() => navigate(-1)}
+                                />
+                                <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl bg-[#1E2021]">
+                                    <VideoPlayerPage isModal={true} />
+                                </div>
+                            </div>
+                        }
+                    />
                 </Routes>
             )}
         </ThemeProvider>

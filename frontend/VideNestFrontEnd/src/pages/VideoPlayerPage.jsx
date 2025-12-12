@@ -12,6 +12,8 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { getVideoById, getAllVideos } from "../api/videoApi"
+// import { getActivity } from "../api/userApi" // Removed invalid import
+import { toggleVideoLike, getIsVideoLiked } from "../api/likeApi"
 import { toggleSubscription } from "../api/subscriptionApi"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
 import VideoCard from "../components/video/VideoCard"
@@ -21,13 +23,15 @@ import {
     MessageSquare,
     Share2,
     MoreVertical,
+    Heart,
+    X,
 } from "lucide-react"
 import toast from "react-hot-toast"
 
 import VideoControls from "../components/video/VideoControls"
 import CommentSection from "../components/comments/CommentSection"
 
-const VideoPlayerPage = () => {
+const VideoPlayerPage = ({ isModal = false }) => {
     const { videoId } = useParams()
     const navigate = useNavigate()
     const { user } = useSelector((state) => state.auth)
@@ -43,6 +47,10 @@ const VideoPlayerPage = () => {
     const [subscribing, setSubscribing] = useState(false)
     const [subscriberCount, setSubscriberCount] = useState(0)
 
+    // Like state for Modal
+    const [liked, setLiked] = useState(false)
+    const [likesCount, setLikesCount] = useState(0)
+
     // Fetch Video Details
     useEffect(() => {
         const fetchVideoData = async () => {
@@ -56,6 +64,17 @@ const VideoPlayerPage = () => {
 
                 // Set initial subscriber count
                 setSubscriberCount(fetchedVideo.owner?.subscribersCount || 0)
+                setLikesCount(fetchedVideo.likes || 0) // Initialize likes
+
+                // Check like status
+                if (user) {
+                    try {
+                        const likeData = await getIsVideoLiked(videoId)
+                        setLiked(likeData.isLiked)
+                    } catch (err) {
+                        console.error("Failed to fetch like status", err)
+                    }
+                }
 
                 // Fetch Related
                 const relatedData = await getAllVideos({ limit: 10 })
@@ -75,9 +94,10 @@ const VideoPlayerPage = () => {
         }
         if (videoId) {
             fetchVideoData()
-            window.scrollTo(0, 0)
+            // window.scrollTo(0, 0) // Disable scroll to top if modal? Or Keep it?
+            if (!isModal) window.scrollTo(0, 0)
         }
-    }, [videoId, navigate])
+    }, [videoId, navigate, isModal, user])
 
     // Subscribe Handler
     const handleSubscribe = async () => {
@@ -122,9 +142,177 @@ const VideoPlayerPage = () => {
 
     if (!video) return null
 
+    const handleLike = async (e) => {
+        e?.stopPropagation()
+        if (!user) {
+            toast.error("Please login to like videos")
+            return
+        }
+
+        const isLikedNow = !liked
+        setLiked(isLikedNow)
+        setLikesCount((prev) => {
+            const newCount = isLikedNow ? prev + 1 : prev - 1
+            return Math.max(0, newCount)
+        })
+
+        try {
+            await toggleVideoLike(videoId)
+        } catch (error) {
+            setLiked(!isLikedNow)
+            setLikesCount((prev) => (isLikedNow ? prev - 1 : prev + 1))
+            toast.error("Failed to like video")
+        }
+    }
+
+    const handleShare = (e) => {
+        e.stopPropagation()
+        const link = window.location.href
+        navigator.clipboard.writeText(link)
+        toast.success("Link copied to clipboard!")
+    }
+
+    // IMMERSIVE MODAL LAYOUT (REELS STYLE)
+    if (isModal) {
+        return (
+            <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
+                {/* CLOSE BUTTON */}
+                <button
+                    onClick={() => navigate(-1)}
+                    className="absolute top-4 left-4 z-50 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors"
+                >
+                    <X size={24} />
+                </button>
+
+                {/* VIDEO PLAYER - CENTRAL & IMMERSIVE */}
+                <div className="relative w-full h-full max-w-[500px] flex items-center bg-black">
+                    <video
+                        src={video.videoFile?.replace("http://", "https://")}
+                        controls
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-contain"
+                        poster={video.thumbnail}
+                        onLoadedData={(e) => {
+                            e.target.play().catch(() => {
+                                // Autoplay failed, usually due to browser policy.
+                                // User can click play manually.
+                                console.log(
+                                    "Autoplay blocked, waiting for interaction"
+                                )
+                            })
+                        }}
+                    />
+                </div>
+
+                {/* RIGHT OVERLAY - ACTIONS BUTTONS */}
+                <div className="absolute right-4 bottom-20 z-40 flex flex-col items-center gap-6">
+                    {/* Like Action */}
+                    <button
+                        className="flex flex-col items-center gap-1 group"
+                        onClick={handleLike}
+                    >
+                        <div
+                            className={`p-3 rounded-full backdrop-blur-md transition-all ${liked ? "bg-red-600/80 text-white" : "bg-black/40 text-white group-hover:bg-red-500/20"}`}
+                        >
+                            <Heart
+                                size={28}
+                                fill={liked ? "currentColor" : "none"}
+                            />
+                        </div>
+                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
+                            {likesCount}
+                        </span>
+                    </button>
+
+                    {/* Comment Action */}
+                    <button className="flex flex-col items-center gap-1 group">
+                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
+                            <MessageSquare size={28} />
+                        </div>
+                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
+                            Comment
+                        </span>
+                    </button>
+
+                    {/* Share Action */}
+                    <button
+                        className="flex flex-col items-center gap-1 group"
+                        onClick={handleShare}
+                    >
+                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
+                            <Share2 size={28} />
+                        </div>
+                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
+                            Share
+                        </span>
+                    </button>
+
+                    {/* More Action */}
+                    <button className="flex flex-col items-center gap-1 group">
+                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
+                            <MoreVertical size={28} />
+                        </div>
+                    </button>
+                </div>
+
+                {/* BOTTOM OVERLAY - INFO */}
+                <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20 pb-6 px-4">
+                    <div className="flex items-center gap-3 mb-3">
+                        <img
+                            src={
+                                video.owner?.avatar ||
+                                "https://via.placeholder.com/40"
+                            }
+                            alt={video.owner?.username}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-white/20 cursor-pointer"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                navigate(`/channel/${video.owner?.username}`)
+                            }}
+                        />
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                                <span
+                                    className="font-bold text-white text-base hover:underline cursor-pointer"
+                                    onClick={() =>
+                                        navigate(
+                                            `/channel/${video.owner?.username}`
+                                        )
+                                    }
+                                >
+                                    {video.owner?.username}
+                                </span>
+                                <button
+                                    onClick={handleSubscribe}
+                                    className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-white/10 text-white" : "bg-red-600 text-white"}`}
+                                >
+                                    {isSubscribed ? "Subscribed" : "Subscribe"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h1 className="text-white text-lg font-medium leading-tight line-clamp-2 mb-1 w-[85%]">
+                        {video.title}
+                    </h1>
+                    {video.description && (
+                        <p className="text-gray-200/80 text-sm line-clamp-1 w-[85%]">
+                            {video.description}
+                        </p>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <div className="min-h-screen bg-[#1E2021] text-white pt-4 pb-12">
-            <div className="max-w-[1800px] mx-auto px-4 md:px-6 flex flex-col lg:flex-row gap-6">
+        <div
+            className={`${isModal ? "h-full overflow-y-auto bg-[#1E2021] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10" : "min-h-screen bg-[#1E2021] pt-4 pb-12"} text-white`}
+        >
+            <div
+                className={`mx-auto flex flex-col lg:flex-row gap-6 ${isModal ? "p-0" : "max-w-[1800px] px-4 md:px-6"}`}
+            >
                 {/* LEFT COLUMN: Main Video Player & Details */}
                 <div className="flex-1 lg:w-[70%]">
                     {/* 1. Video Player */}
@@ -133,7 +321,7 @@ const VideoPlayerPage = () => {
                             src={video.videoFile}
                             controls
                             autoPlay
-                            className="w-full aspect-video max-h-[80vh] object-contain bg-[#1E2021]"
+                            className="w-full max-h-[80vh] object-contain bg-[#1E2021] mx-auto"
                             poster={video.thumbnail}
                         />
                     </div>
