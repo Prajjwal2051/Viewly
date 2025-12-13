@@ -25,6 +25,7 @@ const TweetPage = ({ isModal = false }) => {
     const [isLiked, setIsLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(0)
     const [isSubscribed, setIsSubscribed] = useState(false)
+    const [showComments, setShowComments] = useState(false)
 
     useEffect(() => {
         const fetchTweet = async () => {
@@ -149,7 +150,13 @@ const TweetPage = ({ isModal = false }) => {
                     </button>
 
                     {/* Comment Action */}
-                    <button className="flex flex-col items-center gap-1 group">
+                    <button
+                        className="flex flex-col items-center gap-1 group"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            setShowComments(true)
+                        }}
+                    >
                         <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
                             <MessageCircle size={28} />
                         </div>
@@ -170,12 +177,12 @@ const TweetPage = ({ isModal = false }) => {
                             Share
                         </span>
                     </button>
-
-                    {/* Removed MoreVertical (3 dots) as requested */}
                 </div>
 
-                {/* BOTTOM OVERLAY - INFO */}
-                <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-24 pb-8 px-4">
+                {/* BOTTOM OVERLAY - INFO (Hide if comments matching video player style preferred, but let's keep for now unless it conflicts) */}
+                <div
+                    className={`absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-24 pb-8 px-4 transition-opacity duration-300 ${showComments ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+                >
                     <div className="flex items-center gap-3 mb-3">
                         <img
                             src={
@@ -216,7 +223,6 @@ const TweetPage = ({ isModal = false }) => {
                         </div>
                     </div>
 
-                    {/* Show content snippet IF image exists. If NO image, we don't show it here because it's already centered big! */}
                     {tweet.image && tweet.content && (
                         <p className="text-white text-sm md:text-base leading-snug line-clamp-3 mb-1 w-[85%] shadow-black drop-shadow-sm">
                             {tweet.content}
@@ -228,6 +234,35 @@ const TweetPage = ({ isModal = false }) => {
                             addSuffix: true,
                         })}
                     </p>
+                </div>
+
+                {/* COMMENTS SIDEBAR - TRANSITION SLIDE IN */}
+                <div
+                    className={`absolute top-0 right-0 h-full w-full md:w-[400px] bg-[#1E2021] z-50 transition-transform duration-300 ease-in-out border-l border-gray-800 ${showComments ? "translate-x-0" : "translate-x-full"}`}
+                    onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                >
+                    <div className="flex flex-col h-full">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                            <h2 className="text-lg font-bold text-white">
+                                Comments
+                            </h2>
+                            <button
+                                onClick={() => setShowComments(false)}
+                                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                            >
+                                <X size={20} className="text-white" />
+                            </button>
+                        </div>
+
+                        {/* Comments List */}
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                            <CommentSection
+                                tweetId={tweet._id}
+                                hideHeader={true}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         )

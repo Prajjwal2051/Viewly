@@ -74,7 +74,7 @@ const TweetCard = ({ tweet }) => {
                 <div className="relative w-full isolate overflow-hidden bg-[#1E2021]">
                     {/* Image */}
                     <img
-                        src={tweet.image?.replace("http://", "https://")}
+                        src={getOptimizedUrl(tweet.image, { width: 600 })} // Resize to ~600px width (enough for card)
                         alt={tweet.content}
                         className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                     />
