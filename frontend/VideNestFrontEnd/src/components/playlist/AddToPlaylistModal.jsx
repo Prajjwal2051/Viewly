@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react"
 import { X, Loader2, Plus, Check, ListVideo } from "lucide-react"
 import { useSelector } from "react-redux"
-import { getUserPlaylists, addVideoToPlaylist } from "../../api/playlistApi"
+import {
+    getUserPlaylists,
+    addVideoToPlaylist,
+    removeVideoFromPlaylist,
+} from "../../api/playlistApi"
 import CreatePlaylistModal from "./CreatePlaylistModal"
 import toast from "react-hot-toast"
 
@@ -39,24 +43,50 @@ const AddToPlaylistModal = ({
     }
 
     const handleAddToPlaylist = async (playlistId) => {
+        const playlist = playlists.find((p) => p._id === playlistId)
+        const isInPlaylist = isVideoInPlaylist(playlist)
+
         try {
             setAddingTo((prev) => ({ ...prev, [playlistId]: true }))
 
-            await addVideoToPlaylist(playlistId, videoId)
+            if (isInPlaylist) {
+                // Remove from playlist
+                await removeVideoFromPlaylist(playlistId, videoId)
+                toast.success("Removed from playlist!")
 
-            toast.success("Added to playlist!")
-
-            // Update local state to show checkmark
-            setPlaylists((prev) =>
-                prev.map((p) =>
-                    p._id === playlistId
-                        ? { ...p, videos: [...(p.videos || []), videoId] }
-                        : p
+                // Update local state to remove checkmark
+                setPlaylists((prev) =>
+                    prev.map((p) =>
+                        p._id === playlistId
+                            ? {
+                                  ...p,
+                                  videos: (p.videos || []).filter(
+                                      (v) =>
+                                          (typeof v === "string"
+                                              ? v
+                                              : v._id) !== videoId
+                                  ),
+                              }
+                            : p
+                    )
                 )
-            )
+            } else {
+                // Add to playlist
+                await addVideoToPlaylist(playlistId, videoId)
+                toast.success("Added to playlist!")
+
+                // Update local state to show checkmark
+                setPlaylists((prev) =>
+                    prev.map((p) =>
+                        p._id === playlistId
+                            ? { ...p, videos: [...(p.videos || []), videoId] }
+                            : p
+                    )
+                )
+            }
         } catch (error) {
-            console.error("Error adding to playlist:", error)
-            const errorMsg = error.message || "Failed to add to playlist"
+            console.error("Error updating playlist:", error)
+            const errorMsg = error.message || "Failed to update playlist"
 
             // Check if video already exists
             if (errorMsg.includes("already exists")) {
@@ -130,14 +160,13 @@ const AddToPlaylistModal = ({
                                     <button
                                         key={playlist._id}
                                         onClick={() =>
-                                            !inPlaylist &&
                                             !isAdding &&
                                             handleAddToPlaylist(playlist._id)
                                         }
-                                        disabled={inPlaylist || isAdding}
+                                        disabled={isAdding}
                                         className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
                                             inPlaylist
-                                                ? "bg-green-600/10 border-green-600/50 cursor-default"
+                                                ? "bg-green-600/10 border-green-600/50 hover:border-red-600 hover:bg-red-600/10"
                                                 : "bg-[#2A2D2E] border-gray-600 hover:border-red-600 hover:bg-[#2A2D2E]/80"
                                         } ${isAdding ? "opacity-50 cursor-wait" : ""}`}
                                     >
@@ -263,16 +292,15 @@ const AddToPlaylistModal = ({
                                         <button
                                             key={playlist._id}
                                             onClick={() =>
-                                                !inPlaylist &&
                                                 !isAdding &&
                                                 handleAddToPlaylist(
                                                     playlist._id
                                                 )
                                             }
-                                            disabled={inPlaylist || isAdding}
+                                            disabled={isAdding}
                                             className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
                                                 inPlaylist
-                                                    ? "bg-green-600/10 border-green-600/50 cursor-default"
+                                                    ? "bg-green-600/10 border-green-600/50 hover:border-red-600 hover:bg-red-600/10"
                                                     : "bg-[#2A2D2E] border-gray-600 hover:border-red-600 hover:bg-[#2A2D2E]/80"
                                             } ${isAdding ? "opacity-50 cursor-wait" : ""}`}
                                         >

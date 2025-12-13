@@ -288,6 +288,7 @@ const getUserPlaylist = asyncHandler(async (req, res) => {
                 name: 1, // Playlist name
                 description: 1, // Playlist description
                 isPublic: 1, // Visibility status
+                videos: 1, // Video IDs array (needed for frontend to check if video is in playlist)
                 videoCount: 1, // Computed video count
                 createdAt: 1, // Creation timestamp
                 updatedAt: 1, // Last update timestamp
@@ -412,8 +413,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     // 3. Owner details for each video (nested populate)
     //
     // This gives a complete picture of the playlist content in one query
-    const existsPlaylist = await playlist
-        .findById(playlistId)
+    const existsPlaylist = await Playlist.findById(playlistId)
         // First populate: Get playlist owner information
         .populate("owner", "username fullName avatar")
         // Second populate: Get all videos AND their owner information (nested)
@@ -500,9 +500,8 @@ const getPlaylistById = asyncHandler(async (req, res) => {
  * @returns {Object} ApiResponse with updated playlist data
  */
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
-    // STEP 1: Extract playlist and video IDs from request body
-    const { playlistId } = req.params.playlistId
-    const { videoId } = req.params.videoId
+    // STEP 1: Extract playlist and video IDs from request params
+    const { playlistId, videoId } = req.params
 
     // STEP 2: Validate playlist ID
     if (!playlistId) {
@@ -606,8 +605,8 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
  * @returns {Object} ApiResponse with updated playlist data
  */
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
-    // STEP 1: Extract playlist and video IDs from request body
-    const { playlistId, videoId } = req.body
+    // STEP 1: Extract playlist and video IDs from request params
+    const { playlistId, videoId } = req.params
     const userId = req.user._id
 
     // STEP 2: Validate playlist ID

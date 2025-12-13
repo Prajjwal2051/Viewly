@@ -118,35 +118,35 @@ const Header = () => {
                             <span className="absolute top-3 right-3 h-2 w-2 bg-red-600 rounded-full border-2 border-[#1E2021] animate-pulse"></span>
                         </Button>
 
-                        {/* PLAYLISTS DROPDOWN */}
+                        {/* PLAYLISTS DROPDOWN - Mobile Only */}
                         <div
-                            className="relative"
+                            className="relative md:hidden"
                             onMouseEnter={() => setShowPlaylistMenu(true)}
                             onMouseLeave={() => setShowPlaylistMenu(false)}
                         >
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="relative hover:bg-[#2A2D2E] rounded-full h-12 w-12 group transition-all duration-300 hover:scale-110 active:scale-95"
+                                className="relative hover:bg-[#2A2D2E] rounded-full h-12 w-12"
                             >
-                                <ListVideo className="h-6 w-6 text-gray-500 group-hover:text-red-600 transition-all duration-300" />
+                                <ListVideo className="h-6 w-6 text-gray-500" />
                             </Button>
 
                             {/* Playlist Dropdown Menu */}
                             {showPlaylistMenu && (
-                                <div className="absolute right-0 top-full mt-2 w-80 bg-[#1E2021] border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                                <div className="fixed left-1/2 -translate-x-1/2 top-16 md:absolute md:left-1/2 md:-translate-x-1/2 md:top-full mt-2 w-[calc(100vw-2rem)] max-w-sm bg-[#1E2021] border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
                                     {/* Clickable Header */}
                                     <button
                                         onClick={() => {
                                             navigate("/playlists")
                                             setShowPlaylistMenu(false)
                                         }}
-                                        className="w-full p-4 border-b border-gray-700 text-left hover:bg-[#2A2D2E] transition-colors"
+                                        className="w-full p-3 md:p-4 border-b border-gray-700 text-left hover:bg-[#2A2D2E] transition-colors"
                                     >
-                                        <h3 className="font-semibold text-white flex items-center gap-2 hover:text-red-600 transition-colors">
+                                        <h3 className="font-semibold text-white flex items-center gap-2 hover:text-red-600 transition-colors text-sm md:text-base">
                                             <ListVideo
-                                                size={18}
-                                                className="text-red-600"
+                                                size={16}
+                                                className="text-red-600 md:w-[18px] md:h-[18px]"
                                             />
                                             Your Playlists
                                         </h3>
@@ -158,15 +158,15 @@ const Header = () => {
                                             navigate("/playlists")
                                             setShowPlaylistMenu(false)
                                         }}
-                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2A2D2E] transition-colors border-b border-gray-700"
+                                        className="w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 hover:bg-[#2A2D2E] transition-colors border-b border-gray-700"
                                     >
-                                        <div className="p-2 bg-red-600 rounded-full">
+                                        <div className="p-1.5 md:p-2 bg-red-600 rounded-full">
                                             <Plus
-                                                size={16}
-                                                className="text-white"
+                                                size={14}
+                                                className="text-white md:w-4 md:h-4"
                                             />
                                         </div>
-                                        <span className="text-white font-medium">
+                                        <span className="text-white font-medium text-sm md:text-base">
                                             Create New Playlist
                                         </span>
                                     </button>
@@ -185,16 +185,16 @@ const Header = () => {
                                                             false
                                                         )
                                                     }}
-                                                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2A2D2E] transition-colors text-left"
+                                                    className="w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 hover:bg-[#2A2D2E] transition-colors text-left"
                                                 >
-                                                    <div className="w-10 h-10 bg-[#2A2D2E] rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-8 h-8 md:w-10 md:h-10 bg-[#2A2D2E] rounded-lg flex items-center justify-center flex-shrink-0">
                                                         <ListVideo
-                                                            size={18}
-                                                            className="text-gray-400"
+                                                            size={16}
+                                                            className="text-gray-400 md:w-[18px] md:h-[18px]"
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-white font-medium truncate">
+                                                        <p className="text-white font-medium truncate text-sm md:text-base">
                                                             {playlist.name}
                                                         </p>
                                                         <p className="text-xs text-gray-500">
@@ -206,12 +206,12 @@ const Header = () => {
                                                 </button>
                                             ))
                                         ) : (
-                                            <div className="px-4 py-8 text-center">
+                                            <div className="px-3 md:px-4 py-6 md:py-8 text-center">
                                                 <ListVideo
                                                     className="mx-auto mb-2 text-gray-600"
-                                                    size={32}
+                                                    size={28}
                                                 />
-                                                <p className="text-gray-400 text-sm">
+                                                <p className="text-gray-400 text-xs md:text-sm">
                                                     No playlists yet
                                                 </p>
                                             </div>
@@ -225,7 +225,7 @@ const Header = () => {
                                                 navigate("/playlists")
                                                 setShowPlaylistMenu(false)
                                             }}
-                                            className="w-full px-4 py-3 text-center text-red-600 hover:bg-[#2A2D2E] transition-colors border-t border-gray-700 font-medium"
+                                            className="w-full px-3 md:px-4 py-2.5 md:py-3 text-center text-red-600 hover:bg-[#2A2D2E] transition-colors border-t border-gray-700 font-medium text-sm md:text-base"
                                         >
                                             View All Playlists
                                         </button>

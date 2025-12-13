@@ -51,23 +51,23 @@ const PlaylistsPage = () => {
     })
 
     return (
-        <div className="min-h-screen bg-[#1E2021] text-white pt-6 pb-20">
+        <div className="min-h-screen bg-[#1E2021] text-white pt-6 pb-20 md:pb-6">
             <div className="max-w-7xl mx-auto px-4 md:px-6">
                 {/* Header */}
                 <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                         <div>
-                            <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                                <ListVideo className="text-red-500" size={36} />
+                            <h1 className="text-2xl md:text-4xl font-bold mb-2 flex items-center gap-2 md:gap-3">
+                                <ListVideo className="text-red-500" size={28} />
                                 My Playlists
                             </h1>
-                            <p className="text-gray-400">
+                            <p className="text-sm md:text-base text-gray-400">
                                 Organize your favorite videos into playlists
                             </p>
                         </div>
                         <button
                             onClick={() => setShowCreateModal(true)}
-                            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-red-600/30"
+                            className="w-full md:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full flex items-center justify-center gap-2 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-red-600/30"
                         >
                             <Plus size={20} />
                             Create Playlist
@@ -75,10 +75,10 @@ const PlaylistsPage = () => {
                     </div>
 
                     {/* Filter Tabs */}
-                    <div className="flex gap-2 border-b border-gray-700">
+                    <div className="flex gap-2 border-b border-gray-700 overflow-x-auto scrollbar-hide">
                         <button
                             onClick={() => setFilter("all")}
-                            className={`px-4 py-2 font-medium transition-colors ${
+                            className={`px-3 md:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm md:text-base ${
                                 filter === "all"
                                     ? "text-red-600 border-b-2 border-red-600"
                                     : "text-gray-400 hover:text-white"
@@ -88,25 +88,25 @@ const PlaylistsPage = () => {
                         </button>
                         <button
                             onClick={() => setFilter("public")}
-                            className={`px-4 py-2 font-medium transition-colors flex items-center gap-2 ${
+                            className={`px-3 md:px-4 py-2 font-medium transition-colors flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${
                                 filter === "public"
                                     ? "text-red-600 border-b-2 border-red-600"
                                     : "text-gray-400 hover:text-white"
                             }`}
                         >
-                            <Globe size={16} />
+                            <Globe size={14} className="md:w-4 md:h-4" />
                             Public ({playlists.filter((p) => p.isPublic).length}
                             )
                         </button>
                         <button
                             onClick={() => setFilter("private")}
-                            className={`px-4 py-2 font-medium transition-colors flex items-center gap-2 ${
+                            className={`px-3 md:px-4 py-2 font-medium transition-colors flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${
                                 filter === "private"
                                     ? "text-red-600 border-b-2 border-red-600"
                                     : "text-gray-400 hover:text-white"
                             }`}
                         >
-                            <Lock size={16} />
+                            <Lock size={14} className="md:w-4 md:h-4" />
                             Private (
                             {playlists.filter((p) => !p.isPublic).length})
                         </button>

@@ -28,6 +28,12 @@ const Sidebar = () => {
     const navItems = [
         { id: "home", icon: Home, label: "Home", path: "/" },
         { id: "discover", icon: Compass, label: "Discover", path: "/discover" },
+        {
+            id: "playlists",
+            icon: ListVideo,
+            label: "Playlists",
+            path: "/playlists",
+        },
         { id: "upload", icon: PlusCircle, label: "Create", path: "/upload" },
         { id: "activity", icon: Bell, label: "Activity", path: "/activity" },
         { id: "profile", icon: User, label: "Profile", path: "/profile" },
@@ -51,34 +57,36 @@ const Sidebar = () => {
         <>
             {/* MOBILE NAVIGATION - Bottom Bar */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1E2021] border-t border-[#2A2D2E] flex items-center justify-around px-2 z-50 shadow-lg backdrop-blur-sm">
-                {navItems.map((item) => {
-                    const Icon = item.icon
-                    const active = isActive(item.path)
+                {navItems
+                    .filter((item) => item.id !== "playlists") // Exclude playlists from mobile nav (it's in header)
+                    .map((item) => {
+                        const Icon = item.icon
+                        const active = isActive(item.path)
 
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => navigate(item.path)}
-                            className={`relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-                                active ? "text-red-600" : "text-gray-400"
-                            }`}
-                        >
-                            {/* Active Indicator */}
-                            {active && (
-                                <div className="absolute -top-1 inset-x-0 mx-auto w-10 h-1 bg-red-600 rounded-full animate-pulse" />
-                            )}
-                            <Icon
-                                className={`h-6 w-6 transition-all duration-300 ${active ? "animate-bounce" : ""}`}
-                                strokeWidth={active ? 2.5 : 2}
-                            />
-                            <span
-                                className={`text-[10px] font-medium transition-all duration-300 ${active ? "text-red-600 font-semibold" : "text-gray-400"}`}
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => navigate(item.path)}
+                                className={`relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+                                    active ? "text-red-600" : "text-gray-400"
+                                }`}
                             >
-                                {item.label}
-                            </span>
-                        </button>
-                    )
-                })}
+                                {/* Active Indicator */}
+                                {active && (
+                                    <div className="absolute -top-1 inset-x-0 mx-auto w-10 h-1 bg-red-600 rounded-full animate-pulse" />
+                                )}
+                                <Icon
+                                    className={`h-6 w-6 transition-all duration-300 ${active ? "animate-bounce" : ""}`}
+                                    strokeWidth={active ? 2.5 : 2}
+                                />
+                                <span
+                                    className={`text-[10px] font-medium transition-all duration-300 ${active ? "text-red-600 font-semibold" : "text-gray-400"}`}
+                                >
+                                    {item.label}
+                                </span>
+                            </button>
+                        )
+                    })}
             </nav>
 
             {/* DESKTOP NAVIGATION - Left Sidebar */}
