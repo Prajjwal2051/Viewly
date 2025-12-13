@@ -19,6 +19,8 @@ const CommentSection = ({ videoId, tweetId }) => {
     const [submitting, setSubmitting] = useState(false)
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(true)
+    const [editingCommentId, setEditingCommentId] = useState(null)
+    const [editContent, setEditContent] = useState("")
 
     // Initial Fetch
     useEffect(() => {
@@ -77,6 +79,42 @@ const CommentSection = ({ videoId, tweetId }) => {
         } catch (error) {
             toast.error("Failed to delete comment")
         }
+    }
+
+    // Start editing a comment
+    const handleEdit = (comment) => {
+        setEditingCommentId(comment._id)
+        setEditContent(comment.content)
+    }
+
+    // Save edited comment
+    const handleUpdate = async (commentId) => {
+        if (!editContent.trim()) {
+            toast.error("Comment cannot be empty")
+            return
+        }
+
+        try {
+            const response = await updateComment(commentId, editContent)
+            const updated = response.data || response
+
+            setComments((prev) =>
+                prev.map((c) =>
+                    c._id === commentId ? { ...c, content: editContent } : c
+                )
+            )
+            setEditingCommentId(null)
+            setEditContent("")
+            toast.success("Comment updated")
+        } catch (error) {
+            toast.error("Failed to update comment")
+        }
+    }
+
+    // Cancel editing
+    const handleCancelEdit = () => {
+        setEditingCommentId(null)
+        setEditContent("")
     }
 
     return (
@@ -141,24 +179,74 @@ const CommentSection = ({ videoId, tweetId }) => {
                                             ).toLocaleDateString()}
                                         </span>
                                     </div>
-                                    <p className="text-gray-300 text-sm">
-                                        {comment.content}
-                                    </p>
-
-                                    {/* ACTIONS (Like / Delete) */}
-                                    <div className="flex items-center gap-4 mt-2">
-                                        {/* Owner controls */}
-                                        {user?._id === owner?._id && (
-                                            <button
-                                                onClick={() =>
-                                                    handleDelete(comment._id)
+                                    {/* Comment Content or Edit Mode */}
+                                    {editingCommentId === comment._id ? (
+                                        <div className="space-y-2">
+                                            <textarea
+                                                value={editContent}
+                                                onChange={(e) =>
+                                                    setEditContent(
+                                                        e.target.value
+                                                    )
                                                 }
-                                                className="text-gray-500 hover:text-red-600 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                Delete
-                                            </button>
-                                        )}
-                                    </div>
+                                                className="w-full bg-[#2A2D2E] border border-gray-600 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-red-600 resize-none"
+                                                rows="3"
+                                            />
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() =>
+                                                        handleUpdate(
+                                                            comment._id
+                                                        )
+                                                    }
+                                                    className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-semibold hover:bg-red-700 transition"
+                                                >
+                                                    Save
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelEdit}
+                                                    className="bg-gray-600 text-white px-3 py-1 rounded-full text-xs font-semibold hover:bg-gray-700 transition"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-gray-300 text-sm">
+                                                {comment.content}
+                                            </p>
+
+                                            {/* ACTIONS (Edit / Delete) */}
+                                            <div className="flex items-center gap-4 mt-2">
+                                                {/* Owner controls */}
+                                                {user?._id === owner?._id && (
+                                                    <>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleEdit(
+                                                                    comment
+                                                                )
+                                                            }
+                                                            className="text-gray-500 hover:text-blue-500 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    comment._id
+                                                                )
+                                                            }
+                                                            className="text-gray-500 hover:text-red-600 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         )
