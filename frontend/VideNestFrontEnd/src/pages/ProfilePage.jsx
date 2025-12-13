@@ -32,6 +32,12 @@ const ProfilePage = () => {
     const isOwnProfile = !username || username === user?.username
     const profileUser = isOwnProfile ? user : null // For now, use current user
 
+    console.log("ProfilePage Debug:", {
+        user,
+        coverImage: user?.coverImage,
+        coverImg: user?.coverImg,
+    })
+
     // Fetch profile data
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -107,19 +113,33 @@ const ProfilePage = () => {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             {/* Cover Photo Banner */}
-            <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden mb-8 bg-gradient-to-r from-red-600 via-pink-600 to-purple-600">
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            {/* Cover Photo Banner */}
+            <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden mb-8 bg-[#1E2021]">
+                {user?.coverImage || user?.coverImg || user?.coverimage ? (
+                    <img
+                        src={
+                            user?.coverImage ||
+                            user?.coverImg ||
+                            user?.coverimage
+                        }
+                        alt="Cover"
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 relative">
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-                {/* Decorative Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]" />
-                </div>
+                        {/* Decorative Pattern */}
+                        <div className="absolute inset-0 opacity-10">
+                            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]" />
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Profile Header Card */}
             <div className="bg-[#1E2021] rounded-2xl shadow-sm border border-gray-100 p-8 mb-8 -mt-24 relative z-10">
-                
                 <div className="flex flex-col md:flex-row items-center gap-8">
                     {/* Avatar */}
                     <div className="relative group">

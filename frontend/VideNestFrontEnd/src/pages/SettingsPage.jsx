@@ -219,9 +219,15 @@ const SettingsPage = () => {
                         {/* Cover Image Upload */}
                         <div className="flex flex-col items-center">
                             <div className="relative group mb-4 w-full h-32 rounded-xl overflow-hidden shadow-md ring-1 ring-white/10">
-                                {user?.coverImage || user?.coverImg ? (
+                                {user?.coverImage ||
+                                user?.coverImg ||
+                                user?.coverimage ? (
                                     <img
-                                        src={user?.coverImage || user?.coverImg}
+                                        src={
+                                            user?.coverImage ||
+                                            user?.coverImg ||
+                                            user?.coverimage
+                                        }
                                         alt="Cover"
                                         className="w-full h-full object-cover"
                                     />
