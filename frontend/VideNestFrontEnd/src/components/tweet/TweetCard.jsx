@@ -1,5 +1,11 @@
+// ============================================
+// TWEET CARD COMPONENT - REUSABLE TWEET ITEM
+// ============================================
+// Displays tweet content, image, and owner info.
+// Used in profile page and tweet feed.
+
 import React, { useState } from "react"
-import { Heart, MessageCircle, Share2 } from "lucide-react"
+import { Heart, MessageCircle, Share2, User } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { toggleTweetLike } from "../../api/tweetApi"
 import { toast } from "react-hot-toast"
@@ -182,7 +188,7 @@ const TweetCard = ({ tweet }) => {
             >
                 {/* Content */}
                 <p
-                    className={`text-white font-medium leading-snug drop-shadow-md ${!hasImage ? "text-lg line-clamp-6" : "text-base line-clamp-2 mb-2"}`}
+                    className={`text-white font-medium leading-relaxed ${!hasImage ? "text-xl line-clamp-6" : "text-lg line-clamp-2 mb-2"}`}
                 >
                     {tweet.content}
                 </p>
@@ -191,20 +197,31 @@ const TweetCard = ({ tweet }) => {
                 <div className="flex items-center justify-between mt-auto pt-2 relative z-20">
                     <div className="flex items-center gap-3">
                         {/* Avatar */}
-                        <img
-                            src={
-                                tweet.ownerDetails?.avatar ||
-                                "https://via.placeholder.com/40"
-                            }
-                            alt={tweet.ownerDetails?.username}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                navigate(
-                                    `/channel/${tweet.ownerDetails?.username}`
-                                )
-                            }}
-                            className="h-10 w-10 rounded-full object-cover border border-white/10 hover:border-red-500 transition-colors"
-                        />
+                        {tweet.ownerDetails?.avatar ? (
+                            <img
+                                src={tweet.ownerDetails.avatar}
+                                alt={tweet.ownerDetails?.username}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    navigate(
+                                        `/channel/${tweet.ownerDetails?.username}`
+                                    )
+                                }}
+                                className="h-10 w-10 rounded-full object-cover border border-white/10 hover:border-red-500 transition-colors cursor-pointer"
+                            />
+                        ) : (
+                            <div
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    navigate(
+                                        `/channel/${tweet.ownerDetails?.username}`
+                                    )
+                                }}
+                                className="h-10 w-10 rounded-full bg-gray-700 border border-white/10 hover:border-red-500 transition-colors cursor-pointer flex items-center justify-center"
+                            >
+                                <User size={20} className="text-gray-400" />
+                            </div>
+                        )}
                         {/* Name & Date */}
                         <div className="flex flex-col">
                             <span

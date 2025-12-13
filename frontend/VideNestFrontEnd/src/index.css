@@ -1,11 +1,8 @@
 /* ============================================
    GLOBAL STYLES - DARK THEME
    ============================================
-   Dark theme with custom background color
+   Dark theme with custom background color and elegant typography
 */
-
-/* Google Fonts Import */
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap");
 
 /* Tailwind CSS - Import utilities */
 @tailwind base;
@@ -14,6 +11,17 @@
 
 /* Custom base styles */
 body {
+    /* Use Inter as primary font with system fallbacks */
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Roboto",
+        "Oxygen",
+        "Ubuntu",
+        "Cantarell",
+        sans-serif;
     /* Smoother font rendering across browsers */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

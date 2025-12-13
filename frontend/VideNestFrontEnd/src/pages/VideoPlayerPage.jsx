@@ -21,7 +21,6 @@ import {
     ThumbsUp,
     MessageSquare,
     Share2,
-    MoreVertical,
     Heart,
     X,
     Play,
@@ -304,322 +303,380 @@ const VideoPlayerPage = ({ isModal = false }) => {
     // IMMERSIVE MODAL LAYOUT (REELS STYLE)
     if (isModal) {
         return (
-            <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
-                {/* CLOSE BUTTON */}
-                <button
-                    onClick={() => navigate(-1)}
-                    className="absolute top-4 left-4 z-50 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors"
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+                {/* ROUNDED CONTAINER - Video + Playlist */}
+                <div
+                    className={`relative bg-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 ${showPlaylistModal ? "w-[95%] max-w-[1400px]" : "w-auto max-w-[600px]"} h-[90vh] flex`}
                 >
-                    <X size={24} />
-                </button>
+                    {/* VIDEO CONTAINER - Shifts left when playlist is open */}
+                    <div
+                        className={`relative h-full flex items-center justify-center transition-all duration-300 ${showPlaylistModal ? "w-[60%]" : "w-full"}`}
+                    >
+                        {/* Close Button */}
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="absolute top-4 left-4 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-all"
+                        >
+                            <X size={24} />
+                        </button>
 
-                {/* VIDEO PLAYER - CENTRAL & IMMERSIVE */}
-                <div className="relative w-full h-full max-w-[500px] flex items-center bg-black group">
-                    <video
-                        ref={videoRef}
-                        src={video.videoFile?.replace("http://", "https://")}
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-contain cursor-pointer"
-                        poster={video.thumbnail}
-                        onClick={handleTogglePlay}
-                        onPlay={() => setIsPlaying(true)}
-                        onPause={() => setIsPlaying(false)}
-                        onLoadedData={(e) => {
-                            e.target.play().catch(() => {
-                                console.log(
-                                    "Autoplay blocked, waiting for interaction"
-                                )
-                                setIsPlaying(false)
-                            })
-                        }}
-                    />
-
-                    {/* CUSTOM CONTROLS OVERLAY - CENTERED */}
-                    <div className="absolute inset-0 flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        {/* Top Controls - Fullscreen & PiP */}
-                        <div className="absolute top-4 right-4 flex gap-2 z-20">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    togglePictureInPicture()
-                                }}
-                                className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-sm"
-                                title="Picture in Picture"
-                            >
-                                <PictureInPicture size={20} />
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    toggleFullscreen()
-                                }}
-                                className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-sm"
-                                title="Fullscreen"
-                            >
-                                <Maximize size={20} />
-                            </button>
-                        </div>
-
-                        {/* Center Controls - Play/Pause & Skip */}
-                        <div className="flex-1 flex items-center justify-center gap-8 pointer-events-none">
-                            {/* Rewind -5s */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    skip(-5)
-                                }}
-                                className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
-                                title="Rewind 5s"
-                            >
-                                <Rewind size={32} fill="white" />
-                            </button>
-
-                            {/* Play/Pause Main Button */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleTogglePlay()
-                                }}
-                                className="p-5 rounded-full bg-red-600/90 text-white hover:bg-red-600 hover:scale-110 transition-all shadow-lg pointer-events-auto backdrop-blur-sm shadow-red-900/20"
-                            >
-                                {isPlaying ? (
-                                    <Pause size={40} fill="white" />
-                                ) : (
-                                    <Play
-                                        size={40}
-                                        fill="white"
-                                        className="ml-1"
-                                    />
+                        {/* VIDEO PLAYER - CENTRAL & IMMERSIVE */}
+                        <div className="relative w-full h-full max-w-[500px] flex items-center bg-black group">
+                            <video
+                                ref={videoRef}
+                                src={video.videoFile?.replace(
+                                    "http://",
+                                    "https://"
                                 )}
-                            </button>
-
-                            {/* Fast Forward +5s */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    skip(5)
+                                autoPlay
+                                playsInline
+                                className="w-full h-full object-contain cursor-pointer"
+                                poster={video.thumbnail}
+                                onClick={handleTogglePlay}
+                                onPlay={() => setIsPlaying(true)}
+                                onPause={() => setIsPlaying(false)}
+                                onLoadedData={(e) => {
+                                    e.target.play().catch(() => {
+                                        console.log(
+                                            "Autoplay blocked, waiting for interaction"
+                                        )
+                                        setIsPlaying(false)
+                                    })
                                 }}
-                                className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
-                                title="Forward 5s"
-                            >
-                                <FastForward size={32} fill="white" />
-                            </button>
-                        </div>
+                            />
 
-                        {/* Bottom Controls - Progress, Volume, Speed */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                            {/* Progress Bar */}
-                            <div className="mb-3">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={progress}
-                                    onChange={handleProgressChange}
-                                    className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-all"
-                                    style={{
-                                        background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${progress}%, rgba(255,255,255,0.3) ${progress}%, rgba(255,255,255,0.3) 100%)`,
-                                    }}
-                                />
-                            </div>
-
-                            {/* Controls Row */}
-                            <div className="flex items-center justify-between text-white text-sm">
-                                {/* Left: Time */}
-                                <div className="flex items-center gap-2">
-                                    <span className="font-mono">
-                                        {formatTime(currentTime)} /{" "}
-                                        {formatTime(duration)}
-                                    </span>
+                            {/* CUSTOM CONTROLS OVERLAY - CENTERED */}
+                            <div className="absolute inset-0 flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                {/* Top Controls - Fullscreen & PiP */}
+                                <div className="absolute top-4 right-4 flex gap-2 z-20">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            togglePictureInPicture()
+                                        }}
+                                        className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-sm"
+                                        title="Picture in Picture"
+                                    >
+                                        <PictureInPicture size={20} />
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            toggleFullscreen()
+                                        }}
+                                        className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-sm"
+                                        title="Fullscreen"
+                                    >
+                                        <Maximize size={20} />
+                                    </button>
                                 </div>
 
-                                {/* Right: Volume & Speed */}
-                                <div className="flex items-center gap-4">
-                                    {/* Volume Control */}
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                toggleMute()
-                                            }}
-                                            className="p-1 hover:scale-110 transition-transform"
-                                        >
-                                            {isMuted || volume === 0 ? (
-                                                <VolumeX size={20} />
-                                            ) : (
-                                                <Volume2 size={20} />
-                                            )}
-                                        </button>
+                                {/* Center Controls - Play/Pause & Skip */}
+                                <div className="flex-1 flex items-center justify-center gap-8 pointer-events-none">
+                                    {/* Rewind -5s */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            skip(-5)
+                                        }}
+                                        className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
+                                        title="Rewind 5s"
+                                    >
+                                        <Rewind size={32} fill="white" />
+                                    </button>
+
+                                    {/* Play/Pause Main Button */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleTogglePlay()
+                                        }}
+                                        className="p-5 rounded-full bg-red-600/90 text-white hover:bg-red-600 hover:scale-110 transition-all shadow-lg pointer-events-auto backdrop-blur-sm shadow-red-900/20"
+                                    >
+                                        {isPlaying ? (
+                                            <Pause size={40} fill="white" />
+                                        ) : (
+                                            <Play
+                                                size={40}
+                                                fill="white"
+                                                className="ml-1"
+                                            />
+                                        )}
+                                    </button>
+
+                                    {/* Fast Forward +5s */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            skip(5)
+                                        }}
+                                        className="p-3 rounded-full bg-black/40 text-white hover:bg-black/60 hover:scale-110 transition-all pointer-events-auto backdrop-blur-sm"
+                                        title="Forward 5s"
+                                    >
+                                        <FastForward size={32} fill="white" />
+                                    </button>
+                                </div>
+
+                                {/* Bottom Controls - Progress, Volume, Speed */}
+                                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                                    {/* Progress Bar */}
+                                    <div className="mb-3">
                                         <input
                                             type="range"
                                             min="0"
-                                            max="1"
-                                            step="0.1"
-                                            value={isMuted ? 0 : volume}
-                                            onChange={handleVolumeChange}
-                                            className="w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
+                                            max="100"
+                                            value={progress}
+                                            onChange={handleProgressChange}
+                                            className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-all"
+                                            style={{
+                                                background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${progress}%, rgba(255,255,255,0.3) ${progress}%, rgba(255,255,255,0.3) 100%)`,
+                                            }}
                                         />
                                     </div>
 
-                                    {/* Playback Speed */}
-                                    <div className="relative">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                setShowSpeedMenu(!showSpeedMenu)
-                                            }}
-                                            className="flex items-center gap-1 px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
-                                        >
-                                            <Settings size={16} />
-                                            <span className="text-xs">
-                                                {playbackSpeed}x
+                                    {/* Controls Row */}
+                                    <div className="flex items-center justify-between text-white text-sm">
+                                        {/* Left: Time */}
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono">
+                                                {formatTime(currentTime)} /{" "}
+                                                {formatTime(duration)}
                                             </span>
-                                        </button>
+                                        </div>
 
-                                        {showSpeedMenu && (
-                                            <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
-                                                {[
-                                                    0.5, 0.75, 1, 1.25, 1.5, 2,
-                                                ].map((speed) => (
-                                                    <button
-                                                        key={speed}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            handleSpeedChange(
-                                                                speed
-                                                            )
-                                                        }}
-                                                        className={`block w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors ${
-                                                            playbackSpeed ===
-                                                            speed
-                                                                ? "bg-red-600 text-white"
-                                                                : "text-gray-300"
-                                                        }`}
-                                                    >
-                                                        {speed}x
-                                                    </button>
-                                                ))}
+                                        {/* Right: Volume & Speed */}
+                                        <div className="flex items-center gap-4">
+                                            {/* Volume Control */}
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        toggleMute()
+                                                    }}
+                                                    className="p-1 hover:scale-110 transition-transform"
+                                                >
+                                                    {isMuted || volume === 0 ? (
+                                                        <VolumeX size={20} />
+                                                    ) : (
+                                                        <Volume2 size={20} />
+                                                    )}
+                                                </button>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="1"
+                                                    step="0.1"
+                                                    value={isMuted ? 0 : volume}
+                                                    onChange={
+                                                        handleVolumeChange
+                                                    }
+                                                    className="w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
+                                                />
                                             </div>
-                                        )}
+
+                                            {/* Playback Speed */}
+                                            <div className="relative">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setShowSpeedMenu(
+                                                            !showSpeedMenu
+                                                        )
+                                                    }}
+                                                    className="flex items-center gap-1 px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                                                >
+                                                    <Settings size={16} />
+                                                    <span className="text-xs">
+                                                        {playbackSpeed}x
+                                                    </span>
+                                                </button>
+
+                                                {showSpeedMenu && (
+                                                    <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
+                                                        {[
+                                                            0.5, 0.75, 1, 1.25,
+                                                            1.5, 2,
+                                                        ].map((speed) => (
+                                                            <button
+                                                                key={speed}
+                                                                onClick={(
+                                                                    e
+                                                                ) => {
+                                                                    e.stopPropagation()
+                                                                    handleSpeedChange(
+                                                                        speed
+                                                                    )
+                                                                }}
+                                                                className={`block w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors ${
+                                                                    playbackSpeed ===
+                                                                    speed
+                                                                        ? "bg-red-600 text-white"
+                                                                        : "text-gray-300"
+                                                                }`}
+                                                            >
+                                                                {speed}x
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* RIGHT OVERLAY - ACTIONS BUTTONS */}
-                <div className="absolute right-4 bottom-20 z-40 flex flex-col items-center gap-6">
-                    {/* Like Action */}
-                    <button
-                        className="flex flex-col items-center gap-1 group"
-                        onClick={handleLike}
-                    >
-                        <div
-                            className={`p-3 rounded-full backdrop-blur-md transition-all ${liked ? "bg-red-600/80 text-white" : "bg-black/40 text-white group-hover:bg-red-500/20"}`}
-                        >
-                            <Heart
-                                size={28}
-                                fill={liked ? "currentColor" : "none"}
-                            />
+                        {/* RIGHT SIDE - ACTION BUTTONS (Vertically Centered) */}
+                        <div className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3 sm:gap-4">
+                            {/* Like Action */}
+                            <button
+                                onClick={handleLike}
+                                className="flex flex-col items-center gap-1 group"
+                            >
+                                <div
+                                    className={`p-2 sm:p-3 rounded-full ${liked ? "bg-red-600 text-white shadow-lg shadow-red-600/40" : "bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20"} transition-all`}
+                                >
+                                    <Heart
+                                        size={24}
+                                        className="sm:w-7 sm:h-7"
+                                        fill={liked ? "currentColor" : "none"}
+                                    />
+                                </div>
+                                <span className="text-[10px] sm:text-xs font-bold text-white shadow-black drop-shadow-md">
+                                    {likesCount}
+                                </span>
+                            </button>
+
+                            {/* Comment Action */}
+                            <button className="flex flex-col items-center gap-1 group">
+                                <div className="p-2 sm:p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
+                                    <MessageSquare
+                                        size={24}
+                                        className="sm:w-7 sm:h-7"
+                                    />
+                                </div>
+                                <span className="text-[10px] sm:text-xs font-bold text-white shadow-black drop-shadow-md">
+                                    Comment
+                                </span>
+                            </button>
+
+                            {/* Share Action */}
+                            <button
+                                className="flex flex-col items-center gap-1 group"
+                                onClick={handleShare}
+                            >
+                                <div className="p-2 sm:p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
+                                    <Share2
+                                        size={24}
+                                        className="sm:w-7 sm:h-7"
+                                    />
+                                </div>
+                                <span className="text-[10px] sm:text-xs font-bold text-white shadow-black drop-shadow-md">
+                                    Share
+                                </span>
+                            </button>
+
+                            {/* Add to Playlist Action */}
+                            <button
+                                className="flex flex-col items-center gap-1 group"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    console.log(
+                                        "[VideoPlayer] Opening playlist modal"
+                                    )
+                                    setShowPlaylistModal(true)
+                                }}
+                            >
+                                <div className="p-2 sm:p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
+                                    <ListPlus
+                                        size={24}
+                                        className="sm:w-7 sm:h-7"
+                                    />
+                                </div>
+                                <span className="text-[10px] sm:text-xs font-bold text-white shadow-black drop-shadow-md">
+                                    Save
+                                </span>
+                            </button>
                         </div>
-                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
-                            {likesCount}
-                        </span>
-                    </button>
 
-                    {/* Comment Action */}
-                    <button className="flex flex-col items-center gap-1 group">
-                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
-                            <MessageSquare size={28} />
-                        </div>
-                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
-                            Comment
-                        </span>
-                    </button>
-
-                    {/* Share Action */}
-                    <button
-                        className="flex flex-col items-center gap-1 group"
-                        onClick={handleShare}
-                    >
-                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
-                            <Share2 size={28} />
-                        </div>
-                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
-                            Share
-                        </span>
-                    </button>
-
-                    {/* Add to Playlist Action */}
-                    <button
-                        className="flex flex-col items-center gap-1 group"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            setShowPlaylistModal(true)
-                        }}
-                    >
-                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
-                            <ListPlus size={28} />
-                        </div>
-                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
-                            Save
-                        </span>
-                    </button>
-
-                    {/* More Action */}
-                    <button className="flex flex-col items-center gap-1 group">
-                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
-                            <MoreVertical size={28} />
-                        </div>
-                    </button>
-                </div>
-
-                {/* BOTTOM OVERLAY - INFO */}
-                <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20 pb-6 px-4">
-                    <div className="flex items-center gap-3 mb-3">
-                        <img
-                            src={
-                                video.owner?.avatar ||
-                                "https://via.placeholder.com/40"
-                            }
-                            alt={video.owner?.username}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-white/20 cursor-pointer"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                navigate(`/channel/${video.owner?.username}`)
-                            }}
-                        />
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                                <span
-                                    className="font-bold text-white text-base hover:underline cursor-pointer"
-                                    onClick={() =>
+                        {/* BOTTOM OVERLAY - INFO */}
+                        <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20 pb-6 px-4">
+                            <div className="flex items-center gap-3 mb-3">
+                                <img
+                                    src={
+                                        video.owner?.avatar ||
+                                        "https://via.placeholder.com/40"
+                                    }
+                                    alt={video.owner?.username}
+                                    className="w-10 h-10 rounded-full object-cover border-2 border-white/20 cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
                                         navigate(
                                             `/channel/${video.owner?.username}`
                                         )
-                                    }
-                                >
-                                    {video.owner?.username}
-                                </span>
-                                <button
-                                    onClick={handleSubscribe}
-                                    className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-white/10 text-white" : "bg-red-600 text-white"}`}
-                                >
-                                    {isSubscribed ? "Subscribed" : "Subscribe"}
-                                </button>
+                                    }}
+                                />
+                                <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className="font-bold text-white text-base hover:underline cursor-pointer"
+                                            onClick={() =>
+                                                navigate(
+                                                    `/channel/${video.owner?.username}`
+                                                )
+                                            }
+                                        >
+                                            {video.owner?.username}
+                                        </span>
+                                        <button
+                                            onClick={handleSubscribe}
+                                            className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-white/10 text-white" : "bg-red-600 text-white"}`}
+                                        >
+                                            {isSubscribed
+                                                ? "Subscribed"
+                                                : "Subscribe"}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
+
+                            <h1 className="text-white text-lg font-medium leading-tight line-clamp-2 mb-1 w-[85%]">
+                                {video.title}
+                            </h1>
+                            {video.description && (
+                                <p className="text-gray-200/80 text-sm line-clamp-1 w-[85%]">
+                                    {video.description}
+                                </p>
+                            )}
                         </div>
                     </div>
-
-                    <h1 className="text-white text-lg font-medium leading-tight line-clamp-2 mb-1 w-[85%]">
-                        {video.title}
-                    </h1>
-                    {video.description && (
-                        <p className="text-gray-200/80 text-sm line-clamp-1 w-[85%]">
-                            {video.description}
-                        </p>
+                    {/* PLAYLIST SIDEBAR - Slides in from right */}
+                    {showPlaylistModal && (
+                        <div className="w-[40%] h-full bg-[#1E2021] border-l border-gray-700 overflow-y-auto">
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-2xl font-bold text-white">
+                                        Add to Playlist
+                                    </h2>
+                                    <button
+                                        onClick={() =>
+                                            setShowPlaylistModal(false)
+                                        }
+                                        className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                                {/* Playlist content will be rendered by AddToPlaylistModal component */}
+                                <AddToPlaylistModal
+                                    isOpen={true}
+                                    onClose={() => setShowPlaylistModal(false)}
+                                    videoId={videoId}
+                                    videoTitle={video?.title}
+                                    isSidebar={true}
+                                />
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>

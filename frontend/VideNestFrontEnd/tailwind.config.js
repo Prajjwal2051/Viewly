@@ -3,6 +3,18 @@ export default {
     content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
     theme: {
         extend: {
+            fontFamily: {
+                sans: [
+                    "Inter",
+                    "system-ui",
+                    "-apple-system",
+                    "BlinkMacSystemFont",
+                    "Segoe UI",
+                    "Roboto",
+                    "sans-serif",
+                ],
+                heading: ["Poppins", "Inter", "system-ui", "sans-serif"],
+            },
             fontSize: {
                 xs: ["0.85rem", { lineHeight: "1.2rem" }], // Increased from 0.75rem (12px -> ~13.6px)
                 sm: ["0.95rem", { lineHeight: "1.4rem" }], // Increased from 0.875rem (14px -> ~15.2px)

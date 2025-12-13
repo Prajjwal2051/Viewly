@@ -5,7 +5,13 @@ import { getUserPlaylists, addVideoToPlaylist } from "../../api/playlistApi"
 import CreatePlaylistModal from "./CreatePlaylistModal"
 import toast from "react-hot-toast"
 
-const AddToPlaylistModal = ({ isOpen, onClose, videoId, videoTitle }) => {
+const AddToPlaylistModal = ({
+    isOpen,
+    onClose,
+    videoId,
+    videoTitle,
+    isSidebar = false,
+}) => {
     const { user } = useSelector((state) => state.auth)
     const [playlists, setPlaylists] = useState([])
     const [loading, setLoading] = useState(false)
@@ -80,6 +86,112 @@ const AddToPlaylistModal = ({ isOpen, onClose, videoId, videoTitle }) => {
 
     if (!isOpen) return null
 
+    // Sidebar mode - render without overlay
+    if (isSidebar) {
+        return (
+            <>
+                {/* Create New Playlist Button */}
+                <div className="mb-4">
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="w-full flex items-center gap-3 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+                    >
+                        <Plus size={20} />
+                        Create New Playlist
+                    </button>
+                </div>
+
+                {/* Playlists List */}
+                <div className="flex-1 overflow-y-auto">
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <Loader2 className="w-10 h-10 animate-spin text-red-600 mb-3" />
+                            <p className="text-gray-400">
+                                Loading playlists...
+                            </p>
+                        </div>
+                    ) : playlists.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <ListVideo className="w-16 h-16 text-gray-600 mb-4" />
+                            <h3 className="text-lg font-semibold text-gray-300 mb-2">
+                                No playlists yet
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-4">
+                                Create your first playlist to save videos
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {playlists.map((playlist) => {
+                                const inPlaylist = isVideoInPlaylist(playlist)
+                                const isAdding = addingTo[playlist._id]
+
+                                return (
+                                    <button
+                                        key={playlist._id}
+                                        onClick={() =>
+                                            !inPlaylist &&
+                                            !isAdding &&
+                                            handleAddToPlaylist(playlist._id)
+                                        }
+                                        disabled={inPlaylist || isAdding}
+                                        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                                            inPlaylist
+                                                ? "bg-green-600/10 border-green-600/50 cursor-default"
+                                                : "bg-[#2A2D2E] border-gray-600 hover:border-red-600 hover:bg-[#2A2D2E]/80"
+                                        } ${isAdding ? "opacity-50 cursor-wait" : ""}`}
+                                    >
+                                        <div
+                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                                                inPlaylist
+                                                    ? "bg-green-600 border-green-600"
+                                                    : "border-gray-500"
+                                            }`}
+                                        >
+                                            {inPlaylist && (
+                                                <Check
+                                                    size={14}
+                                                    className="text-white"
+                                                />
+                                            )}
+                                            {isAdding && (
+                                                <Loader2
+                                                    size={14}
+                                                    className="text-white animate-spin"
+                                                />
+                                            )}
+                                        </div>
+
+                                        <div className="flex-1 text-left min-w-0">
+                                            <h4 className="font-medium text-white line-clamp-1">
+                                                {playlist.name}
+                                            </h4>
+                                            <p className="text-xs text-gray-500">
+                                                {playlist.videoCount || 0}{" "}
+                                                videos •{" "}
+                                                {playlist.isPublic
+                                                    ? "Public"
+                                                    : "Private"}
+                                            </p>
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                {/* Create Playlist Modal */}
+                <CreatePlaylistModal
+                    isOpen={showCreateModal}
+                    onClose={() => setShowCreateModal(false)}
+                    onSuccess={handleCreateSuccess}
+                />
+            </>
+        )
+    }
+
+    // Modal mode - render with overlay
     return (
         <>
             <div
