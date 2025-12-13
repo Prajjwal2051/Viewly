@@ -11,7 +11,7 @@ import {
 import toast from "react-hot-toast"
 import Input from "../layout/ui/Input"
 
-const CommentSection = ({ videoId, tweetId }) => {
+const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
     const { user } = useSelector((state) => state.auth)
     const [comments, setComments] = useState([])
     const [loading, setLoading] = useState(true)
@@ -81,9 +81,11 @@ const CommentSection = ({ videoId, tweetId }) => {
 
     return (
         <div className="mt-8">
-            <h3 className="text-xl font-bold mb-6 text-white">
-                {comments.length} Comments
-            </h3>
+            {!hideHeader && (
+                <h3 className="text-xl font-bold mb-6 text-white">
+                    {comments.length} Comments
+                </h3>
+            )}
 
             {/* ADD COMMENT FORM */}
             <form onSubmit={handleSubmit} className="mb-8 flex gap-4">

@@ -64,12 +64,31 @@ const uploadOnCloudinary = async (localFilePath, options = {}) => {
             return null
         }
 
+        // CHECK FILE SIZE FOR IMAGES (Max 2MB)
+        // Note: Multer limits all files to 10MB. We need strict 2MB check for images here.
+        const stats = fs.statSync(localFilePath)
+        const fileSizeInBytes = stats.size
+        const fileSizeInMB = fileSizeInBytes / (1024 * 1024)
+
+        // Simple extension check (in production, use magic numbers / file-type)
+        const isImage = /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(
+            localFilePath
+        )
+
+        if (isImage && fileSizeInMB > 2) {
+            console.log(
+                `❌ Image file too large: ${fileSizeInMB.toFixed(2)}MB (Limit: 2MB)`
+            )
+            fs.unlinkSync(localFilePath) // Delete temp file
+            return null // Or throw error to be handled by controller
+        }
+
         // UPLOAD TO CLOUDINARY
         // resource_type: "auto" automatically detects file type (image, video, raw)
         // options: allows passing custom options (like folder, public_id, transformations)
         const uploadOptions = {
             resource_type: "auto",
-            quality: "auto", // Optimize quality/size balance automatically
+            quality: "auto", // Optimize quality/size balance automatically (default: good)
             fetch_format: "auto", // Deliver best format (WebP/AVIF) for client
             ...options, // Spread custom options to override defaults if needed
         }
