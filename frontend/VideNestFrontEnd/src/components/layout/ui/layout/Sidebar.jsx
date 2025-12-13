@@ -28,12 +28,6 @@ const Sidebar = () => {
     const navItems = [
         { id: "home", icon: Home, label: "Home", path: "/" },
         { id: "discover", icon: Compass, label: "Discover", path: "/discover" },
-        {
-            id: "playlists",
-            icon: ListVideo,
-            label: "Playlists",
-            path: "/playlists",
-        },
         { id: "upload", icon: PlusCircle, label: "Create", path: "/upload" },
         { id: "activity", icon: Bell, label: "Activity", path: "/activity" },
         { id: "profile", icon: User, label: "Profile", path: "/profile" },

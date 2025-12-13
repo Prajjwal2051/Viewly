@@ -9,7 +9,7 @@
 // - Sidebar with more videos
 
 import { useState, useEffect, useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { getVideoById, getAllVideos } from "../api/videoApi"
 import { toggleVideoLike, getIsVideoLiked } from "../api/likeApi"
@@ -33,16 +33,32 @@ import {
     Settings,
     PictureInPicture,
     ListPlus,
+    User,
 } from "lucide-react"
 import AddToPlaylistModal from "../components/playlist/AddToPlaylistModal"
 import toast from "react-hot-toast"
 
-import VideoControls from "../components/video/VideoControls"
-import CommentSection from "../components/comments/CommentSection"
+// Format duration to simple format (21 sec, 2 min, 1 hr)
+const formatDuration = (seconds) => {
+    if (!seconds || seconds < 0) return "0 sec"
+
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = Math.floor(seconds % 60)
+
+    if (hours > 0) {
+        return `${hours} hr${minutes > 0 ? " " + minutes + " min" : ""}`
+    } else if (minutes > 0) {
+        return `${minutes} min${secs > 0 ? " " + secs + " sec" : ""}`
+    } else {
+        return `${secs} sec`
+    }
+}
 
 const VideoPlayerPage = ({ isModal = false }) => {
     const { videoId } = useParams()
     const navigate = useNavigate()
+    const location = useLocation()
     const { user } = useSelector((state) => state.auth)
 
     // State
@@ -71,6 +87,16 @@ const VideoPlayerPage = ({ isModal = false }) => {
     const [playbackSpeed, setPlaybackSpeed] = useState(1)
     const [showSpeedMenu, setShowSpeedMenu] = useState(false)
     const [showPlaylistModal, setShowPlaylistModal] = useState(false)
+    const [showCommentsPanel, setShowCommentsPanel] = useState(false)
+
+    // Check for openComments in location state
+    useEffect(() => {
+        if (location.state?.openComments) {
+            setShowCommentsPanel(true)
+            // Optional: Clear the state so it doesn't reopen if we navigate back/forth in a way that preserves state
+            // But usually for this modal flow it's fine
+        }
+    }, [location.state])
 
     const handleTogglePlay = () => {
         if (videoRef.current) {
@@ -304,13 +330,13 @@ const VideoPlayerPage = ({ isModal = false }) => {
     if (isModal) {
         return (
             <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-                {/* ROUNDED CONTAINER - Video + Playlist */}
+                {/* ROUNDED CONTAINER - Video + Sidebar (Playlist or Comments) */}
                 <div
-                    className={`relative bg-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 ${showPlaylistModal ? "w-[95%] max-w-[1400px]" : "w-auto max-w-[600px]"} h-[90vh] flex`}
+                    className={`relative bg-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 ${showPlaylistModal || showCommentsPanel ? "w-[95%] max-w-[1400px]" : "w-auto max-w-[600px]"} h-[90vh] flex`}
                 >
-                    {/* VIDEO CONTAINER - Shifts left when playlist is open */}
+                    {/* VIDEO CONTAINER - Shifts left when sidebar is open */}
                     <div
-                        className={`relative h-full flex items-center justify-center transition-all duration-300 ${showPlaylistModal ? "w-[60%]" : "w-full"}`}
+                        className={`relative h-full flex items-center justify-center transition-all duration-300 ${showPlaylistModal || showCommentsPanel ? "w-[60%]" : "w-full"}`}
                     >
                         {/* Close Button */}
                         <button
@@ -548,7 +574,14 @@ const VideoPlayerPage = ({ isModal = false }) => {
                             </button>
 
                             {/* Comment Action */}
-                            <button className="flex flex-col items-center gap-1 group">
+                            <button
+                                className="flex flex-col items-center gap-1 group"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setShowCommentsPanel(true)
+                                    setShowPlaylistModal(false) // Close playlist if open
+                                }}
+                            >
                                 <div className="p-2 sm:p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
                                     <MessageSquare
                                         size={24}
@@ -585,6 +618,7 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                         "[VideoPlayer] Opening playlist modal"
                                     )
                                     setShowPlaylistModal(true)
+                                    setShowCommentsPanel(false) // Close comments if open
                                 }}
                             >
                                 <div className="p-2 sm:p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
@@ -602,20 +636,34 @@ const VideoPlayerPage = ({ isModal = false }) => {
                         {/* BOTTOM OVERLAY - INFO */}
                         <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20 pb-6 px-4">
                             <div className="flex items-center gap-3 mb-3">
-                                <img
-                                    src={
-                                        video.owner?.avatar ||
-                                        "https://via.placeholder.com/40"
-                                    }
-                                    alt={video.owner?.username}
-                                    className="w-10 h-10 rounded-full object-cover border-2 border-white/20 cursor-pointer"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        navigate(
-                                            `/channel/${video.owner?.username}`
-                                        )
-                                    }}
-                                />
+                                {video.owner?.avatar ? (
+                                    <img
+                                        src={video.owner.avatar}
+                                        alt={video.owner?.username}
+                                        className="w-10 h-10 rounded-full object-cover border-2 border-white/20 cursor-pointer"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate(
+                                                `/channel/${video.owner?.username}`
+                                            )
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-10 h-10 rounded-full bg-gray-700 border-2 border-white/20 cursor-pointer flex items-center justify-center"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate(
+                                                `/channel/${video.owner?.username}`
+                                            )
+                                        }}
+                                    >
+                                        <User
+                                            size={20}
+                                            className="text-gray-400"
+                                        />
+                                    </div>
+                                )}
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span
@@ -640,14 +688,18 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                 </div>
                             </div>
 
-                            <h1 className="text-white text-lg font-medium leading-tight line-clamp-2 mb-1 w-[85%]">
+                            <h1 className="text-white text-2xl font-bold leading-tight line-clamp-2 mb-2 w-[85%]">
                                 {video.title}
                             </h1>
                             {video.description && (
-                                <p className="text-gray-200/80 text-sm line-clamp-1 w-[85%]">
+                                <p className="text-gray-200/90 text-base line-clamp-2 w-[85%] mb-1">
                                     {video.description}
                                 </p>
                             )}
+                            <p className="text-gray-400 text-sm">
+                                {video.views?.toLocaleString()} views •{" "}
+                                {formatDuration(video.duration)}
+                            </p>
                         </div>
                     </div>
                     {/* PLAYLIST SIDEBAR - Slides in from right */}
@@ -675,6 +727,47 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                     videoTitle={video?.title}
                                     isSidebar={true}
                                 />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* COMMENTS SIDEBAR - Slides in from right */}
+                    {showCommentsPanel && (
+                        <div className="w-[40%] h-full bg-[#1E2021] border-l border-gray-700 overflow-y-auto">
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-2xl font-bold text-white">
+                                        Comments
+                                    </h2>
+                                    <button
+                                        onClick={() =>
+                                            setShowCommentsPanel(false)
+                                        }
+                                        className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                {/* Comment Input */}
+                                <div className="mb-6">
+                                    <textarea
+                                        placeholder="Add a comment..."
+                                        className="w-full bg-[#2A2D2E] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-600 resize-none"
+                                        rows="3"
+                                    ></textarea>
+                                    <button className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors">
+                                        Post Comment
+                                    </button>
+                                </div>
+
+                                {/* Comments List */}
+                                <div className="space-y-4">
+                                    <p className="text-gray-400 text-center py-8">
+                                        No comments yet. Be the first to
+                                        comment!
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     )}

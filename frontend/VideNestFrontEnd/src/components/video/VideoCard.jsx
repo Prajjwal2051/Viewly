@@ -6,7 +6,7 @@
 
 import { useNavigate, useLocation } from "react-router-dom"
 import { formatDistanceToNow } from "date-fns" // Time formatting library
-import { Play, Share2, MessageCircle } from "lucide-react"
+import { Play, Share2, MessageCircle, User } from "lucide-react"
 import toast from "react-hot-toast"
 
 /**
@@ -38,6 +38,23 @@ const VideoCard = ({ video }) => {
             return formatDistanceToNow(new Date(date), { addSuffix: true })
         } catch {
             return "Recently"
+        }
+    }
+
+    // Format duration to simple format (21 sec, 2 min, 1 hr)
+    const formatDuration = (seconds) => {
+        if (!seconds || seconds < 0) return "0 sec"
+
+        const hours = Math.floor(seconds / 3600)
+        const minutes = Math.floor((seconds % 3600) / 60)
+        const secs = Math.floor(seconds % 60)
+
+        if (hours > 0) {
+            return `${hours} hr${minutes > 0 ? " " + minutes + " min" : ""}`
+        } else if (minutes > 0) {
+            return `${minutes} min${secs > 0 ? " " + secs + " sec" : ""}`
+        } else {
+            return `${secs} sec`
         }
     }
 
@@ -75,8 +92,7 @@ const VideoCard = ({ video }) => {
 
                 {/* DURATION BADGE */}
                 <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md z-20">
-                    {Math.floor(video.duration / 60)}:
-                    {String(video.duration % 60).padStart(2, "0")}
+                    {formatDuration(video.duration)}
                 </div>
 
                 {/* HOVER OVERLAY - PLAY & ACTIONS */}
@@ -85,8 +101,12 @@ const VideoCard = ({ video }) => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation()
+                            // Pass openComments: true in state
                             navigate(`/video/${video._id}`, {
-                                state: { background: location },
+                                state: {
+                                    background: location,
+                                    openComments: true,
+                                },
                             })
                         }}
                         className="flex flex-col items-center gap-1 group/btn transition-all duration-300 hover:scale-110 active:scale-95"
@@ -132,28 +152,38 @@ const VideoCard = ({ video }) => {
 
             {/* BOTTOM SECTION: INFO */}
             <div className="p-3 flex gap-3">
-                {/* Avatar */}
-                <img
-                    src={
-                        video.owner?.avatar || "https://via.placeholder.com/40"
-                    }
-                    alt={video.owner?.username}
-                    className="h-9 w-9 rounded-full object-cover border border-white/10 shrink-0 mt-1"
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        navigate(`/channel/${video.owner?.username}`)
-                    }}
-                />
+                {/* Avatar with Fallback */}
+                {video.owner?.avatar ? (
+                    <img
+                        src={video.owner.avatar}
+                        alt={video.owner?.username}
+                        className="h-9 w-9 rounded-full object-cover border border-white/10 shrink-0 mt-1"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/channel/${video.owner?.username}`)
+                        }}
+                    />
+                ) : (
+                    <div
+                        className="h-9 w-9 rounded-full bg-gray-700 border border-white/10 shrink-0 mt-1 flex items-center justify-center"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/channel/${video.owner?.username}`)
+                        }}
+                    >
+                        <User size={18} className="text-gray-400" />
+                    </div>
+                )}
 
                 <div className="flex flex-col min-w-0">
-                    {/* Title */}
-                    <h3 className="text-white font-semibold text-sm line-clamp-2 leading-tight mb-1 group-hover:text-red-400 transition-colors">
+                    {/* Title - Increased Font Size */}
+                    <h3 className="text-white font-semibold text-base line-clamp-2 leading-tight mb-1 group-hover:text-red-400 transition-colors">
                         {video.title}
                     </h3>
 
                     {/* Channel Name */}
                     <p
-                        className="text-xs text-gray-400 hover:text-white transition-colors truncate"
+                        className="text-xs text-gray-400 hover:text-white transition-colors truncate mb-1"
                         onClick={(e) => {
                             e.stopPropagation()
                             navigate(`/channel/${video.owner?.username}`)
@@ -162,8 +192,8 @@ const VideoCard = ({ video }) => {
                         {video.owner?.fullName || video.owner?.username}
                     </p>
 
-                    {/* Stats */}
-                    <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-0.5">
+                    {/* Stats - Adjusted */}
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
                         <span>{formatViews(video.views)} views</span>
                         <span>•</span>
                         <span>{formatDate(video.createdAt)}</span>

@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
-import { Search, Bell, ListVideo, Plus } from "lucide-react"
+import { Search, Bell, ListVideo, Plus, User } from "lucide-react"
 import Button from "../Button"
 import Input from "../Input"
 import { logout } from "../../../../store/slices/authSlice.js"
@@ -135,15 +135,22 @@ const Header = () => {
                             {/* Playlist Dropdown Menu */}
                             {showPlaylistMenu && (
                                 <div className="absolute right-0 top-full mt-2 w-80 bg-[#1E2021] border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
-                                    <div className="p-4 border-b border-gray-700">
-                                        <h3 className="font-semibold text-white flex items-center gap-2">
+                                    {/* Clickable Header */}
+                                    <button
+                                        onClick={() => {
+                                            navigate("/playlists")
+                                            setShowPlaylistMenu(false)
+                                        }}
+                                        className="w-full p-4 border-b border-gray-700 text-left hover:bg-[#2A2D2E] transition-colors"
+                                    >
+                                        <h3 className="font-semibold text-white flex items-center gap-2 hover:text-red-600 transition-colors">
                                             <ListVideo
                                                 size={18}
                                                 className="text-red-600"
                                             />
                                             Your Playlists
                                         </h3>
-                                    </div>
+                                    </button>
 
                                     {/* Create New Playlist */}
                                     <button
@@ -233,14 +240,20 @@ const Header = () => {
                                 onClick={() => setShowUserMenu(!showUserMenu)}
                                 className="flex items-center gap-2 p-1 rounded-full hover:bg-[#2A2D2E] focus:outline-none transition-all duration-300 group"
                             >
-                                <img
-                                    src={
-                                        user?.avatar ||
-                                        "https://via.placeholder.com/40"
-                                    }
-                                    alt={user?.username}
-                                    className="h-10 w-10 rounded-full object-cover border-2 border-[#2A2D2E] transition-all duration-300 group-hover:scale-110 group-hover:border-red-600 group-hover:rotate-6"
-                                />
+                                {user?.avatar ? (
+                                    <img
+                                        src={user.avatar}
+                                        alt={user?.username}
+                                        className="h-10 w-10 rounded-full object-cover border-2 border-[#2A2D2E] transition-all duration-300 group-hover:scale-110 group-hover:border-red-600 group-hover:rotate-6"
+                                    />
+                                ) : (
+                                    <div className="h-10 w-10 rounded-full bg-gray-700 border-2 border-[#2A2D2E] flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-red-600 group-hover:rotate-6">
+                                        <User
+                                            size={20}
+                                            className="text-gray-400 group-hover:text-white"
+                                        />
+                                    </div>
+                                )}
                             </button>
 
                             {showUserMenu && (
