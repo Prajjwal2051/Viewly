@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getTweetById, toggleTweetLike } from "../api/tweetApi"
+import { getIsTweetLiked } from "../api/likeApi"
 import { toggleSubscription } from "../api/subscriptionApi"
 import CommentSection from "../components/comments/CommentSection"
 import {
@@ -52,6 +53,21 @@ const TweetPage = ({ isModal = false }) => {
 
         if (tweetId) fetchTweet()
     }, [tweetId, navigate])
+
+    // Fetch like status
+    useEffect(() => {
+        const fetchLikeStatus = async () => {
+            if (user && tweetId) {
+                try {
+                    const data = await getIsTweetLiked(tweetId)
+                    setIsLiked(data.isLiked || false)
+                } catch (error) {
+                    console.error("Failed to fetch like status:", error)
+                }
+            }
+        }
+        fetchLikeStatus()
+    }, [tweetId, user])
 
     const handleSubscribe = async (e) => {
         e?.stopPropagation()
@@ -109,6 +125,8 @@ const TweetPage = ({ isModal = false }) => {
         )
     }
 
+    if (!tweet) return null
+
     const handleShare = (e) => {
         e?.stopPropagation()
         const link = window.location.href
@@ -129,7 +147,7 @@ const TweetPage = ({ isModal = false }) => {
                 </button>
 
                 {/* CONTENT - CENTRAL & IMMERSIVE */}
-                <div className="relative w-full h-full flex items-center justify-center bg-black">
+                <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-black via-black to-[#1a0505]">
                     {tweet.image ? (
                         <img
                             src={tweet.image}
@@ -137,10 +155,18 @@ const TweetPage = ({ isModal = false }) => {
                             className="max-w-full max-h-full object-contain shadow-2xl"
                         />
                     ) : (
-                        <div className="w-full flex items-center justify-center">
-                            <p className="text-white text-3xl md:text-4xl font-bold text-center leading-snug tracking-wide">
-                                {tweet.content}
-                            </p>
+                        <div className="w-full max-w-7xl px-4 md:pl-16 md:pr-40 flex items-center justify-start h-full pt-16 pb-32">
+                            <div className="w-full h-[55vh] min-h-[400px] flex flex-col items-start justify-start bg-gradient-to-br from-black to-[#0f0000] rounded-3xl p-8 md:p-12 border border-white/20 shadow-2xl shadow-red-900/10 backdrop-blur-xl relative overflow-hidden group">
+                                {/* Decorative gradient blob */}
+                                <div className="absolute -top-24 -right-24 w-64 h-64 bg-red-600/5 rounded-full blur-3xl pointer-events-none group-hover:bg-red-600/10 transition-colors duration-700"></div>
+
+                                {/* Scrollable Content Area */}
+                                <div className="w-full h-full overflow-y-auto custom-scrollbar z-10 pr-4">
+                                    <p className="text-gray-100 text-lg md:text-2xl font-normal text-left leading-relaxed whitespace-pre-wrap tracking-wide">
+                                        {tweet.content}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

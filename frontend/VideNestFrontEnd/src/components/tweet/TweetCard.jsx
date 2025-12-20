@@ -107,14 +107,11 @@ const TweetCard = ({ tweet }) => {
     return (
         <div
             onClick={() =>
-                hasImage &&
                 navigate(`/tweet/${tweet._id}`, {
                     state: { background: location },
                 })
             }
-            className={`group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E] transition-all duration-300 border border-transparent flex flex-col hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] hover:border-white/10 ${
-                !hasImage ? "min-h-[300px]" : "cursor-pointer"
-            }`}
+            className={`group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E] transition-all duration-300 border border-transparent flex flex-col hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] hover:border-white/10 cursor-pointer`}
         >
             {/* TOP SECTION: IMAGE & ACTIONS OVERLAY - Only show if image exists */}
             {hasImage && (
@@ -231,7 +228,13 @@ const TweetCard = ({ tweet }) => {
 
             {/* BOTTOM SECTION: TEXT & INFO */}
             <div
-                className={`p-5 flex flex-col gap-4 ${!hasImage ? "flex-1 justify-between h-full relative" : ""}`}
+                onClick={() =>
+                    !hasImage &&
+                    navigate(`/tweet/${tweet._id}`, {
+                        state: { background: location },
+                    })
+                }
+                className={`p-5 flex flex-col gap-4 ${!hasImage ? "flex-1 justify-between h-full relative cursor-pointer" : ""}`}
             >
                 {/* Content */}
                 <p

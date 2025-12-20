@@ -116,6 +116,7 @@ const getAllComment = asyncHandler(async (req, res) => {
                 likes: 1,
                 createdAt: 1,
                 "ownerDetails.username": 1,
+                "ownerDetails._id": 1,
                 "ownerDetails.fullName": 1,
                 "ownerDetails.avatar": 1,
             },
@@ -173,6 +174,7 @@ const getTweetComments = asyncHandler(async (req, res) => {
         {
             $project: {
                 content: 1,
+                "ownerDetails._id": 1,
                 likes: 1,
                 createdAt: 1,
                 "ownerDetails.username": 1,

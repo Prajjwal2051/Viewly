@@ -36,6 +36,8 @@ import {
     User,
 } from "lucide-react"
 import AddToPlaylistModal from "../components/playlist/AddToPlaylistModal"
+import CommentSection from "../components/comments/CommentSection"
+import VideoControls from "../components/video/VideoControls"
 import toast from "react-hot-toast"
 
 // Format duration to simple format (21 sec, 2 min, 1 hr)
@@ -749,25 +751,8 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                     </button>
                                 </div>
 
-                                {/* Comment Input */}
-                                <div className="mb-6">
-                                    <textarea
-                                        placeholder="Add a comment..."
-                                        className="w-full bg-[#2A2D2E] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-600 resize-none"
-                                        rows="3"
-                                    ></textarea>
-                                    <button className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors">
-                                        Post Comment
-                                    </button>
-                                </div>
-
-                                {/* Comments List */}
-                                <div className="space-y-4">
-                                    <p className="text-gray-400 text-center py-8">
-                                        No comments yet. Be the first to
-                                        comment!
-                                    </p>
-                                </div>
+                                {/* Use actual CommentSection component */}
+                                <CommentSection videoId={videoId} hideHeader={false} />
                             </div>
                         </div>
                     )}
