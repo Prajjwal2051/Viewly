@@ -68,7 +68,7 @@ const addComment = asyncHandler(async (req, res) => {
 
     const createdComment = await Comment.findById(newComment._id).populate(
         "owner",
-        "username fullname avatar"
+        "username fullName avatar"
     )
 
     return res
@@ -128,8 +128,10 @@ const getAllComment = asyncHandler(async (req, res) => {
     const options = {
         page: parseInt(page),
         limit: parseInt(limit),
-        docs: "comments",
-        totalDocs: "totalComments",
+        customLabels: {
+            docs: "comments",
+            totalDocs: "totalComments",
+        },
     }
 
     const comments = await Comment.aggregatePaginate(aggregate, options)
@@ -186,8 +188,10 @@ const getTweetComments = asyncHandler(async (req, res) => {
     const options = {
         page: parseInt(page),
         limit: parseInt(limit),
-        docs: "comments",
-        totalDocs: "totalComments",
+        customLabels: {
+            docs: "comments",
+            totalDocs: "totalComments",
+        },
     }
 
     const comments = await Comment.aggregatePaginate(aggregate, options)
@@ -235,7 +239,7 @@ const updateComment = asyncHandler(async (req, res) => {
 
     const commentWithOwner = await Comment.findById(
         updatedComment._id
-    ).populate("owner", "username fullname avatar")
+    ).populate("owner", "username fullName avatar")
 
     return res
         .status(200)

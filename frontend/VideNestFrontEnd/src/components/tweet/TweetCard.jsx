@@ -82,7 +82,11 @@ const TweetCard = ({ tweet }) => {
 
         try {
             await toggleTweetLike(tweet._id)
+            // Show success toast with context
+            toast.success(newLikedState ? "Liked" : "Unliked")
         } catch (error) {
+            // Log the error for debugging
+            console.error("Error liking tweet:", error)
             // Revert on error
             setIsLiked(wasLiked)
             setLikesCount((prev) => (newLikedState ? prev - 1 : prev + 1))

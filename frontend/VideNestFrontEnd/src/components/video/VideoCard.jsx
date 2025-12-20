@@ -106,6 +106,8 @@ const VideoCard = ({ video }) => {
 
         try {
             await toggleVideoLike(video._id)
+            // Show success toast with context
+            toast.success(newLikedState ? "Liked" : "Unliked")
         } catch (error) {
             // Revert on error
             setIsLiked(wasLiked)

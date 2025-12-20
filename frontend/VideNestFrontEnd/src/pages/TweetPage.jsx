@@ -74,14 +74,30 @@ const TweetPage = ({ isModal = false }) => {
     }
 
     const handleLike = async () => {
+        if (!user) {
+            toast.error("Please login to like tweets")
+            return
+        }
+
+        // Optimistic update
+        const wasLiked = isLiked
+        const newLikedState = !isLiked
+        setIsLiked(newLikedState)
+        setLikesCount((prev) => {
+            const newCount = newLikedState ? prev + 1 : prev - 1
+            return Math.max(0, newCount) // Prevent negative counts
+        })
+
         try {
-            const response = await toggleTweetLike(tweet._id)
-            setIsLiked(response.data.isliked)
-            setLikesCount((prev) =>
-                response.data.isliked ? prev + 1 : prev - 1
-            )
+            await toggleTweetLike(tweet._id)
+            // Show success toast with context
+            toast.success(newLikedState ? "Liked" : "Unliked")
         } catch (error) {
-            toast.error("Failed to like post")
+            // Revert on error
+            setIsLiked(wasLiked)
+            setLikesCount((prev) => (newLikedState ? prev - 1 : prev + 1))
+            console.error("Error liking tweet:", error)
+            toast.error("Failed to like tweet")
         }
     }
 

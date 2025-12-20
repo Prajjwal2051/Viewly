@@ -28,11 +28,21 @@ const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
             try {
                 let data
                 if (tweetId) {
+                    console.log(
+                        "[CommentSection] Fetching tweet comments:",
+                        tweetId
+                    )
                     data = await getTweetComments(tweetId, 1, 10)
                 } else if (videoId) {
+                    console.log(
+                        "[CommentSection] Fetching video comments:",
+                        videoId
+                    )
                     data = await getVideoComments(videoId, 1, 10)
                 }
 
+                console.log("[CommentSection] Fetched data:", data)
+                console.log("[CommentSection] Comments array:", data?.comments)
                 setComments(data?.comments || [])
                 setHasMore(data?.hasNextPage)
             } catch (error) {
@@ -57,12 +67,32 @@ const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
         setSubmitting(true)
         try {
             // Pass both, let api helper handle nulls
-            const addedComment = await addComment(newComment, videoId, tweetId)
+            console.log("[CommentSection] Adding comment:", {
+                content: newComment,
+                videoId,
+                tweetId,
+            })
+            const response = await addComment(newComment, videoId, tweetId)
+            console.log("[CommentSection] Add response:", response)
+            const addedComment = response.data || response
+            console.log("[CommentSection] Added comment:", addedComment)
 
-            setComments((prev) => [addedComment, ...prev])
+            // Ensure owner details are present for immediate display
+            const commentWithOwner = {
+                ...addedComment,
+                ownerDetails: addedComment.ownerDetails || {
+                    _id: user._id,
+                    username: user.username,
+                    fullName: user.fullName,
+                    avatar: user.avatar,
+                },
+            }
+
+            setComments((prev) => [commentWithOwner, ...prev])
             setNewComment("")
             toast.success("Comment added")
         } catch (error) {
+            console.error("Failed to add comment:", error)
             toast.error("Failed to post comment")
         } finally {
             setSubmitting(false)
