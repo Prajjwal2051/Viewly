@@ -126,7 +126,7 @@ const ProfilePage = () => {
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 relative">
+                    <div className="w-full h-full bg-gradient-to-r from-red-600 via-red-700 to-red-800 relative">
                         {/* Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
@@ -138,100 +138,88 @@ const ProfilePage = () => {
                 )}
             </div>
 
-            {/* Profile Header Card */}
-            <div className="bg-[#1E2021] rounded-2xl shadow-sm border border-gray-100 p-8 mb-8 -mt-24 relative z-10">
-                <div className="flex flex-col md:flex-row items-center gap-8">
-                    {/* Avatar */}
-                    <div className="relative group">
-                        <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-red-500 to-pink-500">
-                            <img
-                                src={
-                                    user?.avatar ||
-                                    "https://via.placeholder.com/150"
-                                }
-                                alt={user?.username}
-                                className="w-full h-full rounded-full object-cover border-4 border-white"
-                            />
-                        </div>
+            {/* Profile Header Area - Notion Style */}
+            <div className="relative mb-8 px-4">
+                {/* Floating Avatar - Overlapping Banner */}
+                <div className="absolute -top-16 left-4 md:left-8">
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1.5 bg-[#121212]">
+                        <img
+                            src={
+                                user?.avatar ||
+                                "https://via.placeholder.com/150"
+                            }
+                            alt={user?.username}
+                            className="w-full h-full rounded-full object-cover"
+                        />
+                    </div>
+                </div>
+
+                {/* Edit/Subscribe Button - Top Right aligned with Avatar area */}
+                <div className="flex justify-end pt-4 mb-4">
+                    {isOwnProfile ? (
+                        <button
+                            onClick={() => navigate("/settings")}
+                            className="px-4 py-2 bg-[#2A2D2E] hover:bg-[#3F4243] text-white text-sm font-medium rounded transition-colors"
+                        >
+                            Edit Profile
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSubscribe}
+                            disabled={subscribing}
+                            className={`px-6 py-2 font-semibold rounded transition-colors disabled:opacity-50 ${
+                                isSubscribed
+                                    ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
+                                    : "bg-red-600 text-white hover:bg-red-700"
+                            }`}
+                        >
+                            {subscribing
+                                ? "Loading..."
+                                : isSubscribed
+                                  ? "Subscribed"
+                                  : "Subscribe"}
+                        </button>
+                    )}
+                </div>
+
+                {/* Content Flow */}
+                <div className="mt-12 md:mt-16 ml-1">
+                    {/* Name - Huge Title Style */}
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+                        {user?.fullName}
+                    </h1>
+
+                    {/* Handle & Email - Minimal metadata */}
+                    <div className="flex flex-wrap gap-4 text-gray-500 font-medium text-lg mb-6 items-center">
+                        <span>@{user?.username}</span>
+                        {/* Stats inline */}
+                        <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                        <span className="text-gray-400">
+                            {loading
+                                ? "..."
+                                : stats.subscribers.toLocaleString()}{" "}
+                            {stats.subscribers === 1
+                                ? "Subscriber"
+                                : "Subscribers"}
+                        </span>
+                        <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                        <span className="text-gray-400">
+                            {loading ? "..." : stats.videos.toLocaleString()}{" "}
+                            {stats.videos === 1 ? "Video" : "Videos"}
+                        </span>
                     </div>
 
-                    {/* User Info */}
-                    <div className="flex-1 text-center md:text-left space-y-2">
-                        <h1 className="text-3xl font-bold text-white font-Playfair_Display">
-                            {user?.fullName}
-                        </h1>
-                        <p className="text-lg text-gray-500 font-medium">
-                            @{user?.username}
-                        </p>
-                        <p className="text-gray-400 max-w-lg">{user?.email}</p>
-
-                        {/* Stats - Horizontal Stack */}
-                        <div className="flex items-center justify-center md:justify-start gap-8 mt-6 pt-6 border-t border-gray-100">
-                            <div className="text-center md:text-left">
-                                <span className="block text-2xl font-bold text-white">
-                                    {loading ? (
-                                        <Loader2 className="inline-block w-6 h-6 animate-spin" />
-                                    ) : (
-                                        stats.subscribers.toLocaleString()
-                                    )}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                    {stats.subscribers === 1
-                                        ? "Subscriber"
-                                        : "Subscribers"}
-                                </span>
-                            </div>
-                            <div className="text-center md:text-left">
-                                <span className="block text-2xl font-bold text-white">
-                                    {loading ? (
-                                        <Loader2 className="inline-block w-6 h-6 animate-spin" />
-                                    ) : (
-                                        stats.videos.toLocaleString()
-                                    )}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                    {stats.videos === 1 ? "Video" : "Videos"}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Bio Section */}
-                        {user?.bio && (
-                            <div className="mt-6 pt-6 border-t border-gray-100">
-                                <p className="text-gray-400 leading-relaxed">
+                    {/* Bio - Notion Callout Block Style */}
+                    {user?.bio && (
+                        <div className="bg-[#2A2D2E] rounded-md p-4 mb-8 flex gap-4 items-start max-w-4xl border border-transparent hover:border-gray-600 transition-colors">
+                            <span className="text-2xl">💡</span>
+                            <div className="flex-1">
+                                <p className="text-gray-300 leading-relaxed font-normal">
                                     {user.bio}
                                 </p>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-3">
-                        {isOwnProfile ? (
-                            <button
-                                onClick={() => navigate("/settings")}
-                                className="px-6 py-2 bg-[#2A2D2E] hover:bg-gray-200 text-white font-medium rounded-full transition-colors"
-                            >
-                                Edit Profile
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSubscribe}
-                                disabled={subscribing}
-                                className={`px-6 py-2 font-semibold rounded-full transition-colors disabled:opacity-50 ${
-                                    isSubscribed
-                                        ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
-                                        : "bg-red-600 text-white hover:bg-red-700"
-                                }`}
-                            >
-                                {subscribing
-                                    ? "Loading..."
-                                    : isSubscribed
-                                      ? "Subscribed"
-                                      : "Subscribe"}
-                            </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react"
 import TweetCard from "./TweetCard"
 import { getUserTweets, getAllTweets } from "../../api/tweetApi"
-import { Loader2 } from "lucide-react"
+import { Loader2, MessageSquare } from "lucide-react"
+import EmptyState from "../ui/EmptyState"
 
 const TweetList = ({ userId, limit }) => {
     const [tweets, setTweets] = useState([])
@@ -76,9 +77,11 @@ const TweetList = ({ userId, limit }) => {
 
     if (tweets.length === 0) {
         return (
-            <div className="text-center p-12 bg-[#2A2D2E] rounded-xl border border-dashed border-gray-300">
-                <p className="text-gray-500 text-lg">No posts yet.</p>
-            </div>
+            <EmptyState
+                title="No tweets yet"
+                description="This user hasn't posted any tweets."
+                icon={MessageSquare}
+            />
         )
     }
 

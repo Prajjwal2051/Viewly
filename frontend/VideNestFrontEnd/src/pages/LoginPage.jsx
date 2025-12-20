@@ -11,6 +11,9 @@ import toast from "react-hot-toast"
 import Input from "../components/layout/ui/Input"
 import Button from "../components/layout/ui/Button"
 import authBgBright from "../assets/auth_bg_bright.png"
+import { Eye, EyeOff, Info, Github, Mail } from "lucide-react"
+import developerProfile from "../assets/developer_profile.jpg"
+
 console.log("Login Background Path:", authBgBright)
 
 const LoginPage = () => {
@@ -19,6 +22,7 @@ const LoginPage = () => {
         usernameOrEmail: "",
         password: "",
     })
+    const [showPassword, setShowPassword] = useState(false)
 
     const navigate = useNavigate()
     const dispatch = useDispatch()
@@ -96,7 +100,80 @@ const LoginPage = () => {
                 </div>
 
                 {/* Right Side: Form Card (Removed border) */}
-                <div className="w-full md:w-[480px] bg-white rounded-[32px] shadow-2xl p-8">
+                <div className="w-full md:w-[480px] bg-white rounded-[32px] shadow-2xl p-8 relative group/card">
+                    {/* Developer Info Icon */}
+                    <div className="absolute top-6 right-6 z-20">
+                        <div className="relative group/info">
+                            <Info
+                                size={24}
+                                className="text-gray-400 hover:text-red-600 cursor-pointer transition-colors"
+                            />
+
+                            {/* Tooltip */}
+                            <div className="absolute right-0 top-8 w-64 bg-[#1E2021]/95 backdrop-blur-md text-white p-4 rounded-2xl shadow-xl opacity-0 invisible group-hover/info:opacity-100 group-hover/info:visible transition-all duration-300 transform origin-top-right scale-95 group-hover/info:scale-100 border border-gray-700/50">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="relative">
+                                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-red-600 shadow-md">
+                                            <img
+                                                src={developerProfile}
+                                                alt="Prajjwal Sahu"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-[#1E2021]"></div>
+                                    </div>
+
+                                    <div className="text-center">
+                                        <h3 className="font-bold text-lg font-['Outfit'] text-white">
+                                            Prajjwal Sahu
+                                        </h3>
+                                        <p className="text-xs text-gray-400 font-['Calibri']">
+                                            Full Stack Developer
+                                        </p>
+                                    </div>
+
+                                    <div className="w-full h-[1px] bg-gray-700/50 my-1"></div>
+
+                                    <div className="flex flex-col gap-2 w-full">
+                                        <a
+                                            href="https://github.com/Prajjwal2051/VidNest"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors group/link"
+                                        >
+                                            <div className="bg-gray-800 p-1.5 rounded-md group-hover/link:bg-black transition-colors">
+                                                <Github
+                                                    size={16}
+                                                    className="text-white"
+                                                />
+                                            </div>
+                                            <span className="text-sm font-medium text-gray-300 group-hover/link:text-white">
+                                                VidNest Repo
+                                            </span>
+                                        </a>
+
+                                        <a
+                                            href="mailto:prajjwal2051@gmail.com"
+                                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors group/link"
+                                        >
+                                            <div className="bg-gray-800 p-1.5 rounded-md group-hover/link:bg-red-600 transition-colors">
+                                                <Mail
+                                                    size={16}
+                                                    className="text-white"
+                                                />
+                                            </div>
+                                            <span className="text-sm font-medium text-gray-300 group-hover/link:text-white">
+                                                prajjwal2051@gmail.com
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                                {/* Arrow */}
+                                <div className="absolute -top-2 right-1 w-4 h-4 bg-[#1E2021]/95 border-l border-t border-gray-700/50 transform rotate-45"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className="flex justify-center mb-4">
@@ -122,21 +199,34 @@ const LoginPage = () => {
                             value={formData.usernameOrEmail}
                             onChange={handleChange}
                             required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
+                            className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri']"
                             disabled={loading}
                         />
 
                         {/* Password Input */}
-                        <Input
-                            type="password"
-                            name="password"
-                            placeholder="Password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                            className="bg-gray-100 border-transparent rounded-2xl py-3 px-4 text-white placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all shadow-inner font-['Outfit']"
-                            disabled={loading}
-                        />
+                        <div className="relative">
+                            <Input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                placeholder="Password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri'] pr-12"
+                                disabled={loading}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={20} />
+                                ) : (
+                                    <Eye size={20} />
+                                )}
+                            </button>
+                        </div>
 
                         <div className="text-right">
                             <a
