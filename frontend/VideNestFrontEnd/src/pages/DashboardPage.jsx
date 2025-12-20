@@ -11,6 +11,8 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { getAllVideos, deleteVideo } from "../api/videoApi"
+import { getUserTweets } from "../api/tweetApi"
+import { getUserChannelProfile } from "../api/userApi"
 import {
     BarChart3,
     Video as VideoIcon,
@@ -34,6 +36,7 @@ const DashboardPage = () => {
         totalSubscribers: 0,
     })
     const [videos, setVideos] = useState([])
+    const [tweets, setTweets] = useState([])
     const [loading, setLoading] = useState(true)
     const [deleting, setDeleting] = useState(null)
 
@@ -66,10 +69,23 @@ const DashboardPage = () => {
                 0
             )
 
+            // Fetch user channel profile for fresh subscriber count
+            const channelProfile = await getUserChannelProfile(user.username)
+            const subscriberCount =
+                channelProfile.data?.subscribersCount ||
+                channelProfile.subscribersCount ||
+                user.subscribersCount ||
+                0
+
+            // Fetch user tweets
+            const tweetsResponse = await getUserTweets(user._id)
+            const userTweets = tweetsResponse.data || tweetsResponse || []
+            setTweets(userTweets)
+
             setStats({
                 totalVideos: userVideos.length,
                 totalViews,
-                totalSubscribers: user.subscribersCount || 0,
+                totalSubscribers: subscriberCount,
             })
         } catch (error) {
             console.error("Failed to load dashboard data:", error)
@@ -232,11 +248,12 @@ const DashboardPage = () => {
                                         >
                                             <td className="p-4">
                                                 <div className="flex items-center gap-4">
-                                                    <img
-                                                        src={video.thumbnail}
-                                                        alt={video.title}
-                                                        className="w-32 h-18 object-cover rounded-lg"
-                                                    />
+                                                    <div className="w-32 h-18 bg-gray-800 rounded-lg flex items-center justify-center">
+                                                        <VideoIcon
+                                                            className="text-gray-500"
+                                                            size={24}
+                                                        />
+                                                    </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h4
                                                             className="font-semibold text-white line-clamp-2 cursor-pointer hover:text-red-600"
@@ -302,6 +319,85 @@ const DashboardPage = () => {
                                                             <Trash2 size={18} />
                                                         )}
                                                     </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                {/* Tweets Table */}
+                <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden mt-8">
+                    <div className="p-6 border-b border-[#2A2D2E]">
+                        <h2 className="text-2xl font-bold">Your Tweets</h2>
+                    </div>
+
+                    {tweets.length === 0 ? (
+                        <div className="p-12 text-center">
+                            <MessageSquare
+                                className="mx-auto mb-4 text-gray-400"
+                                size={48}
+                            />
+                            <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                No tweets yet
+                            </h3>
+                            <p className="text-gray-500 mb-4">
+                                Post your first tweet to get started
+                            </p>
+                            <button
+                                onClick={() => navigate("/upload")}
+                                className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
+                            >
+                                Post Tweet
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-[#2A2D2E]/50">
+                                    <tr>
+                                        <th className="text-left p-4 font-semibold text-gray-300">
+                                            Tweet Content
+                                        </th>
+                                        <th className="text-center p-4 font-semibold text-gray-300">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Heart size={16} />
+                                                Likes
+                                            </div>
+                                        </th>
+                                        <th className="text-center p-4 font-semibold text-gray-300">
+                                            Date
+                                        </th>
+                                        <th className="text-right p-4 font-semibold text-gray-300">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tweets.map((tweet) => (
+                                        <tr
+                                            key={tweet._id}
+                                            className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E]/30 transition-colors"
+                                        >
+                                            <td className="p-4">
+                                                <h4 className="font-semibold text-white line-clamp-2">
+                                                    {tweet.content}
+                                                </h4>
+                                            </td>
+                                            <td className="p-4 text-center text-gray-300">
+                                                {tweet.likes || 0}
+                                            </td>
+                                            <td className="p-4 text-center text-gray-400 text-sm">
+                                                {new Date(
+                                                    tweet.createdAt
+                                                ).toLocaleDateString()}
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {/* Add tweet actions here if needed */}
                                                 </div>
                                             </td>
                                         </tr>

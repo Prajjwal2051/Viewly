@@ -13,7 +13,10 @@ import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { getVideoById, getAllVideos } from "../api/videoApi"
 import { toggleVideoLike, getIsVideoLiked } from "../api/likeApi"
-import { toggleSubscription } from "../api/subscriptionApi"
+import {
+    toggleSubscription,
+    getSubscriptionStatus,
+} from "../api/subscriptionApi"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
 import VideoCard from "../components/video/VideoCard"
 import {
@@ -255,18 +258,36 @@ const VideoPlayerPage = ({ isModal = false }) => {
         }
     }, [videoId, navigate, isModal, user])
 
-    // Subscribe Handler
+    // Fetch follow status
+    useEffect(() => {
+        const fetchFollowStatus = async () => {
+            if (user && video?.owner?._id) {
+                try {
+                    const data = await getSubscriptionStatus(video.owner._id)
+                    setIsSubscribed(data.isSubscribed || false)
+                } catch (error) {
+                    console.error("Failed to fetch follow status:", error)
+                }
+            }
+        }
+        fetchFollowStatus()
+    }, [video?.owner?._id, user])
+
+    // Follow Handler
     const handleSubscribe = async () => {
         if (!user) {
-            toast.error("Please login to subscribe")
+            toast.error("Please login to follow")
             navigate("/login")
             return
         }
 
         if (user._id === video.owner._id) {
-            toast.error("You cannot subscribe to your own channel")
+            toast.error("You cannot follow yourself")
             return
         }
+
+        // Prevent rapid clicks
+        if (subscribing) return
 
         setSubscribing(true)
         const wasSubscribed = isSubscribed
@@ -276,13 +297,33 @@ const VideoPlayerPage = ({ isModal = false }) => {
         setSubscriberCount((prev) => (wasSubscribed ? prev - 1 : prev + 1))
 
         try {
-            await toggleSubscription(video.owner._id)
-            toast.success(wasSubscribed ? "Unsubscribed" : "Subscribed!")
+            const response = await toggleSubscription(video.owner._id)
+            console.log("Toggle response:", response)
+
+            // Use actual API response
+            const newState =
+                response.data?.isSubscribed ??
+                response.isSubscribed ??
+                !wasSubscribed
+            setIsSubscribed(newState)
+
+            // Fix subscriber count if needed
+            if (newState !== !wasSubscribed) {
+                setSubscriberCount((prev) =>
+                    wasSubscribed ? prev + 1 : prev - 1
+                )
+            }
+
+            const username = video.owner?.username || "user"
+            toast.success(
+                newState ? `Following @${username}` : `Unfollowed @${username}`
+            )
         } catch (error) {
             // Revert on error
             setIsSubscribed(wasSubscribed)
             setSubscriberCount((prev) => (wasSubscribed ? prev + 1 : prev - 1))
-            toast.error("Failed to update subscription")
+            toast.error("Failed to update follow status")
+            console.error("Follow error:", error)
         } finally {
             setSubscribing(false)
         }
@@ -680,11 +721,11 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                         </span>
                                         <button
                                             onClick={handleSubscribe}
-                                            className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-white/10 text-white" : "bg-red-600 text-white"}`}
+                                            className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-red-600/20 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white" : "bg-red-600 text-white hover:bg-red-700"}`}
                                         >
                                             {isSubscribed
-                                                ? "Subscribed"
-                                                : "Subscribe"}
+                                                ? "Unfollow"
+                                                : "Follow"}
                                         </button>
                                     </div>
                                 </div>
@@ -752,7 +793,10 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                 </div>
 
                                 {/* Use actual CommentSection component */}
-                                <CommentSection videoId={videoId} hideHeader={false} />
+                                <CommentSection
+                                    videoId={videoId}
+                                    hideHeader={false}
+                                />
                             </div>
                         </div>
                     )}
@@ -817,7 +861,7 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                             : "subscribers"}
                                     </p>
                                 </div>
-                                {/* Subscribe Button */}
+                                {/* Follow Button */}
                                 <button
                                     onClick={handleSubscribe}
                                     disabled={
@@ -826,15 +870,15 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                     }
                                     className={`ml-auto px-6 py-2 font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                         isSubscribed
-                                            ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
-                                            : "bg-[#1E2021] text-black hover:bg-gray-200"
+                                            ? "bg-red-600/20 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+                                            : "bg-red-600 text-white hover:bg-red-700"
                                     }`}
                                 >
                                     {subscribing
                                         ? "Loading..."
                                         : isSubscribed
-                                          ? "Subscribed"
-                                          : "Subscribe"}
+                                          ? "Unfollow"
+                                          : "Follow"}
                                 </button>
                             </div>
 

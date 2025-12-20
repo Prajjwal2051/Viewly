@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getTweetById, toggleTweetLike } from "../api/tweetApi"
 import { getIsTweetLiked } from "../api/likeApi"
+import { getSubscriptionStatus } from "../api/subscriptionApi"
 import { toggleSubscription } from "../api/subscriptionApi"
 import CommentSection from "../components/comments/CommentSection"
 import {
@@ -26,6 +27,7 @@ const TweetPage = ({ isModal = false }) => {
     const [isLiked, setIsLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(0)
     const [isSubscribed, setIsSubscribed] = useState(false)
+    const [isFollowing, setIsFollowing] = useState(false) // Loading state for follow button
     const [showComments, setShowComments] = useState(false)
 
     useEffect(() => {
@@ -69,23 +71,65 @@ const TweetPage = ({ isModal = false }) => {
         fetchLikeStatus()
     }, [tweetId, user])
 
+    // Fetch follow status
+    useEffect(() => {
+        const fetchFollowStatus = async () => {
+            if (user && tweet?.ownerDetails?._id) {
+                try {
+                    const data = await getSubscriptionStatus(
+                        tweet.ownerDetails._id
+                    )
+                    setIsSubscribed(data.isSubscribed || false)
+                } catch (error) {
+                    console.error("Failed to fetch follow status:", error)
+                }
+            }
+        }
+        fetchFollowStatus()
+    }, [tweet?.ownerDetails?._id, user])
+
     const handleSubscribe = async (e) => {
         e?.stopPropagation()
+
         if (!user) {
-            toast.error("Please login to subscribe")
+            toast.error("Please login to follow")
             return
         }
-        if (user._id === tweet?.ownerDetails?._id) return
 
+        // Prevent self-follow with error message
+        if (user._id === tweet?.ownerDetails?._id) {
+            toast.error("You cannot follow yourself")
+            return
+        }
+
+        // Prevent rapid clicks
+        if (isFollowing) return
+
+        setIsFollowing(true)
         const wasSubscribed = isSubscribed
         setIsSubscribed(!wasSubscribed) // Optimistic
 
         try {
-            await toggleSubscription(tweet.ownerDetails._id)
-            toast.success(wasSubscribed ? "Unsubscribed" : "Subscribed!")
+            const response = await toggleSubscription(tweet.ownerDetails._id)
+            console.log("Toggle response:", response)
+
+            // Use actual API response
+            const newState =
+                response.data?.isSubscribed ??
+                response.isSubscribed ??
+                !wasSubscribed
+            setIsSubscribed(newState)
+
+            const username = tweet.ownerDetails?.username || "user"
+            toast.success(
+                newState ? `Following @${username}` : `Unfollowed @${username}`
+            )
         } catch (error) {
             setIsSubscribed(wasSubscribed)
-            toast.error("Failed to update subscription")
+            toast.error("Failed to update follow status")
+            console.error("Follow error:", error)
+        } finally {
+            setIsFollowing(false)
         }
     }
 
@@ -252,12 +296,19 @@ const TweetPage = ({ isModal = false }) => {
                                 >
                                     {tweet.ownerDetails?.fullName}
                                 </span>
-                                <button
-                                    onClick={handleSubscribe}
-                                    className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-white/20 text-gray-200" : "bg-white text-black hover:bg-gray-200"}`}
-                                >
-                                    {isSubscribed ? "Following" : "Follow"}
-                                </button>
+                                {user?._id !== tweet.ownerDetails?._id && (
+                                    <button
+                                        onClick={handleSubscribe}
+                                        disabled={isFollowing}
+                                        className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isSubscribed ? "bg-red-600/20 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white" : "bg-red-600 text-white hover:bg-red-700"}`}
+                                    >
+                                        {isFollowing
+                                            ? "..."
+                                            : isSubscribed
+                                              ? "Unfollow"
+                                              : "Follow"}
+                                    </button>
+                                )}
                             </div>
                             <span className="text-xs text-gray-300">
                                 @{tweet.ownerDetails?.username}

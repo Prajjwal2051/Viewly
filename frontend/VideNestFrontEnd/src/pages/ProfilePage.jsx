@@ -7,6 +7,7 @@ import TweetList from "../components/tweet/TweetList"
 import EmptyState from "../components/ui/EmptyState"
 import { getAllVideos } from "../api/videoApi"
 import { toggleSubscription } from "../api/subscriptionApi"
+import { getUserChannelProfile } from "../api/userApi"
 import toast from "react-hot-toast"
 
 // Tab Configuration
@@ -44,24 +45,45 @@ const ProfilePage = () => {
             try {
                 setLoading(true)
 
-                // Fetch all videos and filter by user
-                const response = await getAllVideos()
-                const allVideos = response.data?.videos || response.videos || []
+                // Fetch channel profile with latest subscriber count
+                if (user?.username) {
+                    const channelResponse = await getUserChannelProfile(
+                        user.username
+                    )
+                    console.log("Channel profile:", channelResponse)
 
-                // Filter user's videos
-                const filtered = allVideos.filter(
-                    (v) => v.owner?._id === user._id || v.owner === user._id
-                )
+                    const channelData = channelResponse.data || channelResponse
+                    const subscriberCount =
+                        channelData.subscribersCount ||
+                        channelData.subscriberCount ||
+                        user?.subscribersCount ||
+                        0
 
-                setUserVideos(filtered)
+                    // Fetch all videos and filter by user
+                    const response = await getAllVideos()
+                    const allVideos =
+                        response.data?.videos || response.videos || []
 
-                // Set stats
-                setStats({
-                    subscribers: user?.subscribersCount || 0,
-                    videos: filtered.length,
-                })
+                    // Filter user's videos
+                    const filtered = allVideos.filter(
+                        (v) => v.owner?._id === user._id || v.owner === user._id
+                    )
+
+                    setUserVideos(filtered)
+
+                    // Set stats with fresh subscriber count
+                    setStats({
+                        subscribers: subscriberCount,
+                        videos: filtered.length,
+                    })
+                }
             } catch (error) {
                 console.error("Failed to load profile data:", error)
+                // Fallback to user data if API fails
+                setStats({
+                    subscribers: user?.subscribersCount || 0,
+                    videos: userVideos.length,
+                })
             } finally {
                 setLoading(false)
             }
