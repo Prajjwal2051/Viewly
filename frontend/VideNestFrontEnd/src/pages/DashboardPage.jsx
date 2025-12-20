@@ -10,8 +10,8 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
-import { getAllVideos, deleteVideo } from "../api/videoApi"
-import { getUserTweets } from "../api/tweetApi"
+import { getAllVideos, deleteVideo, updateVideo } from "../api/videoApi"
+import { getUserTweets, deleteTweet, updateTweet } from "../api/tweetApi"
 import { getUserChannelProfile } from "../api/userApi"
 import {
     BarChart3,
@@ -23,6 +23,8 @@ import {
     Trash2,
     Edit,
     Loader2,
+    X,
+    Upload,
 } from "lucide-react"
 import toast from "react-hot-toast"
 
@@ -34,11 +36,13 @@ const DashboardPage = () => {
         totalVideos: 0,
         totalViews: 0,
         totalSubscribers: 0,
+        totalTweets: 0,
     })
     const [videos, setVideos] = useState([])
     const [tweets, setTweets] = useState([])
     const [loading, setLoading] = useState(true)
     const [deleting, setDeleting] = useState(null)
+    const [editingItem, setEditingItem] = useState(null) // { type: 'video'|'tweet', data: ... }
 
     useEffect(() => {
         if (!user) {
@@ -86,6 +90,7 @@ const DashboardPage = () => {
                 totalVideos: userVideos.length,
                 totalViews,
                 totalSubscribers: subscriberCount,
+                totalTweets: userTweets.length,
             })
         } catch (error) {
             console.error("Failed to load dashboard data:", error)
@@ -116,9 +121,38 @@ const DashboardPage = () => {
         }
     }
 
-    const handleEdit = (videoId) => {
-        navigate(`/video/${videoId}`)
-        toast.info("Edit functionality coming soon!")
+    const handleDeleteTweet = async (tweetId) => {
+        if (!window.confirm("Are you sure you want to delete this tweet?")) {
+            return
+        }
+
+        setDeleting(tweetId)
+        try {
+            await deleteTweet(tweetId)
+            setTweets((prev) => prev.filter((t) => t._id !== tweetId))
+            setStats((prev) => ({
+                ...prev,
+                totalTweets: prev.totalTweets - 1,
+            }))
+            toast.success("Tweet deleted successfully")
+        } catch (error) {
+            toast.error("Failed to delete tweet")
+        } finally {
+            setDeleting(null)
+        }
+    }
+
+    const handleEdit = (video) => {
+        setEditingItem({ type: "video", data: video })
+    }
+
+    const handleEditTweet = (tweet) => {
+        setEditingItem({ type: "tweet", data: tweet })
+    }
+
+    const handleUpdateSuccess = () => {
+        setEditingItem(null)
+        fetchDashboardData() // Refresh data
     }
 
     if (loading) {
@@ -143,7 +177,7 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {/* Total Videos */}
                     <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -183,6 +217,20 @@ const DashboardPage = () => {
                         </p>
                         <h3 className="text-3xl font-bold text-white">
                             {stats.totalSubscribers.toLocaleString()}
+                        </h3>
+                    </div>
+
+                    {/* Total Tweets */}
+                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <MessageSquare className="text-red-500" size={32} />
+                            <BarChart3 className="text-red-400/30" size={48} />
+                        </div>
+                        <p className="text-gray-400 text-sm mb-1">
+                            Total Tweets
+                        </p>
+                        <h3 className="text-3xl font-bold text-white">
+                            {stats.totalTweets.toLocaleString()}
                         </h3>
                     </div>
                 </div>
@@ -248,10 +296,10 @@ const DashboardPage = () => {
                                         >
                                             <td className="p-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-32 h-18 bg-gray-800 rounded-lg flex items-center justify-center">
+                                                    <div className="w-32 h-20 bg-gray-800 rounded-lg flex items-center justify-center">
                                                         <VideoIcon
                                                             className="text-gray-500"
-                                                            size={24}
+                                                            size={32}
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -287,9 +335,7 @@ const DashboardPage = () => {
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
                                                         onClick={() =>
-                                                            handleEdit(
-                                                                video._id
-                                                            )
+                                                            handleEdit(video)
                                                         }
                                                         className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
                                                         title="Edit"
@@ -397,7 +443,40 @@ const DashboardPage = () => {
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    {/* Add tweet actions here if needed */}
+                                                    <button
+                                                        onClick={() =>
+                                                            handleEditTweet(
+                                                                tweet
+                                                            )
+                                                        }
+                                                        className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleDeleteTweet(
+                                                                tweet._id
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            deleting ===
+                                                            tweet._id
+                                                        }
+                                                        className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
+                                                        title="Delete"
+                                                    >
+                                                        {deleting ===
+                                                        tweet._id ? (
+                                                            <Loader2
+                                                                size={18}
+                                                                className="animate-spin"
+                                                            />
+                                                        ) : (
+                                                            <Trash2 size={18} />
+                                                        )}
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -407,6 +486,242 @@ const DashboardPage = () => {
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Edit Modal */}
+            {editingItem && (
+                <EditModal
+                    isOpen={!!editingItem}
+                    onClose={() => setEditingItem(null)}
+                    item={editingItem}
+                    onSuccess={handleUpdateSuccess}
+                />
+            )}
+        </div>
+    )
+}
+
+// Edit Modal Component
+const EditModal = ({ isOpen, onClose, item, onSuccess }) => {
+    const isVideo = item.type === "video"
+    const [formData, setFormData] = useState({
+        title: isVideo ? item.data.title : "",
+        description: isVideo ? item.data.description : "",
+        content: !isVideo ? item.data.content : "",
+        thumbnail: null,
+    })
+    const [loading, setLoading] = useState(false)
+    const [preview, setPreview] = useState(
+        isVideo ? item.data.thumbNail || item.data.thumbnail : null
+    )
+
+    const handleChange = (e) => {
+        const { name, value, files } = e.target
+        if (name === "thumbnail" && files[0]) {
+            setFormData((prev) => ({ ...prev, thumbnail: files[0] }))
+            setPreview(URL.createObjectURL(files[0]))
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }))
+        }
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setLoading(true)
+
+        try {
+            if (isVideo) {
+                // Update Video
+                // If we have a file, specifically use updateVideo
+                // The controller expects a PATCH with field updates
+                // If file is present, it handles cloud upload
+
+                // We need to send updates.
+                // Note: The generic updateVideo in API might treat usage of FormData differently or expects JSON if no file?
+                // Actually updateVideo API usually handles generic requests.
+                // Let's verify API signature: `updateVideo = async (videoId, data)`
+                // If we are sending file, data should be FormData.
+
+                let dataToSend
+                const isMultipart = !!formData.thumbnail
+
+                if (isMultipart) {
+                    dataToSend = new FormData()
+                    dataToSend.append("title", formData.title)
+                    dataToSend.append("description", formData.description)
+                    if (formData.thumbnail) {
+                        dataToSend.append("thumbnail", formData.thumbnail)
+                    }
+                } else {
+                    // Send JSON if no file, but wait, updateVideo API likely uses patch directly.
+                    // Let's check api/videoApi.js again.
+                    // It says: `apiClient.patch(\`/videos/${videoId}\`, data)`
+                    // If we pass an object, axios sends JSON. If FormData, it sets multipart.
+                    // Keep common fields
+                    dataToSend = {
+                        title: formData.title,
+                        description: formData.description,
+                    }
+                }
+
+                // Correction: The controller checks `req.file?.path`.
+                // This means the request MUST be multipart/form-data if a file is involved.
+                // If NO file is involved, we can send JSON `title` and `description`.
+                // However, our `updateVideo` function in `videoApi.js` (I should check source)
+                // usually blindly passes `data`.
+                // If I pass a plain object to axios patch, it sends JSON.
+                // If I pass FormData, it sends multipart.
+                // So: if thumbnail is new, use FormData. If not, use JSON.
+
+                if (formData.thumbnail) {
+                    const fd = new FormData()
+                    fd.append("title", formData.title)
+                    fd.append("description", formData.description)
+                    fd.append("thumbnail", formData.thumbnail)
+                    await updateVideo(item.data._id, fd)
+                } else {
+                    await updateVideo(item.data._id, {
+                        title: formData.title,
+                        description: formData.description,
+                    })
+                }
+
+                toast.success("Video updated successfully")
+            } else {
+                // Update Tweet
+                await updateTweet(item.data._id, formData.content)
+                toast.success("Tweet updated successfully")
+            }
+            onSuccess()
+        } catch (error) {
+            console.error("Update failed:", error)
+            toast.error(error.message || "Failed to update")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (!isOpen) return null
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div
+                className={`bg-[#1E2021] border border-[#2A2D2E] rounded-2xl w-full ${isVideo ? "max-w-2xl" : "max-w-lg"} shadow-2xl overflow-hidden`}
+            >
+                <div className="flex justify-between items-center p-6 border-b border-[#2A2D2E]">
+                    <h3 className="text-xl font-bold text-white">
+                        {isVideo ? "Edit Video" : "Edit Tweet"}
+                    </h3>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-white transition-colors"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6">
+                    {isVideo ? (
+                        <div className="space-y-6">
+                            {/* Thumbnail Preview & Upload */}
+                            <div className="flex gap-6 flex-col md:flex-row">
+                                <div className="w-full md:w-1/3 relative aspect-video bg-black rounded-lg overflow-hidden group">
+                                    {preview ? (
+                                        <img
+                                            src={preview}
+                                            alt="Thumbnail"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                            No Thumbnail
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                        <label className="cursor-pointer flex flex-col items-center gap-2 text-white">
+                                            <Upload size={24} />
+                                            <span className="text-xs font-medium">
+                                                Change
+                                            </span>
+                                            <input
+                                                type="file"
+                                                name="thumbnail"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleChange}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                                            Video Title
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="title"
+                                            value={formData.title}
+                                            onChange={handleChange}
+                                            className="w-full bg-[#2A2D2E] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-red-600 transition-colors"
+                                            placeholder="Enter video title"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                                            Description
+                                        </label>
+                                        <textarea
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleChange}
+                                            rows={4}
+                                            className="w-full bg-[#2A2D2E] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-red-600 transition-colors resize-none"
+                                            placeholder="Enter video description"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                                Tweet Content
+                            </label>
+                            <textarea
+                                name="content"
+                                value={formData.content}
+                                onChange={handleChange}
+                                rows={6}
+                                className="w-full bg-[#2A2D2E] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors resize-none text-lg"
+                                placeholder="What's happening?"
+                                required
+                            />
+                        </div>
+                    )}
+
+                    <div className="mt-8 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-6 py-2 bg-[#2A2D2E] hover:bg-gray-700 text-white font-medium rounded-full transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-full transition-colors disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {loading && (
+                                <Loader2 size={18} className="animate-spin" />
+                            )}
+                            {loading ? "Saving..." : "Save Changes"}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     )

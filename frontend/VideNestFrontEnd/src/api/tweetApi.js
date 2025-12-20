@@ -54,3 +54,25 @@ export const getTweetById = async (tweetId) => {
         throw error.response?.data || error
     }
 }
+
+// Update a tweet
+export const updateTweet = async (tweetId, content) => {
+    try {
+        const response = await apiClient.patch(`/tweets/${tweetId}`, {
+            content,
+        })
+        return response.data
+    } catch (error) {
+        throw error.response?.data || error
+    }
+}
+
+// Delete a tweet
+export const deleteTweet = async (tweetId) => {
+    try {
+        const response = await apiClient.delete(`/tweets/${tweetId}`)
+        return response.data
+    } catch (error) {
+        throw error.response?.data || error
+    }
+}
