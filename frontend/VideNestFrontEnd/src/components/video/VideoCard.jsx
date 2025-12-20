@@ -6,8 +6,11 @@
 
 import { useNavigate, useLocation } from "react-router-dom"
 import { formatDistanceToNow } from "date-fns" // Time formatting library
-import { Play, Share2, MessageCircle, User } from "lucide-react"
+import { Play, Share2, User, Heart } from "lucide-react"
 import toast from "react-hot-toast"
+import { useState, useEffect } from "react"
+import { toggleVideoLike, getIsVideoLiked } from "../../api/likeApi"
+import { useSelector } from "react-redux"
 
 /**
  * Props:
@@ -16,6 +19,25 @@ import toast from "react-hot-toast"
 const VideoCard = ({ video }) => {
     const navigate = useNavigate()
     const location = useLocation()
+    const { user } = useSelector((state) => state.auth)
+    const [isLiked, setIsLiked] = useState(false)
+    const [likesCount, setLikesCount] = useState(video.likes || 0)
+
+    // Fetch initial like status when component mounts
+    useEffect(() => {
+        const fetchLikeStatus = async () => {
+            if (user && video._id) {
+                try {
+                    const data = await getIsVideoLiked(video._id)
+                    setIsLiked(data.isLiked)
+                } catch (error) {
+                    // Silent fail - like status will default to false
+                    console.error("Failed to fetch video like status:", error)
+                }
+            }
+        }
+        fetchLikeStatus()
+    }, [video._id, user])
 
     /**
      * FORMAT VIEWS HELPER
@@ -62,13 +84,34 @@ const VideoCard = ({ video }) => {
         e.stopPropagation()
         const link = `${window.location.origin}/video/${video._id}`
         navigator.clipboard.writeText(link)
-        // Show toast notification
-        const toast = document.createElement("div")
-        toast.textContent = "Link copied!"
-        toast.className =
-            "fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-2"
-        document.body.appendChild(toast)
-        setTimeout(() => toast.remove(), 2000)
+        toast.success("Link copied to clipboard!")
+    }
+
+    const handleLike = async (e) => {
+        e.stopPropagation()
+
+        if (!user) {
+            toast.error("Please login to like videos")
+            return
+        }
+
+        // Optimistic update
+        const wasLiked = isLiked
+        const newLikedState = !isLiked
+        setIsLiked(newLikedState)
+        setLikesCount((prev) => {
+            const newCount = newLikedState ? prev + 1 : prev - 1
+            return Math.max(0, newCount) // Prevent negative counts
+        })
+
+        try {
+            await toggleVideoLike(video._id)
+        } catch (error) {
+            // Revert on error
+            setIsLiked(wasLiked)
+            setLikesCount((prev) => (newLikedState ? prev - 1 : prev + 1))
+            toast.error("Failed to like video")
+        }
     }
 
     return (
@@ -97,23 +140,23 @@ const VideoCard = ({ video }) => {
 
                 {/* HOVER OVERLAY - PLAY & ACTIONS */}
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-6 z-10">
-                    {/* Comment Action */}
+                    {/* Like Action */}
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            // Pass openComments: true in state
-                            navigate(`/video/${video._id}`, {
-                                state: {
-                                    background: location,
-                                    openComments: true,
-                                },
-                            })
-                        }}
+                        onClick={handleLike}
                         className="flex flex-col items-center gap-1 group/btn transition-all duration-300 hover:scale-110 active:scale-95"
-                        title="Comment"
+                        title="Like"
                     >
-                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 transition-all duration-300">
-                            <MessageCircle size={20} />
+                        <div
+                            className={`p-3 rounded-full transition-all duration-300 ${
+                                isLiked
+                                    ? "bg-red-600 text-white shadow-lg shadow-red-600/40"
+                                    : "bg-white/20 text-white hover:bg-white/40"
+                            }`}
+                        >
+                            <Heart
+                                size={22}
+                                fill={isLiked ? "currentColor" : "none"}
+                            />
                         </div>
                     </button>
 
@@ -195,6 +238,8 @@ const VideoCard = ({ video }) => {
                     {/* Stats - Adjusted */}
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                         <span>{formatViews(video.views)} views</span>
+                        <span>•</span>
+                        <span>{formatViews(likesCount)} likes</span>
                         <span>•</span>
                         <span>{formatDate(video.createdAt)}</span>
                     </div>

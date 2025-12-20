@@ -28,7 +28,7 @@ export const getUserTweets = async (userId) => {
 // Toggle like on a tweet
 export const toggleTweetLike = async (tweetId) => {
     try {
-        const response = await apiClient.post(`/likes/tweet/${tweetId}`)
+        const response = await apiClient.post(`/like/tweet/${tweetId}`)
         return response.data
     } catch (error) {
         throw error.response?.data || error

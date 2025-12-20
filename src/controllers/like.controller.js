@@ -630,6 +630,40 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     }
 })
 
+/**
+ * GET IS TWEET LIKED CONTROLLER
+ * Checks if the authenticated user has liked a specific tweet
+ *
+ * Purpose:
+ * - Allow frontend to show correct like status (filled heart vs empty heart)
+ *
+ * @route GET /api/v1/like/status/tweet/:tweetId
+ * @access Private
+ */
+const getIsTweetLiked = asyncHandler(async (req, res) => {
+    const { tweetId } = req.params
+    const userId = req.user._id
+
+    if (!mongoose.isValidObjectId(tweetId)) {
+        throw new ApiError(400, "Invalid tweet ID")
+    }
+
+    const existingLike = await like.findOne({
+        tweet: tweetId,
+        likedBy: userId,
+    })
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                { isLiked: !!existingLike },
+                "Like status fetched successfully"
+            )
+        )
+})
+
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
@@ -640,4 +674,5 @@ export {
     getLikedVideos, // GET /likes/videos - Get all videos liked by authenticated user
     getLikedComments, // GET /likes/comments - Get all comments liked by authenticated user
     getIsVideoLiked, // GET /likes/status/v/:videoId - Check if video is liked
+    getIsTweetLiked, // GET /likes/status/tweet/:tweetId - Check if tweet is liked
 }

@@ -27,3 +27,14 @@ export const getIsVideoLiked = async (videoId) => {
     const response = await apiClient.get(`/like/status/video/${videoId}`)
     return response.data
 }
+
+/**
+ * GET TWEET LIKE STATUS
+ * Checks if current user liked a specific tweet
+ */
+export const getIsTweetLiked = async (tweetId) => {
+    const response = await apiClient.get(`/like/status/tweet/${tweetId}`)
+    console.log(`[likeApi] getIsTweetLiked response for ${tweetId}:`, response)
+    console.log(`[likeApi] response.data:`, response.data)
+    return response.data
+}

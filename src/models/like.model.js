@@ -28,9 +28,22 @@ const likeSchema = new mongoose.Schema(
 )
 likeSchema.plugin(mongooseAggregatePaginate)
 
-// and we also need to ensure that a particular user likes a video or comment only once
-likeSchema.index({ video: 1, likedBy: 1 }, { unique: true, sparse: true })
-likeSchema.index({ comment: 1, likedBy: 1 }, { unique: true, sparse: true })
-likeSchema.index({ tweet: 1, likedBy: 1 }, { unique: true, sparse: true })
+// Ensure that a particular user likes a video, comment, or tweet only once
+// Using partial indexes to exclude null values completely from the index
+likeSchema.index(
+    { video: 1, likedBy: 1 },
+    { unique: true, partialFilterExpression: { video: { $type: "objectId" } } }
+)
+likeSchema.index(
+    { comment: 1, likedBy: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { comment: { $type: "objectId" } },
+    }
+)
+likeSchema.index(
+    { tweet: 1, likedBy: 1 },
+    { unique: true, partialFilterExpression: { tweet: { $type: "objectId" } } }
+)
 
 export const like = mongoose.model("Like", likeSchema)

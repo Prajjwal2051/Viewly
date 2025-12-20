@@ -4,16 +4,20 @@
 // Displays tweet content, image, and owner info.
 // Used in profile page and tweet feed.
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Heart, MessageCircle, Share2, User } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { toggleTweetLike } from "../../api/tweetApi"
+import { getIsTweetLiked } from "../../api/likeApi"
 import { toast } from "react-hot-toast"
 import { useNavigate, useLocation } from "react-router-dom"
+import { getOptimizedUrl } from "../../utils/imageUrlHelper"
+import { useSelector } from "react-redux"
 
 const TweetCard = ({ tweet }) => {
     const navigate = useNavigate()
     const location = useLocation()
+    const { user } = useSelector((state) => state.auth)
     const [isLiked, setIsLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(tweet.likes || 0)
 
@@ -21,6 +25,31 @@ const TweetCard = ({ tweet }) => {
         image: tweet.image,
         content: tweet.content,
     })
+
+    // Fetch initial like status when component mounts
+    useEffect(() => {
+        const fetchLikeStatus = async () => {
+            if (user && tweet._id) {
+                try {
+                    console.log(
+                        `[TweetCard] Fetching like status for tweet: ${tweet._id}`
+                    )
+                    const data = await getIsTweetLiked(tweet._id)
+                    console.log(`[TweetCard] Like status response:`, data)
+                    // Backend returns 'isLiked' (capital L) from getIsTweetLiked
+                    setIsLiked(data.isLiked || false)
+                    console.log(
+                        `[TweetCard] Set isLiked to:`,
+                        data.isLiked || false
+                    )
+                } catch (error) {
+                    // Silent fail - like status will default to false
+                    console.error("Failed to fetch tweet like status:", error)
+                }
+            }
+        }
+        fetchLikeStatus()
+    }, [tweet._id, user])
 
     const handleShare = (e) => {
         e.stopPropagation()
@@ -36,14 +65,28 @@ const TweetCard = ({ tweet }) => {
 
     const handleLike = async (e) => {
         e.stopPropagation()
+
+        if (!user) {
+            toast.error("Please login to like tweets")
+            return
+        }
+
+        // Optimistic update
+        const wasLiked = isLiked
+        const newLikedState = !isLiked
+        setIsLiked(newLikedState)
+        setLikesCount((prev) => {
+            const newCount = newLikedState ? prev + 1 : prev - 1
+            return Math.max(0, newCount) // Prevent negative counts
+        })
+
         try {
-            const response = await toggleTweetLike(tweet._id)
-            setIsLiked(response.data.isliked)
-            setLikesCount((prev) =>
-                response.data.isliked ? prev + 1 : prev - 1
-            )
+            await toggleTweetLike(tweet._id)
         } catch (error) {
-            toast.error("Failed to like post")
+            // Revert on error
+            setIsLiked(wasLiked)
+            setLikesCount((prev) => (newLikedState ? prev - 1 : prev + 1))
+            toast.error("Failed to like tweet")
         }
     }
 
@@ -138,7 +181,7 @@ const TweetCard = ({ tweet }) => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation()
-                            handleLike()
+                            handleLike(e)
                         }}
                         className="flex flex-col items-center gap-1 group/btn transition-transform hover:scale-110"
                         title="Like"
