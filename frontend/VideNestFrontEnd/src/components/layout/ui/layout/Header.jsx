@@ -14,6 +14,7 @@ import { logout } from "../../../../store/slices/authSlice.js"
 import { logoutUser } from "../../../../api/authApi"
 import { getUserPlaylists } from "../../../../api/playlistApi"
 import toast from "react-hot-toast"
+import NotificationBell from "../../../notifications/NotificationBell"
 
 const Header = () => {
     const [showUserMenu, setShowUserMenu] = useState(false)
@@ -107,16 +108,8 @@ const Header = () => {
 
                     {/* HEADER ACTIONS */}
                     <div className="flex items-center gap-3">
-                        {/* Notification bell */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate("/activity")}
-                            className="relative hover:bg-[#2A2D2E] rounded-full h-12 w-12 group transition-all duration-300 hover:scale-110 active:scale-95"
-                        >
-                            <Bell className="h-6 w-6 text-gray-500 group-hover:text-red-600 transition-all duration-300 group-hover:animate-pulse" />
-                            <span className="absolute top-3 right-3 h-2 w-2 bg-red-600 rounded-full border-2 border-[#1E2021] animate-pulse"></span>
-                        </Button>
+                        {/* Notification Bell */}
+                        <NotificationBell />
 
                         {/* PLAYLISTS DROPDOWN - Mobile Only */}
                         <div

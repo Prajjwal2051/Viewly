@@ -11,6 +11,11 @@ import toast from "react-hot-toast"
 import { useState, useEffect } from "react"
 import { toggleVideoLike, getIsVideoLiked } from "../../api/likeApi"
 import { useSelector } from "react-redux"
+import {
+    sanitizeVideoTitle,
+    sanitizeDisplayName,
+    sanitizeUsername,
+} from "../../utils/sanitize"
 
 /**
  * Props:
@@ -223,7 +228,7 @@ const VideoCard = ({ video }) => {
                 <div className="flex flex-col min-w-0">
                     {/* Title - Increased Font Size */}
                     <h3 className="text-white font-semibold text-base line-clamp-2 leading-tight mb-1 group-hover:text-red-400 transition-colors">
-                        {video.title}
+                        {sanitizeVideoTitle(video.title)}
                     </h3>
 
                     {/* Channel Name */}
@@ -234,7 +239,9 @@ const VideoCard = ({ video }) => {
                             navigate(`/channel/${video.owner?.username}`)
                         }}
                     >
-                        {video.owner?.fullName || video.owner?.username}
+                        {sanitizeDisplayName(
+                            video.owner?.fullName || video.owner?.username
+                        )}
                     </p>
 
                     {/* Stats - Adjusted */}

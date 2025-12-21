@@ -13,6 +13,11 @@ import { toast } from "react-hot-toast"
 import { useNavigate, useLocation } from "react-router-dom"
 import { getOptimizedUrl } from "../../utils/imageUrlHelper"
 import { useSelector } from "react-redux"
+import {
+    sanitizeTweetContent,
+    sanitizeDisplayName,
+    sanitizeUsername,
+} from "../../utils/sanitize"
 
 const TweetCard = ({ tweet }) => {
     const navigate = useNavigate()
@@ -119,7 +124,7 @@ const TweetCard = ({ tweet }) => {
                     {/* Image */}
                     <img
                         src={getOptimizedUrl(tweet.image, { width: 600 })} // Resize to ~600px width (enough for card)
-                        alt={tweet.content}
+                        alt={sanitizeTweetContent(tweet.content)}
                         className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                     />
 
@@ -240,7 +245,7 @@ const TweetCard = ({ tweet }) => {
                 <p
                     className={`text-white font-medium leading-relaxed ${!hasImage ? "text-xl line-clamp-6" : "text-lg line-clamp-2 mb-2"}`}
                 >
-                    {tweet.content}
+                    {sanitizeTweetContent(tweet.content)}
                 </p>
 
                 {/* Owner Info & Likes */}

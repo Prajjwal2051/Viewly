@@ -38,3 +38,22 @@ export const getIsTweetLiked = async (tweetId) => {
     console.log(`[likeApi] response.data:`, response.data)
     return response.data
 }
+
+/**
+ * TOGGLE TWEET LIKE
+ * Toggles like status for a tweet
+ * Returns: { isLiked: boolean }
+ */
+export const toggleTweetLike = async (tweetId) => {
+    const response = await apiClient.post(`/like/tweet/${tweetId}`)
+    return response.data
+}
+
+/**
+ * GET LIKED TWEETS
+ * Fetches all tweets liked by the current user
+ */
+export const getLikedTweets = async () => {
+    const response = await apiClient.get("/like/tweets")
+    return response.data
+}

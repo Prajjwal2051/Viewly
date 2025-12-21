@@ -34,6 +34,7 @@ import NotFoundPage from "./pages/NotFoundPage"
 import TweetPage from "./pages/TweetPage"
 import PlaylistsPage from "./pages/PlaylistsPage"
 import PlaylistDetailPage from "./pages/PlaylistDetailPage"
+import NotificationsPage from "./pages/NotificationsPage"
 
 // Context
 import { ThemeProvider } from "./context/ThemeContext"
@@ -212,6 +213,18 @@ function App() {
                         <ProtectedRoute>
                             <MainLayout>
                                 <PlaylistDetailPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* NOTIFICATIONS PAGE - User notifications */}
+                <Route
+                    path="/notifications"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <NotificationsPage />
                             </MainLayout>
                         </ProtectedRoute>
                     }

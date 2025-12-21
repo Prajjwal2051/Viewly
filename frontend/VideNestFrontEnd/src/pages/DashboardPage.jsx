@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { getAllVideos, deleteVideo, updateVideo } from "../api/videoApi"
 import { getUserTweets, deleteTweet, updateTweet } from "../api/tweetApi"
+import { getLikedVideos, getLikedTweets } from "../api/likeApi"
 import { getUserChannelProfile } from "../api/userApi"
 import {
     BarChart3,
@@ -40,9 +41,12 @@ const DashboardPage = () => {
     })
     const [videos, setVideos] = useState([])
     const [tweets, setTweets] = useState([])
+    const [likedVideos, setLikedVideos] = useState([])
+    const [likedTweets, setLikedTweets] = useState([])
     const [loading, setLoading] = useState(true)
     const [deleting, setDeleting] = useState(null)
     const [editingItem, setEditingItem] = useState(null) // { type: 'video'|'tweet', data: ... }
+    const [activeTab, setActiveTab] = useState("myVideos") // 'myVideos', 'myTweets', 'likedVideos', 'likedTweets'
 
     useEffect(() => {
         if (!user) {
@@ -92,6 +96,24 @@ const DashboardPage = () => {
                 totalSubscribers: subscriberCount,
                 totalTweets: userTweets.length,
             })
+
+            // Fetch liked videos
+            try {
+                const likedVideosResponse = await getLikedVideos()
+                setLikedVideos(likedVideosResponse.data.likedVideos || [])
+            } catch (error) {
+                console.error("Failed to fetch liked videos:", error)
+                setLikedVideos([])
+            }
+
+            // Fetch liked tweets
+            try {
+                const likedTweetsResponse = await getLikedTweets()
+                setLikedTweets(likedTweetsResponse.data.likedTweets || [])
+            } catch (error) {
+                console.error("Failed to fetch liked tweets:", error)
+                setLikedTweets([])
+            }
         } catch (error) {
             console.error("Failed to load dashboard data:", error)
             toast.error("Failed to load dashboard")
@@ -235,257 +257,436 @@ const DashboardPage = () => {
                     </div>
                 </div>
 
-                {/* Videos Table */}
-                <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
-                    <div className="p-6 border-b border-[#2A2D2E]">
-                        <h2 className="text-2xl font-bold">Your Videos</h2>
-                    </div>
+                {/* Tab Navigation */}
+                <div className="flex gap-2 mb-6 border-b border-gray-700">
+                    <button
+                        onClick={() => setActiveTab("myVideos")}
+                        className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                            activeTab === "myVideos"
+                                ? "text-white border-red-600"
+                                : "text-gray-400 border-transparent hover:text-white"
+                        }`}
+                    >
+                        My Videos ({stats.totalVideos})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("myTweets")}
+                        className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                            activeTab === "myTweets"
+                                ? "text-white border-red-600"
+                                : "text-gray-400 border-transparent hover:text-white"
+                        }`}
+                    >
+                        My Tweets ({stats.totalTweets})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("likedVideos")}
+                        className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                            activeTab === "likedVideos"
+                                ? "text-white border-red-600"
+                                : "text-gray-400 border-transparent hover:text-white"
+                        }`}
+                    >
+                        <Heart size={16} className="inline mr-1" />
+                        Liked Videos ({likedVideos.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("likedTweets")}
+                        className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                            activeTab === "likedTweets"
+                                ? "text-white border-red-600"
+                                : "text-gray-400 border-transparent hover:text-white"
+                        }`}
+                    >
+                        <Heart size={16} className="inline mr-1" />
+                        Liked Tweets ({likedTweets.length})
+                    </button>
+                </div>
 
-                    {videos.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <VideoIcon
-                                className="mx-auto mb-4 text-gray-400"
-                                size={48}
-                            />
-                            <h3 className="text-xl font-semibold text-gray-400 mb-2">
-                                No videos yet
-                            </h3>
-                            <p className="text-gray-500 mb-4">
-                                Upload your first video to get started
-                            </p>
-                            <button
-                                onClick={() => navigate("/upload")}
-                                className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
-                            >
-                                Upload Video
-                            </button>
+                {/* My Videos Section */}
+                {activeTab === "myVideos" && (
+                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                        <div className="p-6 border-b border-[#2A2D2E]">
+                            <h2 className="text-2xl font-bold">Your Videos</h2>
                         </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-[#2A2D2E]/50">
-                                    <tr>
-                                        <th className="text-left p-4 font-semibold text-gray-300">
-                                            Video
-                                        </th>
-                                        <th className="text-center p-4 font-semibold text-gray-300">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <Eye size={16} />
-                                                Views
-                                            </div>
-                                        </th>
-                                        <th className="text-center p-4 font-semibold text-gray-300">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <Heart size={16} />
-                                                Likes
-                                            </div>
-                                        </th>
-                                        <th className="text-center p-4 font-semibold text-gray-300">
-                                            Date
-                                        </th>
-                                        <th className="text-right p-4 font-semibold text-gray-300">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {videos.map((video) => (
-                                        <tr
-                                            key={video._id}
-                                            className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E]/30 transition-colors"
-                                        >
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-32 h-20 bg-gray-800 rounded-lg flex items-center justify-center">
-                                                        <VideoIcon
-                                                            className="text-gray-500"
-                                                            size={32}
-                                                        />
+
+                        {videos.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <VideoIcon
+                                    className="mx-auto mb-4 text-gray-400"
+                                    size={48}
+                                />
+                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                    No videos yet
+                                </h3>
+                                <p className="text-gray-500 mb-4">
+                                    Upload your first video to get started
+                                </p>
+                                <button
+                                    onClick={() => navigate("/upload")}
+                                    className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
+                                >
+                                    Upload Video
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-[#2A2D2E]/50">
+                                        <tr>
+                                            <th className="text-left p-4 font-semibold text-gray-300">
+                                                Video
+                                            </th>
+                                            <th className="text-center p-4 font-semibold text-gray-300">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <Eye size={16} />
+                                                    Views
+                                                </div>
+                                            </th>
+                                            <th className="text-center p-4 font-semibold text-gray-300">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <Heart size={16} />
+                                                    Likes
+                                                </div>
+                                            </th>
+                                            <th className="text-center p-4 font-semibold text-gray-300">
+                                                Date
+                                            </th>
+                                            <th className="text-right p-4 font-semibold text-gray-300">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {videos.map((video) => (
+                                            <tr
+                                                key={video._id}
+                                                className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E]/30 transition-colors"
+                                            >
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-32 h-20 bg-gray-800 rounded-lg flex items-center justify-center">
+                                                            <VideoIcon
+                                                                className="text-gray-500"
+                                                                size={32}
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h4
+                                                                className="font-semibold text-white line-clamp-2 cursor-pointer hover:text-red-600"
+                                                                onClick={() =>
+                                                                    navigate(
+                                                                        `/video/${video._id}`
+                                                                    )
+                                                                }
+                                                            >
+                                                                {video.title}
+                                                            </h4>
+                                                            <p className="text-sm text-gray-400 line-clamp-1 mt-1">
+                                                                {
+                                                                    video.description
+                                                                }
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4
-                                                            className="font-semibold text-white line-clamp-2 cursor-pointer hover:text-red-600"
+                                                </td>
+                                                <td className="p-4 text-center text-gray-300">
+                                                    {video.views?.toLocaleString() ||
+                                                        0}
+                                                </td>
+                                                <td className="p-4 text-center text-gray-300">
+                                                    {video.likes || 0}
+                                                </td>
+                                                <td className="p-4 text-center text-gray-400 text-sm">
+                                                    {new Date(
+                                                        video.createdAt
+                                                    ).toLocaleDateString()}
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
                                                             onClick={() =>
-                                                                navigate(
-                                                                    `/video/${video._id}`
+                                                                handleEdit(
+                                                                    video
                                                                 )
                                                             }
+                                                            className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
+                                                            title="Edit"
                                                         >
-                                                            {video.title}
-                                                        </h4>
-                                                        <p className="text-sm text-gray-400 line-clamp-1 mt-1">
-                                                            {video.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-center text-gray-300">
-                                                {video.views?.toLocaleString() ||
-                                                    0}
-                                            </td>
-                                            <td className="p-4 text-center text-gray-300">
-                                                {video.likes || 0}
-                                            </td>
-                                            <td className="p-4 text-center text-gray-400 text-sm">
-                                                {new Date(
-                                                    video.createdAt
-                                                ).toLocaleDateString()}
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        onClick={() =>
-                                                            handleEdit(video)
-                                                        }
-                                                        className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
-                                                        title="Edit"
-                                                    >
-                                                        <Edit size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleDelete(
+                                                            <Edit size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    video._id
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                deleting ===
                                                                 video._id
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            deleting ===
-                                                            video._id
-                                                        }
-                                                        className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
-                                                        title="Delete"
-                                                    >
-                                                        {deleting ===
-                                                        video._id ? (
-                                                            <Loader2
-                                                                size={18}
-                                                                className="animate-spin"
-                                                            />
-                                                        ) : (
-                                                            <Trash2 size={18} />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-
-                {/* Tweets Table */}
-                <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden mt-8">
-                    <div className="p-6 border-b border-[#2A2D2E]">
-                        <h2 className="text-2xl font-bold">Your Tweets</h2>
+                                                            }
+                                                            className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
+                                                            title="Delete"
+                                                        >
+                                                            {deleting ===
+                                                            video._id ? (
+                                                                <Loader2
+                                                                    size={18}
+                                                                    className="animate-spin"
+                                                                />
+                                                            ) : (
+                                                                <Trash2
+                                                                    size={18}
+                                                                />
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
+                )}
 
-                    {tweets.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <MessageSquare
-                                className="mx-auto mb-4 text-gray-400"
-                                size={48}
-                            />
-                            <h3 className="text-xl font-semibold text-gray-400 mb-2">
-                                No tweets yet
-                            </h3>
-                            <p className="text-gray-500 mb-4">
-                                Post your first tweet to get started
-                            </p>
-                            <button
-                                onClick={() => navigate("/upload")}
-                                className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
-                            >
-                                Post Tweet
-                            </button>
+                {/* My Tweets Section */}
+                {activeTab === "myTweets" && (
+                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden mt-8">
+                        <div className="p-6 border-b border-[#2A2D2E]">
+                            <h2 className="text-2xl font-bold">Your Tweets</h2>
                         </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-[#2A2D2E]/50">
-                                    <tr>
-                                        <th className="text-left p-4 font-semibold text-gray-300">
-                                            Tweet Content
-                                        </th>
-                                        <th className="text-center p-4 font-semibold text-gray-300">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <Heart size={16} />
-                                                Likes
-                                            </div>
-                                        </th>
-                                        <th className="text-center p-4 font-semibold text-gray-300">
-                                            Date
-                                        </th>
-                                        <th className="text-right p-4 font-semibold text-gray-300">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tweets.map((tweet) => (
-                                        <tr
-                                            key={tweet._id}
-                                            className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E]/30 transition-colors"
-                                        >
-                                            <td className="p-4">
-                                                <h4 className="font-semibold text-white line-clamp-2">
-                                                    {tweet.content}
-                                                </h4>
-                                            </td>
-                                            <td className="p-4 text-center text-gray-300">
-                                                {tweet.likes || 0}
-                                            </td>
-                                            <td className="p-4 text-center text-gray-400 text-sm">
-                                                {new Date(
-                                                    tweet.createdAt
-                                                ).toLocaleDateString()}
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        onClick={() =>
-                                                            handleEditTweet(
-                                                                tweet
-                                                            )
-                                                        }
-                                                        className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
-                                                        title="Edit"
-                                                    >
-                                                        <Edit size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleDeleteTweet(
-                                                                tweet._id
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            deleting ===
-                                                            tweet._id
-                                                        }
-                                                        className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
-                                                        title="Delete"
-                                                    >
-                                                        {deleting ===
-                                                        tweet._id ? (
-                                                            <Loader2
-                                                                size={18}
-                                                                className="animate-spin"
-                                                            />
-                                                        ) : (
-                                                            <Trash2 size={18} />
-                                                        )}
-                                                    </button>
+
+                        {tweets.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <MessageSquare
+                                    className="mx-auto mb-4 text-gray-400"
+                                    size={48}
+                                />
+                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                    No tweets yet
+                                </h3>
+                                <p className="text-gray-500 mb-4">
+                                    Post your first tweet to get started
+                                </p>
+                                <button
+                                    onClick={() => navigate("/upload")}
+                                    className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
+                                >
+                                    Post Tweet
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-[#2A2D2E]/50">
+                                        <tr>
+                                            <th className="text-left p-4 font-semibold text-gray-300">
+                                                Tweet Content
+                                            </th>
+                                            <th className="text-center p-4 font-semibold text-gray-300">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <Heart size={16} />
+                                                    Likes
                                                 </div>
-                                            </td>
+                                            </th>
+                                            <th className="text-center p-4 font-semibold text-gray-300">
+                                                Date
+                                            </th>
+                                            <th className="text-right p-4 font-semibold text-gray-300">
+                                                Actions
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {tweets.map((tweet) => (
+                                            <tr
+                                                key={tweet._id}
+                                                className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E]/30 transition-colors"
+                                            >
+                                                <td className="p-4">
+                                                    <h4 className="font-semibold text-white line-clamp-2">
+                                                        {tweet.content}
+                                                    </h4>
+                                                </td>
+                                                <td className="p-4 text-center text-gray-300">
+                                                    {tweet.likes || 0}
+                                                </td>
+                                                <td className="p-4 text-center text-gray-400 text-sm">
+                                                    {new Date(
+                                                        tweet.createdAt
+                                                    ).toLocaleDateString()}
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() =>
+                                                                handleEditTweet(
+                                                                    tweet
+                                                                )
+                                                            }
+                                                            className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
+                                                            title="Edit"
+                                                        >
+                                                            <Edit size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDeleteTweet(
+                                                                    tweet._id
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                deleting ===
+                                                                tweet._id
+                                                            }
+                                                            className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
+                                                            title="Delete"
+                                                        >
+                                                            {deleting ===
+                                                            tweet._id ? (
+                                                                <Loader2
+                                                                    size={18}
+                                                                    className="animate-spin"
+                                                                />
+                                                            ) : (
+                                                                <Trash2
+                                                                    size={18}
+                                                                />
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Liked Videos Section */}
+                {activeTab === "likedVideos" && (
+                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                        <div className="p-6 border-b border-[#2A2D2E]">
+                            <h2 className="text-2xl font-bold flex items-center gap-2">
+                                <Heart size={28} className="text-red-500" />
+                                Liked Videos
+                            </h2>
                         </div>
-                    )}
-                </div>
+
+                        {likedVideos.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <Heart
+                                    className="mx-auto mb-4 text-gray-400"
+                                    size={48}
+                                />
+                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                    No liked videos yet
+                                </h3>
+                                <p className="text-gray-500">
+                                    Videos you like will appear here
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                                {likedVideos.map((item) => {
+                                    const video = item.video || item
+                                    return (
+                                        <div
+                                            key={video._id}
+                                            onClick={() =>
+                                                navigate(`/video/${video._id}`)
+                                            }
+                                            className="bg-[#1E2021] rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+                                        >
+                                            <img
+                                                src={video.thumbNail}
+                                                alt={video.title}
+                                                className="w-full h-40 object-cover"
+                                            />
+                                            <div className="p-3">
+                                                <h4 className="text-white font-medium line-clamp-2 mb-1">
+                                                    {video.title}
+                                                </h4>
+                                                <p className="text-gray-400 text-sm">
+                                                    {video.views?.toLocaleString() ||
+                                                        0}{" "}
+                                                    views
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Liked Tweets Section */}
+                {activeTab === "likedTweets" && (
+                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                        <div className="p-6 border-b border-[#2A2D2E]">
+                            <h2 className="text-2xl font-bold flex items-center gap-2">
+                                <Heart size={28} className="text-red-500" />
+                                Liked Tweets
+                            </h2>
+                        </div>
+
+                        {likedTweets.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <Heart
+                                    className="mx-auto mb-4 text-gray-400"
+                                    size={48}
+                                />
+                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                    No liked tweets yet
+                                </h3>
+                                <p className="text-gray-500">
+                                    Tweets you like will appear here
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
+                                {likedTweets.map((item) => {
+                                    const tweet = item.tweet || item
+                                    return (
+                                        <div
+                                            key={tweet._id}
+                                            onClick={() =>
+                                                navigate(`/tweet/${tweet._id}`)
+                                            }
+                                            className="bg-[#1E2021] rounded-lg p-4 cursor-pointer hover:scale-105 transition-transform"
+                                        >
+                                            {tweet.image && (
+                                                <img
+                                                    src={tweet.image}
+                                                    alt="Tweet"
+                                                    className="w-full h-48 object-cover rounded-lg mb-3"
+                                                />
+                                            )}
+                                            <p className="text-white line-clamp-3">
+                                                {tweet.content}
+                                            </p>
+                                            <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
+                                                <span className="flex items-center gap-1">
+                                                    <Heart size={16} />
+                                                    {tweet.likes || 0}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <MessageSquare size={16} />
+                                                    {tweet.comments || 0}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Edit Modal */}

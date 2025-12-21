@@ -10,6 +10,7 @@ import {
 } from "../../api/commentApi"
 import toast from "react-hot-toast"
 import Input from "../layout/ui/Input"
+import { sanitizeComment, sanitizeDisplayName } from "../../utils/sanitize"
 
 const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
     const { user } = useSelector((state) => state.auth)
@@ -246,7 +247,9 @@ const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
                                     ) : (
                                         <>
                                             <p className="text-gray-300 text-sm">
-                                                {comment.content}
+                                                {sanitizeComment(
+                                                    comment.content
+                                                )}
                                             </p>
 
                                             {/* ACTIONS (Edit / Delete) */}
