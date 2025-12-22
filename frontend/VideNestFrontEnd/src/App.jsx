@@ -35,6 +35,8 @@ import TweetPage from "./pages/TweetPage"
 import PlaylistsPage from "./pages/PlaylistsPage"
 import PlaylistDetailPage from "./pages/PlaylistDetailPage"
 import NotificationsPage from "./pages/NotificationsPage"
+import SubscriptionsPage from "./pages/SubscriptionsPage"
+import SubscribersPage from "./pages/SubscribersPage"
 
 // Context
 import { ThemeProvider } from "./context/ThemeContext"
@@ -225,6 +227,30 @@ function App() {
                         <ProtectedRoute>
                             <MainLayout>
                                 <NotificationsPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* SUBSCRIPTIONS PAGE - Following/Subscribed channels */}
+                <Route
+                    path="/subscriptions"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <SubscriptionsPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* SUBSCRIBERS PAGE - Channel followers */}
+                <Route
+                    path="/channel/:username/subscribers"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <SubscribersPage />
                             </MainLayout>
                         </ProtectedRoute>
                     }

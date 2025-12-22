@@ -114,4 +114,29 @@ apiClient.interceptors.response.use(
     }
 )
 
+// Response interceptor for global error handling
+apiClient.interceptors.response.use(
+    (response) => {
+        // Return successful responses as-is
+        return response
+    },
+    (error) => {
+        // Handle 401 Unauthorized errors (token expiration)
+        if (error.response?.status === 401) {
+            // Clear authentication data
+            localStorage.removeItem("accessToken")
+            localStorage.removeItem("refreshToken")
+
+            // Redirect to login with session expired message
+            const currentPath = window.location.pathname
+            if (currentPath !== "/login" && currentPath !== "/register") {
+                window.location.href = "/login?sessionExpired=true"
+            }
+        }
+
+        // Re-throw error for component-level handling
+        return Promise.reject(error)
+    }
+)
+
 export default apiClient

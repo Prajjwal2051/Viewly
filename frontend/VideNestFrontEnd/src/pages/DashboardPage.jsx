@@ -13,7 +13,11 @@ import { useSelector } from "react-redux"
 import { getAllVideos, deleteVideo, updateVideo } from "../api/videoApi"
 import { getUserTweets, deleteTweet, updateTweet } from "../api/tweetApi"
 import { getLikedVideos, getLikedTweets } from "../api/likeApi"
+import { getChannelStats } from "../api/dashboardApi"
 import { getUserChannelProfile } from "../api/userApi"
+import AnalyticsCharts from "../components/dashboard/AnalyticsCharts"
+import GrowthMetrics from "../components/dashboard/GrowthMetrics"
+import TopVideoCard from "../components/dashboard/TopVideoCard"
 import {
     BarChart3,
     Video as VideoIcon,
@@ -43,6 +47,7 @@ const DashboardPage = () => {
     const [tweets, setTweets] = useState([])
     const [likedVideos, setLikedVideos] = useState([])
     const [likedTweets, setLikedTweets] = useState([])
+    const [analyticsData, setAnalyticsData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [deleting, setDeleting] = useState(null)
     const [editingItem, setEditingItem] = useState(null) // { type: 'video'|'tweet', data: ... }
@@ -113,6 +118,15 @@ const DashboardPage = () => {
             } catch (error) {
                 console.error("Failed to fetch liked tweets:", error)
                 setLikedTweets([])
+            }
+
+            // Fetch detailed analytics
+            try {
+                const analyticsResponse = await getChannelStats()
+                setAnalyticsData(analyticsResponse.data || analyticsResponse)
+            } catch (error) {
+                console.error("Failed to fetch analytics:", error)
+                // Don't block dashboard load on analytics failure
             }
         } catch (error) {
             console.error("Failed to load dashboard data:", error)
@@ -256,6 +270,33 @@ const DashboardPage = () => {
                         </h3>
                     </div>
                 </div>
+
+                {/* Analytics Section */}
+                {analyticsData && (
+                    <div className="mb-12 animate-fadeIn">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-white">
+                                Channel Analytics
+                            </h2>
+                            <p className="text-sm text-gray-400">
+                                Last 30 Days Performance
+                            </p>
+                        </div>
+
+                        <GrowthMetrics metrics={analyticsData?.growthMetrics} />
+
+                        <AnalyticsCharts data={analyticsData?.growthMetrics} />
+
+                        {analyticsData?.additionalMetrics?.mostPopularVideo && (
+                            <TopVideoCard
+                                video={
+                                    analyticsData.additionalMetrics
+                                        .mostPopularVideo
+                                }
+                            />
+                        )}
+                    </div>
+                )}
 
                 {/* Tab Navigation */}
                 <div className="flex gap-2 mb-6 border-b border-gray-700">

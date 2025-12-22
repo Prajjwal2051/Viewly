@@ -30,6 +30,16 @@ const LoginPage = () => {
     // Select auth state from Redux store to check loading/error status
     const { loading } = useSelector((state) => state.auth)
 
+    // Check for session expired URL parameter
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get("sessionExpired") === "true") {
+            toast.error("⏰ Your session has expired. Please log in again.")
+            // Clean up URL
+            window.history.replaceState({}, "", "/login")
+        }
+    }, [])
+
     // Update form state on input change
     const handleChange = (e) => {
         setFormData({

@@ -97,4 +97,28 @@ const deleteVideo = async (videoId) => {
     return response.data
 }
 
-export { deleteVideo, updateVideo, uploadVideo, getAllVideos, getVideoById }
+/**
+ * SEARCH VIDEOS
+ * Advanced search with multiple filters
+ *
+ * Params object keys:
+ * - query: Search text
+ * - category: Filter category
+ * - minDuration, maxDuration: Duration range in seconds
+ * - sortBy: Sort order (relevance, views, date, likes)
+ * - startDate, endDate: Date range
+ * - page, limit: Pagination
+ */
+const searchVideos = async (params) => {
+    const response = await apiClient.get("/search", { params })
+    return response.data
+}
+
+export {
+    deleteVideo,
+    updateVideo,
+    uploadVideo,
+    getAllVideos,
+    getVideoById,
+    searchVideos,
+}
