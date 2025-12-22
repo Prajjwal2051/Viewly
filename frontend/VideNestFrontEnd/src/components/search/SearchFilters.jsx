@@ -5,6 +5,8 @@
 
 import { useState } from "react"
 import { Filter, X, ChevronDown, ChevronUp } from "lucide-react"
+import DateRangePicker from "./DateRangePicker"
+import DurationSlider from "./DurationSlider"
 
 const CATEGORIES = [
     "Music",
@@ -145,110 +147,22 @@ const SearchFilters = ({ filters, onFilterChange, onClearFilters }) => {
                             </div>
                         </div>
 
-                        {/* Duration */}
-                        <div>
+                        {/* Date Range & Duration - Side by Side */}
+                        <div className="md:col-span-2">
                             <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">
-                                Duration
+                                Filters
                             </h3>
-                            <div className="flex flex-col gap-2">
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
-                                        type="radio"
-                                        name="duration"
-                                        className="hidden"
-                                        checked={
-                                            !filters.minDuration &&
-                                            !filters.maxDuration
-                                        }
-                                        onChange={() => {
-                                            onFilterChange("minDuration", "")
-                                            onFilterChange("maxDuration", "")
-                                        }}
-                                    />
-                                    <span
-                                        className={
-                                            !filters.minDuration &&
-                                            !filters.maxDuration
-                                                ? "text-white"
-                                                : "text-gray-400"
-                                        }
-                                    >
-                                        Any
-                                    </span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
-                                        type="radio"
-                                        name="duration"
-                                        className="hidden"
-                                        checked={filters.maxDuration === "300"}
-                                        onChange={() => {
-                                            onFilterChange("minDuration", "")
-                                            onFilterChange("maxDuration", "300")
-                                        }}
-                                    />
-                                    <span
-                                        className={
-                                            filters.maxDuration === "300"
-                                                ? "text-white"
-                                                : "text-gray-400"
-                                        }
-                                    >
-                                        Under 5 minutes
-                                    </span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
-                                        type="radio"
-                                        name="duration"
-                                        className="hidden"
-                                        checked={
-                                            filters.minDuration === "300" &&
-                                            filters.maxDuration === "1200"
-                                        }
-                                        onChange={() => {
-                                            onFilterChange("minDuration", "300")
-                                            onFilterChange(
-                                                "maxDuration",
-                                                "1200"
-                                            )
-                                        }}
-                                    />
-                                    <span
-                                        className={
-                                            filters.minDuration === "300" &&
-                                            filters.maxDuration === "1200"
-                                                ? "text-white"
-                                                : "text-gray-400"
-                                        }
-                                    >
-                                        5 - 20 minutes
-                                    </span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
-                                        type="radio"
-                                        name="duration"
-                                        className="hidden"
-                                        checked={filters.minDuration === "1200"}
-                                        onChange={() => {
-                                            onFilterChange(
-                                                "minDuration",
-                                                "1200"
-                                            )
-                                            onFilterChange("maxDuration", "")
-                                        }}
-                                    />
-                                    <span
-                                        className={
-                                            filters.minDuration === "1200"
-                                                ? "text-white"
-                                                : "text-gray-400"
-                                        }
-                                    >
-                                        Over 20 minutes
-                                    </span>
-                                </label>
+                            <div className="flex flex-wrap gap-3">
+                                <DateRangePicker
+                                    startDate={filters.startDate}
+                                    endDate={filters.endDate}
+                                    onChange={onFilterChange}
+                                />
+                                <DurationSlider
+                                    minDuration={filters.minDuration}
+                                    maxDuration={filters.maxDuration}
+                                    onChange={onFilterChange}
+                                />
                             </div>
                         </div>
                     </div>

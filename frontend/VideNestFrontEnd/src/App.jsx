@@ -37,6 +37,7 @@ import PlaylistDetailPage from "./pages/PlaylistDetailPage"
 import NotificationsPage from "./pages/NotificationsPage"
 import SubscriptionsPage from "./pages/SubscriptionsPage"
 import SubscribersPage from "./pages/SubscribersPage"
+import LikedCommentsPage from "./pages/LikedCommentsPage"
 
 // Context
 import { ThemeProvider } from "./context/ThemeContext"
@@ -251,6 +252,18 @@ function App() {
                         <ProtectedRoute>
                             <MainLayout>
                                 <SubscribersPage />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* LIKED COMMENTS PAGE - User's liked comments */}
+                <Route
+                    path="/liked/comments"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <LikedCommentsPage />
                             </MainLayout>
                         </ProtectedRoute>
                     }

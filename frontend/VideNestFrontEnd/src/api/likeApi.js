@@ -57,3 +57,15 @@ export const getLikedTweets = async () => {
     const response = await apiClient.get("/like/tweets")
     return response.data
 }
+
+/**
+ * GET LIKED COMMENTS
+ * Fetches all comments liked by the current user
+ * Supports pagination with page and limit parameters
+ */
+export const getLikedComments = async ({ page = 1, limit = 20 } = {}) => {
+    const response = await apiClient.get("/like/comments", {
+        params: { page, limit },
+    })
+    return response.data
+}
