@@ -42,6 +42,11 @@ import AddToPlaylistModal from "../components/playlist/AddToPlaylistModal"
 import CommentSection from "../components/comments/CommentSection"
 import VideoControls from "../components/video/VideoControls"
 import toast from "react-hot-toast"
+import {
+    sanitizeVideoTitle,
+    sanitizeVideoDescription,
+    sanitizeUsername,
+} from "../utils/sanitize"
 
 // Format duration to simple format (21 sec, 2 min, 1 hr)
 const formatDuration = (seconds) => {
@@ -732,11 +737,13 @@ const VideoPlayerPage = ({ isModal = false }) => {
                             </div>
 
                             <h1 className="text-white text-2xl font-bold leading-tight line-clamp-2 mb-2 w-[85%]">
-                                {video.title}
+                                {sanitizeVideoTitle(video.title)}
                             </h1>
                             {video.description && (
                                 <p className="text-gray-200/90 text-base line-clamp-2 w-[85%] mb-1">
-                                    {video.description}
+                                    {sanitizeVideoDescription(
+                                        video.description
+                                    )}
                                 </p>
                             )}
                             <p className="text-gray-400 text-sm">

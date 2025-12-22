@@ -23,6 +23,11 @@ import {
     deleteNotification,
 } from "../api/notificationApi"
 import toast from "react-hot-toast"
+import {
+    sanitizeVideoTitle,
+    sanitizeComment,
+    sanitizeDisplayName,
+} from "../utils/sanitize"
 
 const NotificationsPage = () => {
     const navigate = useNavigate()
@@ -122,10 +127,11 @@ const NotificationsPage = () => {
     }
 
     const getNotificationMessage = (notification) => {
-        const senderName =
+        const senderName = sanitizeDisplayName(
             notification.sender?.fullName ||
-            notification.sender?.username ||
-            "Someone"
+                notification.sender?.username ||
+                "Someone"
+        )
 
         switch (notification.type) {
             case "like":
@@ -244,13 +250,19 @@ const NotificationsPage = () => {
 
                                 {notification.video && (
                                     <p className="text-sm text-gray-500 mt-1 truncate">
-                                        {notification.video.title}
+                                        {sanitizeVideoTitle(
+                                            notification.video.title
+                                        )}
                                     </p>
                                 )}
 
                                 {notification.comment && (
                                     <p className="text-sm text-gray-400 mt-2 italic">
-                                        "{notification.comment.content}"
+                                        "
+                                        {sanitizeComment(
+                                            notification.comment.content
+                                        )}
+                                        "
                                     </p>
                                 )}
 

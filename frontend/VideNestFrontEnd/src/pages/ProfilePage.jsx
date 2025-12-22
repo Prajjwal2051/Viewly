@@ -9,6 +9,11 @@ import { getAllVideos } from "../api/videoApi"
 import { toggleSubscription } from "../api/subscriptionApi"
 import { getUserChannelProfile } from "../api/userApi"
 import toast from "react-hot-toast"
+import {
+    sanitizeDisplayName,
+    sanitizeUsername,
+    sanitizeUserBio,
+} from "../utils/sanitize"
 
 // Tab Configuration
 const TABS = [
@@ -208,12 +213,12 @@ const ProfilePage = () => {
                 <div className="mt-12 md:mt-16 ml-1">
                     {/* Name - Huge Title Style */}
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                        {user?.fullName}
+                        {sanitizeDisplayName(user?.fullName)}
                     </h1>
 
                     {/* Handle & Email - Minimal metadata */}
                     <div className="flex flex-wrap gap-4 text-gray-500 font-medium text-lg mb-6 items-center">
-                        <span>@{user?.username}</span>
+                        <span>@{sanitizeUsername(user?.username)}</span>
                         {/* Stats inline */}
                         <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
                         <span className="text-gray-400">
@@ -237,7 +242,7 @@ const ProfilePage = () => {
                             <span className="text-2xl">💡</span>
                             <div className="flex-1">
                                 <p className="text-gray-300 leading-relaxed font-normal">
-                                    {user.bio}
+                                    {sanitizeUserBio(user.bio)}
                                 </p>
                             </div>
                         </div>

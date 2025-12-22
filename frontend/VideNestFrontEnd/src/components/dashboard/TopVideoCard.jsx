@@ -7,6 +7,10 @@ import { Play, Heart, MessageSquare, Calendar } from "lucide-react"
 import { Link } from "react-router-dom"
 import { formatNumber } from "../../utils/formatNumber"
 import { formatDistanceToNow } from "date-fns"
+import {
+    sanitizeVideoTitle,
+    sanitizeVideoDescription,
+} from "../../utils/sanitize"
 
 const TopVideoCard = ({ video }) => {
     if (!video) return null
@@ -57,12 +61,14 @@ const TopVideoCard = ({ video }) => {
                         className="hover:text-red-500 transition-colors"
                     >
                         <h4 className="text-xl font-bold text-white mb-2 line-clamp-2">
-                            {video.title}
+                            {sanitizeVideoTitle(video.title)}
                         </h4>
                     </Link>
 
                     <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                        {video.description || "No description provided"}
+                        {sanitizeVideoDescription(
+                            video.description || "No description provided"
+                        )}
                     </p>
 
                     <div className="flex flex-wrap items-center gap-6 text-sm text-gray-400">

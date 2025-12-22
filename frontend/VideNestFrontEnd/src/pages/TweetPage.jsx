@@ -17,6 +17,11 @@ import {
 import { formatDistanceToNow } from "date-fns"
 import toast from "react-hot-toast"
 import { useSelector } from "react-redux"
+import {
+    sanitizeTweetContent,
+    sanitizeDisplayName,
+    sanitizeUsername,
+} from "../utils/sanitize"
 
 const TweetPage = ({ isModal = false }) => {
     const { tweetId } = useParams()
@@ -207,7 +212,7 @@ const TweetPage = ({ isModal = false }) => {
                                 {/* Scrollable Content Area */}
                                 <div className="w-full h-full overflow-y-auto custom-scrollbar z-10 pr-4">
                                     <p className="text-gray-100 text-lg md:text-2xl font-normal text-left leading-relaxed whitespace-pre-wrap tracking-wide">
-                                        {tweet.content}
+                                        {sanitizeTweetContent(tweet.content)}
                                     </p>
                                 </div>
                             </div>
@@ -294,7 +299,9 @@ const TweetPage = ({ isModal = false }) => {
                                         )
                                     }
                                 >
-                                    {tweet.ownerDetails?.fullName}
+                                    {sanitizeDisplayName(
+                                        tweet.ownerDetails?.fullName
+                                    )}
                                 </span>
                                 {user?._id !== tweet.ownerDetails?._id && (
                                     <button
@@ -311,14 +318,15 @@ const TweetPage = ({ isModal = false }) => {
                                 )}
                             </div>
                             <span className="text-xs text-gray-300">
-                                @{tweet.ownerDetails?.username}
+                                @
+                                {sanitizeUsername(tweet.ownerDetails?.username)}
                             </span>
                         </div>
                     </div>
 
                     {tweet.image && tweet.content && (
                         <p className="text-white text-sm md:text-base leading-snug line-clamp-3 mb-1 w-[85%] shadow-black drop-shadow-sm">
-                            {tweet.content}
+                            {sanitizeTweetContent(tweet.content)}
                         </p>
                     )}
 
@@ -421,10 +429,10 @@ const TweetPage = ({ isModal = false }) => {
                                 )
                             }
                         >
-                            {tweet.ownerDetails?.fullName}
+                            {sanitizeDisplayName(tweet.ownerDetails?.fullName)}
                         </h3>
                         <p className="text-xs text-gray-400">
-                            @{tweet.ownerDetails?.username}
+                            @{sanitizeUsername(tweet.ownerDetails?.username)}
                         </p>
                     </div>
                 </div>
@@ -433,7 +441,7 @@ const TweetPage = ({ isModal = false }) => {
                 <div className="p-4">
                     {tweet.content && (
                         <p className="text-base mb-4 whitespace-pre-wrap leading-relaxed border-b border-[#2A2D2E] pb-4">
-                            {tweet.content}
+                            {sanitizeTweetContent(tweet.content)}
                         </p>
                     )}
 
