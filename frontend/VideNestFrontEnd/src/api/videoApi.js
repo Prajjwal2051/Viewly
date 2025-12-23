@@ -59,6 +59,22 @@ const getVideoCategories = async () => {
 }
 
 /**
+ * GET MOST USED TAGS
+ * Fetches most frequently used tags from published videos
+ *
+ * Params:
+ * - limit: Number of tags to return (default: 15)
+ *
+ * Returns: { data: [{tag: "gaming", count: 42}, ...], message: "..." }
+ */
+const getMostUsedTags = async (limit = 15) => {
+    const response = await apiClient.get("/videos/tags/popular", {
+        params: { limit },
+    })
+    return response.data
+}
+
+/**
  * UPLOAD VIDEO
  * Uploads new video with file and metadata
  *
@@ -132,5 +148,6 @@ export {
     getAllVideos,
     getVideoById,
     getVideoCategories,
+    getMostUsedTags,
     searchVideos,
 }

@@ -23,6 +23,7 @@ import {
     updateVideo, // Updates video metadata
     deleteVideo, // Deletes video
     getVideoCategories, // Gets video categories
+    getMostUsedTags, // Gets popular tags
 } from "../controllers/video.controller.js"
 
 // Create Express router instance
@@ -44,6 +45,12 @@ router.get("/", getAllVideos)
  * Get all unique categories from published videos
  */
 router.get("/categories", getVideoCategories)
+
+/**
+ * GET /api/v1/videos/tags/popular
+ * Get most frequently used tags from published videos
+ */
+router.get("/tags/popular", getMostUsedTags)
 
 /**
  * GET /api/v1/videos/:videoId

@@ -400,17 +400,46 @@ const UploadPage = () => {
                                     <div className="relative">
                                         <select
                                             {...register("category")}
-                                            className="w-full bg-[#2A2D2E] border-transparent rounded-2xl p-3 pr-10 text-white outline-none appearance-none cursor-pointer"
+                                            className="w-full bg-[#2A2D2E] border-transparent rounded-2xl p-3 pr-10 text-white outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-red-600"
                                         >
                                             <option value="General">
                                                 General
                                             </option>
-                                            <option value="Music">Music</option>
                                             <option value="Gaming">
                                                 Gaming
                                             </option>
+                                            <option value="Music">Music</option>
+                                            <option value="Coding">
+                                                Coding
+                                            </option>
+                                            <option value="Cooking">
+                                                Cooking
+                                            </option>
+                                            <option value="Education">
+                                                Education
+                                            </option>
+                                            <option value="Fitness">
+                                                Fitness
+                                            </option>
+                                            <option value="Travel">
+                                                Travel
+                                            </option>
+                                            <option value="Entertainment">
+                                                Entertainment
+                                            </option>
                                             <option value="Technology">
                                                 Technology
+                                            </option>
+                                            <option value="Sports">
+                                                Sports
+                                            </option>
+                                            <option value="Art">Art</option>
+                                            <option value="Fashion">
+                                                Fashion
+                                            </option>
+                                            <option value="News">News</option>
+                                            <option value="Comedy">
+                                                Comedy
                                             </option>
                                         </select>
                                         <ChevronDown

@@ -42,6 +42,93 @@ const getVideoCategories = asyncHandler(async (req, res) => {
 })
 
 /**
+ * Get Most Used Tags Controller
+ *
+ * Retrieves the most frequently used tags from published videos.
+ * Used to display popular tags on home and discover pages.
+ *
+ * @route   GET /api/v1/videos/tags/popular
+ * @access  Public
+ * @query   {number} limit - Number of tags to return (default: 15)
+ * @returns {Object} ApiResponse with array of popular tags
+ */
+const getMostUsedTags = asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit) || 15
+
+    // Aggregate tags from all published videos
+    const tagStats = await Video.aggregate([
+        // Match only published videos
+        {
+            $match: {
+                isPublished: true,
+                tags: { $exists: true, $ne: "" },
+            },
+        },
+        // Split comma-separated tags into array
+        {
+            $project: {
+                tagsArray: {
+                    $split: ["$tags", ","],
+                },
+            },
+        },
+        // Unwind to get individual tags
+        {
+            $unwind: "$tagsArray",
+        },
+        // Trim whitespace and convert to lowercase
+        {
+            $project: {
+                tag: {
+                    $trim: {
+                        input: { $toLower: "$tagsArray" },
+                    },
+                },
+            },
+        },
+        // Filter out empty tags
+        {
+            $match: {
+                tag: { $ne: "" },
+            },
+        },
+        // Group by tag and count occurrences
+        {
+            $group: {
+                _id: "$tag",
+                count: { $sum: 1 },
+            },
+        },
+        // Sort by count descending
+        {
+            $sort: { count: -1 },
+        },
+        // Limit results
+        {
+            $limit: limit,
+        },
+        // Format output
+        {
+            $project: {
+                _id: 0,
+                tag: "$_id",
+                count: 1,
+            },
+        },
+    ])
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                tagStats,
+                "Most used tags fetched successfully"
+            )
+        )
+})
+
+/**
  * Upload Video Controller
  *
  * Handles complete video upload workflow including file upload to Cloudinary
@@ -739,4 +826,5 @@ export {
     updateVideo, // PATCH /api/v1/videos/:videoId - Update video
     deleteVideo, // DELETE /api/v1/videos/:videoId - Delete video
     getVideoCategories, // GET /api/v1/videos/categories - Get distinct categories
+    getMostUsedTags, // GET /api/v1/videos/tags/popular - Get popular tags
 }
