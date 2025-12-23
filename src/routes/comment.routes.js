@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
+import { commentLimiter } from "../middlewares/rate-limiter.middleware.js"
 import {
     addComment,
     deleteComment,
@@ -16,8 +17,8 @@ router.get("/:videoId", getAllComment)
 // GET /api/v1/comments/t/:tweetId - public - get paginated comments for a specific tweet
 router.get("/t/:tweetId", getTweetComments)
 
-// POST /api/v1/comments - private - add a new comment to a video
-router.post("/", verifyJWT, addComment)
+// POST /api/v1/comments - private - add a new comment to a video (rate limited)
+router.post("/", verifyJWT, commentLimiter, addComment)
 
 // PATCH /api/v1/comments/:commentId - private - update user's own comment
 router.patch("/:commentId", verifyJWT, updateComment)

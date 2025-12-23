@@ -75,13 +75,17 @@ apiClient.interceptors.request.use(
  *
  * Purpose:
  * - Unwrap backend response (return just .data instead of full Axios response)
- * - Handle errors globally (401 → auto logout, network errors → friendly message)
+ * - Handle errors globally (401 → auto logout, 429 → rate limit toast, network errors → friendly message)
  *
  * Flow:
  * 1. Backend responds: { statusCode: 200, data: {...}, message: "Success", success: true }
  * 2. Interceptor unwraps → returns just {...} to your component
  * 3. Components get clean data without manual extraction
  */
+
+// Import toast for notifications
+import toast from "react-hot-toast"
+
 apiClient.interceptors.response.use(
     (response) => {
         // SUCCESS: Return only the data object
@@ -90,18 +94,55 @@ apiClient.interceptors.response.use(
         return response.data // ApiResponse { statusCode, data, message, success }
     },
     (error) => {
+        console.error("[API Client] Request error:", error)
+
+        // Handle 401 Unauthorized - Token expired
+        if (error.response?.status === 401) {
+            const currentPath = window.location.pathname
+            // Only redirect if not already on login/register page
+            if (currentPath !== "/login" && currentPath !== "/register") {
+                // Clear tokens
+                localStorage.removeItem("accessToken")
+                localStorage.removeItem("refreshToken")
+
+                // Show error message
+                toast.error("Session expired. Please login again.")
+
+                // Redirect to login
+                window.location.href = "/login"
+            }
+        }
+
+        // Handle 429 Too Many Requests - Rate limit exceeded
+        if (error.response?.status === 429) {
+            const message =
+                error.response?.data?.message ||
+                "Too many requests. Please try again later."
+
+            // Show user-friendly toast notification
+            toast.error(message, {
+                duration: 5000,
+                icon: "⏱️",
+            })
+
+            // Log rate limit headers for debugging
+            const retryAfter = error.response?.headers["retry-after"]
+            const rateLimit = error.response?.headers["ratelimit-limit"]
+            const rateLimitRemaining =
+                error.response?.headers["ratelimit-remaining"]
+
+            console.warn("[Rate Limit] Exceeded:", {
+                message,
+                retryAfter,
+                limit: rateLimit,
+                remaining: rateLimitRemaining,
+            })
+        }
+
         // ERROR HANDLING
         if (error.response) {
             // Backend responded with error (4xx, 5xx status codes)
-            const { status, data } = error.response
-
-            // 401 Unauthorized: Token expired or invalid
-            if (status === 401) {
-                console.log("Token expired, redirecting to login...")
-                // Clear invalid token and force re-login
-                localStorage.removeItem("accessToken")
-                window.location.href = "/login"
-            }
+            const { data } = error.response
 
             // Return backend error (ApiError { statusCode, message, success: false })
             return Promise.reject(data)
@@ -111,31 +152,6 @@ apiClient.interceptors.response.use(
         return Promise.reject({
             message: "Network error. Please check your connection.",
         })
-    }
-)
-
-// Response interceptor for global error handling
-apiClient.interceptors.response.use(
-    (response) => {
-        // Return successful responses as-is
-        return response
-    },
-    (error) => {
-        // Handle 401 Unauthorized errors (token expiration)
-        if (error.response?.status === 401) {
-            // Clear authentication data
-            localStorage.removeItem("accessToken")
-            localStorage.removeItem("refreshToken")
-
-            // Redirect to login with session expired message
-            const currentPath = window.location.pathname
-            if (currentPath !== "/login" && currentPath !== "/register") {
-                window.location.href = "/login?sessionExpired=true"
-            }
-        }
-
-        // Re-throw error for component-level handling
-        return Promise.reject(error)
     }
 )
 

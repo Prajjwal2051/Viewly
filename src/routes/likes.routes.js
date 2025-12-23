@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
+import { likeLimiter } from "../middlewares/rate-limiter.middleware.js"
 import {
     toggleVideoLike,
     toggleCommentLike,
@@ -12,17 +13,17 @@ import {
 
 const router = Router()
 
-// Like/unlike a video
-router.post("/video/:videoId", verifyJWT, toggleVideoLike)
+// Like/unlike a video (rate limited)
+router.post("/video/:videoId", verifyJWT, likeLimiter, toggleVideoLike)
 
 // Check if video is liked
 router.get("/status/video/:videoId", verifyJWT, getIsVideoLiked)
 
-// Like/unlike a comment
-router.post("/comment/:commentId", verifyJWT, toggleCommentLike)
+// Like/unlike a comment (rate limited)
+router.post("/comment/:commentId", verifyJWT, likeLimiter, toggleCommentLike)
 
-// Like/unlike a tweet
-router.post("/tweet/:tweetId", verifyJWT, toggleTweetLike)
+// Like/unlike a tweet (rate limited)
+router.post("/tweet/:tweetId", verifyJWT, likeLimiter, toggleTweetLike)
 
 // Check if tweet is liked
 router.get("/status/tweet/:tweetId", verifyJWT, getIsTweetLiked)

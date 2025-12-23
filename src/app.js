@@ -53,6 +53,12 @@ app.use(express.static("public"))
 
 app.use(cookieParser())
 
+// Import rate limiters
+import { generalLimiter } from "./middlewares/rate-limiter.middleware.js"
+
+// Apply general rate limiter to all API routes
+app.use("/api/v1/", generalLimiter)
+
 // routes
 
 import userRouter from "./routes/user.routes.js"

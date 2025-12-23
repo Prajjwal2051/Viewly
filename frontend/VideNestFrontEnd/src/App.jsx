@@ -4,7 +4,7 @@
 // Central routing hub that controls which pages users can see.
 // Protects routes requiring login and manages navigation flow.
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, lazy, Suspense } from "react"
 import {
     Routes,
     Route,
@@ -18,26 +18,33 @@ import { loginSuccess, logout } from "./store/slices/authSlice"
 import { getCurrentUser } from "./api/authApi"
 import { Loader2 } from "lucide-react"
 
-// Page Components
-import HomePage from "./pages/HomePage"
-import LoginPage from "./pages/LoginPage"
-import RegisterPage from "./pages/RegisterPage"
-import SettingsPage from "./pages/SettingsPage"
-import UploadPage from "./pages/UploadPage"
-import ProfilePage from "./pages/ProfilePage"
-import VideoPlayerPage from "./pages/VideoPlayerPage"
-import DashboardPage from "./pages/DashboardPage"
-import SearchPage from "./pages/SearchPage"
-import DiscoverPage from "./pages/DiscoverPage"
-import ActivityPage from "./pages/ActivityPage"
-import NotFoundPage from "./pages/NotFoundPage"
-import TweetPage from "./pages/TweetPage"
-import PlaylistsPage from "./pages/PlaylistsPage"
-import PlaylistDetailPage from "./pages/PlaylistDetailPage"
-import NotificationsPage from "./pages/NotificationsPage"
-import SubscriptionsPage from "./pages/SubscriptionsPage"
-import SubscribersPage from "./pages/SubscribersPage"
-import LikedCommentsPage from "./pages/LikedCommentsPage"
+// Lazy load all page components for code splitting
+const HomePage = lazy(() => import("./pages/HomePage"))
+const LoginPage = lazy(() => import("./pages/LoginPage"))
+const RegisterPage = lazy(() => import("./pages/RegisterPage"))
+const SettingsPage = lazy(() => import("./pages/SettingsPage"))
+const UploadPage = lazy(() => import("./pages/UploadPage"))
+const ProfilePage = lazy(() => import("./pages/ProfilePage"))
+const VideoPlayerPage = lazy(() => import("./pages/VideoPlayerPage"))
+const DashboardPage = lazy(() => import("./pages/DashboardPage"))
+const SearchPage = lazy(() => import("./pages/SearchPage"))
+const DiscoverPage = lazy(() => import("./pages/DiscoverPage"))
+const ActivityPage = lazy(() => import("./pages/ActivityPage"))
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"))
+const TweetPage = lazy(() => import("./pages/TweetPage"))
+const PlaylistsPage = lazy(() => import("./pages/PlaylistsPage"))
+const PlaylistDetailPage = lazy(() => import("./pages/PlaylistDetailPage"))
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"))
+const SubscriptionsPage = lazy(() => import("./pages/SubscriptionsPage"))
+const SubscribersPage = lazy(() => import("./pages/SubscribersPage"))
+const LikedCommentsPage = lazy(() => import("./pages/LikedCommentsPage"))
+
+// Loading component for Suspense fallback
+const LoadingSpinner = () => (
+    <div className="flex items-center justify-center h-screen bg-[#1E2021]">
+        <Loader2 className="w-12 h-12 animate-spin text-red-600" />
+    </div>
+)
 
 // Context
 import { ThemeProvider } from "./context/ThemeContext"
@@ -122,251 +129,256 @@ function App() {
             {/* Toast notifications - displays success/error messages globally */}
             <Toaster position="top-right" />
 
-            <Routes location={background || location}>
-                {/* PUBLIC ROUTES - No login required */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+            {/* Suspense wrapper for lazy-loaded routes */}
+            <Suspense fallback={<LoadingSpinner />}>
+                <Routes location={background || location}>
+                    {/* PUBLIC ROUTES - No login required */}
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
 
-                {/* PROTECTED ROUTES - All require authentication
+                    {/* PROTECTED ROUTES - All require authentication
                 Each route wraps its page in ProtectedRoute → MainLayout → Page */}
-                <Route
-                    path="/"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <HomePage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/settings"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <SettingsPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/upload"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <UploadPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/video/:videoId"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <VideoPlayerPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* DISCOVER PAGE - Content Discovery */}
-                <Route
-                    path="/discover"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <DiscoverPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* ACTIVITY PAGE - Notifications & Activity */}
-                <Route
-                    path="/activity"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <ActivityPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* PLAYLISTS PAGE - User's playlists */}
-                <Route
-                    path="/playlists"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <PlaylistsPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* PLAYLIST DETAIL PAGE - Single playlist view */}
-                <Route
-                    path="/playlists/:playlistId"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <PlaylistDetailPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* NOTIFICATIONS PAGE - User notifications */}
-                <Route
-                    path="/notifications"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <NotificationsPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* SUBSCRIPTIONS PAGE - Following/Subscribed channels */}
-                <Route
-                    path="/subscriptions"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <SubscriptionsPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* SUBSCRIBERS PAGE - Channel followers */}
-                <Route
-                    path="/channel/:username/subscribers"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <SubscribersPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* LIKED COMMENTS PAGE - User's liked comments */}
-                <Route
-                    path="/liked/comments"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <LikedCommentsPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* TWEET PAGE - Detail view for tweets */}
-                <Route
-                    path="/tweet/:tweetId"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <TweetPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* USER PROFILE PAGE */}
-                <Route
-                    path="/profile"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <ProfilePage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* DASHBOARD PAGE - Creator Stats & Video Management */}
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <DashboardPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* SEARCH PAGE - Video Search Results */}
-                <Route
-                    path="/search"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <SearchPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* CHANNEL PAGE (Public Profile) */}
-                <Route
-                    path="/channel/:username"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <ProfilePage />{" "}
-                                {/* Reusing ProfilePage for now, ideally ChannelPage */}
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
-                <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-
-            {/* MODAL ROUTES - Rendered on top of everything when background exists */}
-            {background && (
-                <Routes>
                     <Route
-                        path="/tweet/:tweetId"
+                        path="/"
                         element={
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                                <div
-                                    className="absolute inset-0"
-                                    onClick={() => navigate(-1)}
-                                />
-                                <div className="relative z-10 w-full max-w-7xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
-                                    <TweetPage isModal={true} />
-                                </div>
-                            </div>
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <HomePage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/settings"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SettingsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/upload"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <UploadPage />
+                                </MainLayout>
+                            </ProtectedRoute>
                         }
                     />
 
                     <Route
                         path="/video/:videoId"
                         element={
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                                <div
-                                    className="absolute inset-0"
-                                    onClick={() => navigate(-1)}
-                                />
-                                <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl bg-[#1E2021]">
-                                    <VideoPlayerPage isModal={true} />
-                                </div>
-                            </div>
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <VideoPlayerPage />
+                                </MainLayout>
+                            </ProtectedRoute>
                         }
                     />
+
+                    {/* DISCOVER PAGE - Content Discovery */}
+                    <Route
+                        path="/discover"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <DiscoverPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* ACTIVITY PAGE - Notifications & Activity */}
+                    <Route
+                        path="/activity"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ActivityPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* PLAYLISTS PAGE - User's playlists */}
+                    <Route
+                        path="/playlists"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <PlaylistsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* PLAYLIST DETAIL PAGE - Single playlist view */}
+                    <Route
+                        path="/playlists/:playlistId"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <PlaylistDetailPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* NOTIFICATIONS PAGE - User notifications */}
+                    <Route
+                        path="/notifications"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <NotificationsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* SUBSCRIPTIONS PAGE - Following/Subscribed channels */}
+                    <Route
+                        path="/subscriptions"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SubscriptionsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* SUBSCRIBERS PAGE - Channel followers */}
+                    <Route
+                        path="/channel/:username/subscribers"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SubscribersPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* LIKED COMMENTS PAGE - User's liked comments */}
+                    <Route
+                        path="/liked/comments"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <LikedCommentsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* TWEET PAGE - Detail view for tweets */}
+                    <Route
+                        path="/tweet/:tweetId"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <TweetPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* USER PROFILE PAGE */}
+                    <Route
+                        path="/profile"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ProfilePage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* DASHBOARD PAGE - Creator Stats & Video Management */}
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <DashboardPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* SEARCH PAGE - Video Search Results */}
+                    <Route
+                        path="/search"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SearchPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* CHANNEL PAGE (Public Profile) */}
+                    <Route
+                        path="/channel/:username"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ProfilePage />{" "}
+                                    {/* Reusing ProfilePage for now, ideally ChannelPage */}
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
+            </Suspense>
+
+            {/* MODAL ROUTES - Rendered on top of everything when background exists */}
+            {background && (
+                <Suspense fallback={null}>
+                    <Routes>
+                        <Route
+                            path="/tweet/:tweetId"
+                            element={
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                    <div
+                                        className="absolute inset-0"
+                                        onClick={() => navigate(-1)}
+                                    />
+                                    <div className="relative z-10 w-full max-w-7xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
+                                        <TweetPage isModal={true} />
+                                    </div>
+                                </div>
+                            }
+                        />
+
+                        <Route
+                            path="/video/:videoId"
+                            element={
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                    <div
+                                        className="absolute inset-0"
+                                        onClick={() => navigate(-1)}
+                                    />
+                                    <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl bg-[#1E2021]">
+                                        <VideoPlayerPage isModal={true} />
+                                    </div>
+                                </div>
+                            }
+                        />
+                    </Routes>
+                </Suspense>
             )}
         </ThemeProvider>
     )
