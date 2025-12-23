@@ -100,7 +100,7 @@ const RegisterPage = () => {
             const { user, accessToken } = response
             localStorage.setItem("accessToken", accessToken)
             dispatch(loginSuccess(user))
-            toast.success(`🎉 Welcome to VidNest, ${user.username}!`)
+            toast.success(`🎉 Welcome to Viewly, ${user.username}!`)
             navigate("/")
         } catch (error) {
             dispatch(loginFailure(error.message || "Registration failed"))
@@ -174,7 +174,7 @@ const RegisterPage = () => {
 
                                     <div className="flex flex-col gap-2 w-full">
                                         <a
-                                            href="https://github.com/Prajjwal2051/VidNest"
+                                            href="https://github.com/Prajjwal2051/Viewly"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors group/link"
@@ -186,7 +186,7 @@ const RegisterPage = () => {
                                                 />
                                             </div>
                                             <span className="text-sm font-medium text-gray-300 group-hover/link:text-white">
-                                                VidNest Repo
+                                                Viewly Repo
                                             </span>
                                         </a>
 
@@ -222,7 +222,7 @@ const RegisterPage = () => {
                             </div>
                         </div>
                         <h2 className="text-3xl font-bold text-[#e60023] mb-2 font-['Playfair_Display']">
-                            Welcome to VidNest
+                            Welcome to Viewly
                         </h2>
                         <p className="text-gray-600">Find new ideas to try</p>
                     </div>
@@ -334,7 +334,7 @@ const RegisterPage = () => {
 
                     <div className="mt-6 text-center">
                         <p className="text-gray-400 text-xs mb-4 px-8">
-                            By continuing, you agree to VidNest's{" "}
+                            By continuing, you agree to Viewly's{" "}
                             <span className="font-bold text-gray-600 cursor-pointer">
                                 Terms of Service
                             </span>{" "}

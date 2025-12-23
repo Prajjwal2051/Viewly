@@ -94,13 +94,13 @@ const Sidebar = () => {
                 {/* LOGO */}
                 <div
                     onClick={() => navigate("/")}
-                    className="mb-8 px-4 cursor-pointer group"
+                    className="mb-8 pl-6 pr-4 cursor-pointer group"
                 >
                     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-600 text-white font-bold text-xl xl:hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
                         V
                     </div>
                     <h1 className="hidden xl:block text-2xl font-bold text-red-600 tracking-tight transition-all duration-300 group-hover:scale-105">
-                        VidNest
+                        Viewly
                     </h1>
                 </div>
 

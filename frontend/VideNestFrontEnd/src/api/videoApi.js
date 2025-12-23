@@ -48,6 +48,17 @@ const getVideoById = async (videoId) => {
 }
 
 /**
+ * GET VIDEO CATEGORIES
+ * Fetches list of all unique categories from published videos
+ *
+ * Returns: { data: ["Category1", "Category2", ...], message: "..." }
+ */
+const getVideoCategories = async () => {
+    const response = await apiClient.get("/videos/categories")
+    return response.data
+}
+
+/**
  * UPLOAD VIDEO
  * Uploads new video with file and metadata
  *
@@ -120,5 +131,6 @@ export {
     uploadVideo,
     getAllVideos,
     getVideoById,
+    getVideoCategories,
     searchVideos,
 }

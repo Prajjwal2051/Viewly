@@ -328,14 +328,63 @@ const getChannelStats = asyncHandler(async (req, res) => {
     ])
     const totalComments = totalCommentsResult[0]?.totalComments || 0
 
-    // STEP 22: Find most popular video by view count
-    const mostPopularVideo = await Video.findOne({
-        owner: channelId,
-        isPublished: true,
-    })
-        .sort({ views: -1 })
-        .select("title description thumbnail views createdAt")
-        .limit(1)
+    // STEP 22: Find most popular video by view count with engagement metrics
+    const mostPopularVideoResult = await Video.aggregate([
+        // Match: Only published videos by this channel
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(channelId),
+                isPublished: true,
+            },
+        },
+        // Sort: By views descending to get most popular first
+        {
+            $sort: { views: -1 },
+        },
+        // Limit: Get only the top video
+        {
+            $limit: 1,
+        },
+        // Lookup: Get likes count
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "video",
+                as: "videoLikes",
+            },
+        },
+        // Lookup: Get comments count
+        {
+            $lookup: {
+                from: "comments",
+                localField: "_id",
+                foreignField: "video",
+                as: "videoComments",
+            },
+        },
+        // Add fields: Calculate counts
+        {
+            $addFields: {
+                likesCount: { $size: "$videoLikes" },
+                commentsCount: { $size: "$videoComments" },
+            },
+        },
+        // Project: Select only needed fields
+        {
+            $project: {
+                title: 1,
+                description: 1,
+                thumbnail: 1,
+                views: 1,
+                createdAt: 1,
+                likesCount: 1,
+                commentsCount: 1,
+            },
+        },
+    ])
+
+    const mostPopularVideo = mostPopularVideoResult[0] || null
 
     // STEP 23: Send comprehensive statistics response
     return res.status(200).json(

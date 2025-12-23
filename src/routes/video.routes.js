@@ -22,6 +22,7 @@ import {
     getVideoById, // Gets single video details
     updateVideo, // Updates video metadata
     deleteVideo, // Deletes video
+    getVideoCategories, // Gets video categories
 } from "../controllers/video.controller.js"
 
 // Create Express router instance
@@ -37,6 +38,12 @@ const router = Router()
  * Anyone can view the video list
  */
 router.get("/", getAllVideos)
+
+/**
+ * GET /api/v1/videos/categories
+ * Get all unique categories from published videos
+ */
+router.get("/categories", getVideoCategories)
 
 /**
  * GET /api/v1/videos/:videoId
