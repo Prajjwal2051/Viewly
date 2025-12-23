@@ -219,7 +219,7 @@ const DashboardPage = () => {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {/* Total Videos */}
-                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
+                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20 animate-fadeIn">
                         <div className="flex items-center justify-between mb-4">
                             <VideoIcon className="text-red-500" size={32} />
                             <BarChart3 className="text-red-400/30" size={48} />
@@ -410,9 +410,9 @@ const DashboardPage = () => {
                                             >
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-32 h-20 bg-gray-800 rounded-lg flex items-center justify-center">
+                                                        <div className="w-32 h-20 bg-red-600/10 rounded-lg flex items-center justify-center">
                                                             <VideoIcon
-                                                                className="text-gray-500"
+                                                                className="text-red-600"
                                                                 size={32}
                                                             />
                                                         </div>

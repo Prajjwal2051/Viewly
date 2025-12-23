@@ -9,8 +9,8 @@
  * @returns {string} Formatted string (e.g., "1.2K", "1.5M")
  */
 export const formatNumber = (num) => {
-    if (!num || isNaN(num)) return '0'
-    
+    if (!num || isNaN(num)) return "0"
+
     if (num >= 1_000_000) {
         return `${(num / 1_000_000).toFixed(1)}M`
     }
@@ -26,7 +26,7 @@ export const formatNumber = (num) => {
  * @returns {string} Formatted string with commas
  */
 export const formatCount = (num) => {
-    if (!num || isNaN(num)) return '0'
+    if (!num || isNaN(num)) return "0"
     return num.toLocaleString()
 }
 
@@ -36,16 +36,16 @@ export const formatCount = (num) => {
  * @returns {string} Formatted duration string
  */
 export const formatDuration = (seconds) => {
-    if (!seconds || isNaN(seconds)) return '0:00'
-    
+    if (!seconds || isNaN(seconds)) return "0:00"
+
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     const secs = Math.floor(seconds % 60)
-    
+
     if (hours > 0) {
-        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+        return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
     }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`
+    return `${minutes}:${secs.toString().padStart(2, "0")}`
 }
 
 /**
@@ -54,7 +54,8 @@ export const formatDuration = (seconds) => {
  * @returns {string} Formatted percentage with sign
  */
 export const formatPercentage = (value) => {
-    if (!value || isNaN(value)) return '0%'
-    const sign = value > 0 ? '+' : ''
-    return `${sign}${value.toFixed(1)}%`
+    const num = Number(value)
+    if (!value || isNaN(num)) return "0%"
+    const sign = num > 0 ? "+" : ""
+    return `${sign}${num.toFixed(1)}%`
 }

@@ -51,8 +51,8 @@ const NotificationBell = () => {
     const fetchNotificationCount = async () => {
         try {
             const data = await getNotifications({ page: 1, limit: 5 })
-            setUnreadCount(data.data.unreadCount || 0)
-            setNotifications(data.data.notifications || [])
+            setUnreadCount(data?.data?.unreadCount || 0)
+            setNotifications(data?.data?.notifications || [])
         } catch (error) {
             console.error("Failed to fetch notifications:", error)
         }

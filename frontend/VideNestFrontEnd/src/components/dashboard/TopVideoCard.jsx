@@ -3,7 +3,7 @@
 // ============================================
 // Highlights the most popular video on the channel
 
-import { Play, Heart, MessageSquare, Calendar } from "lucide-react"
+import { Play, Heart, MessageSquare, Calendar, Video } from "lucide-react"
 import { Link } from "react-router-dom"
 import { formatNumber } from "../../utils/formatNumber"
 import { formatDistanceToNow } from "date-fns"
@@ -29,29 +29,10 @@ const TopVideoCard = ({ video }) => {
             </h3>
 
             <div className="flex flex-col md:flex-row gap-6">
-                {/* Thumbnail */}
-                <div className="relative w-full md:w-64 aspect-video rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                    <Link
-                        to={`/video/${video._id}`}
-                        className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                        <div className="bg-red-600 p-3 rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
-                            <Play
-                                size={24}
-                                fill="currentColor"
-                                className="text-white ml-1"
-                            />
-                        </div>
-                    </Link>
-                    <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white">
-                        {formatNumber(video.duration)}s
-                    </div>
+                {/* Video Logo */}
+                <div className="relative w-24 h-24 bg-red-600/20 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <Video size={40} className="text-red-500" />
+                    <div className="absolute inset-0 bg-red-600/10 rounded-2xl animate-pulse" />
                 </div>
 
                 {/* Info */}

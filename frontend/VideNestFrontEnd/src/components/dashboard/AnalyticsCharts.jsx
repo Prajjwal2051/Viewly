@@ -28,9 +28,9 @@ const AnalyticsCharts = ({ data }) => {
                     Views Growth (Last 30 Days)
                 </h3>
 
-                <div className="h-[300px] w-full">
+                <div className="w-full">
                     {viewsData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" aspect={2.5}>
                             <AreaChart data={viewsData}>
                                 <defs>
                                     <linearGradient
@@ -107,9 +107,9 @@ const AnalyticsCharts = ({ data }) => {
                     Subscribers Growth
                 </h3>
 
-                <div className="h-[300px] w-full">
+                <div className="w-full">
                     {subscribersData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" aspect={2.5}>
                             <LineChart data={subscribersData}>
                                 <CartesianGrid
                                     strokeDasharray="3 3"

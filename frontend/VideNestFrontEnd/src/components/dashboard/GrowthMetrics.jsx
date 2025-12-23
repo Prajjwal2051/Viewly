@@ -22,6 +22,10 @@ const GrowthMetrics = ({ metrics }) => {
         subscriberGrowthPercentage,
     } = last30Days
 
+    // Convert to numbers to ensure proper formatting
+    const viewsGrowth = Number(viewsGrowthPercentage) || 0
+    const subscriberGrowth = Number(subscriberGrowthPercentage) || 0
+
     const renderTrend = (percentage) => {
         if (!percentage || percentage === 0) {
             return (
@@ -57,7 +61,7 @@ const GrowthMetrics = ({ metrics }) => {
                     <h3 className="text-2xl font-bold text-white">
                         {formatNumber(views)}
                     </h3>
-                    {renderTrend(viewsGrowthPercentage)}
+                    {renderTrend(viewsGrowth)}
                 </div>
             </div>
 
@@ -68,7 +72,7 @@ const GrowthMetrics = ({ metrics }) => {
                     <h3 className="text-2xl font-bold text-white">
                         +{formatNumber(newSubscribers)}
                     </h3>
-                    {renderTrend(subscriberGrowthPercentage)}
+                    {renderTrend(subscriberGrowth)}
                 </div>
             </div>
 

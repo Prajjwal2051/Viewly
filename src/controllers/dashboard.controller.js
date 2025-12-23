@@ -334,7 +334,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         isPublished: true,
     })
         .sort({ views: -1 })
-        .select("title thumbnail views createdAt")
+        .select("title description thumbnail views createdAt")
         .limit(1)
 
     // STEP 23: Send comprehensive statistics response
