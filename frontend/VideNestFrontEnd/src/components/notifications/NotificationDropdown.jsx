@@ -7,8 +7,8 @@ import { useNavigate } from "react-router-dom"
 import { formatDistanceToNow } from "date-fns"
 import { Heart, MessageCircle, UserPlus, Video, Check, X } from "lucide-react"
 import {
-    markNotificationAsRead,
-    markAllNotificationsAsRead,
+    markAsRead,
+    markAllAsRead,
     deleteNotification,
 } from "../../api/notificationApi"
 import toast from "react-hot-toast"
@@ -20,7 +20,7 @@ const NotificationDropdown = ({ notifications, onClose, onUpdate }) => {
         try {
             // Mark as read if not already
             if (!notification.isRead) {
-                await markNotificationAsRead(notification._id)
+                await markAsRead(notification._id)
                 onUpdate()
             }
 
@@ -42,7 +42,7 @@ const NotificationDropdown = ({ notifications, onClose, onUpdate }) => {
 
     const handleMarkAllAsRead = async () => {
         try {
-            await markAllNotificationsAsRead()
+            await markAllAsRead()
             toast.success("All notifications marked as read")
             onUpdate()
         } catch (error) {
