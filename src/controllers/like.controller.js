@@ -367,6 +367,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
             $project: {
                 "videoDetails._id": 1, // Video ID
                 "videoDetails.title": 1, // Video title
+                "videoDetails.description": 1, // Video description
                 "videoDetails.thumbnail": 1, // Video thumbnail URL
                 "videoDetails.duration": 1, // Video duration in seconds
                 "videoDetails.views": 1, // View count

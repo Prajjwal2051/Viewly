@@ -114,7 +114,11 @@ const DashboardPage = () => {
                 const subscribersResponse = await getUserChannelSubscribers(
                     user._id
                 )
-                setSubscribers(subscribersResponse?.data || [])
+                setSubscribers(
+                    subscribersResponse?.data?.subscribers ||
+                        subscribersResponse?.subscribers ||
+                        []
+                )
             } catch (error) {
                 console.error("Failed to fetch subscribers:", error)
             }
@@ -136,7 +140,14 @@ const DashboardPage = () => {
             // Fetch liked videos
             try {
                 const likedVideosResponse = await getLikedVideos()
-                setLikedVideos(likedVideosResponse?.data?.likedVideos || [])
+                console.log("Liked videos response:", likedVideosResponse)
+                // Backend returns paginated response: { data: { likedVideos: [...] } }
+                const videos =
+                    likedVideosResponse?.data?.likedVideos ||
+                    likedVideosResponse?.likedVideos ||
+                    []
+                console.log("Extracted liked videos:", videos)
+                setLikedVideos(videos)
             } catch (error) {
                 console.error("Failed to fetch liked videos:", error)
                 setLikedVideos([])
@@ -145,11 +156,14 @@ const DashboardPage = () => {
             // Fetch liked tweets
             try {
                 const likedTweetsResponse = await getLikedTweets()
-                setLikedTweets(
+                console.log("Liked tweets response:", likedTweetsResponse)
+                // Backend returns paginated response: { data: { likedTweets: [...] } }
+                const tweets =
                     likedTweetsResponse?.data?.likedTweets ||
-                        likedTweetsResponse?.data?.likedVideos ||
-                        []
-                )
+                    likedTweetsResponse?.likedTweets ||
+                    []
+                console.log("Extracted liked tweets:", tweets)
+                setLikedTweets(tweets)
             } catch (error) {
                 console.error("Failed to fetch liked tweets:", error)
                 setLikedTweets([])
@@ -459,7 +473,7 @@ const DashboardPage = () => {
                                         {videos.map((video) => (
                                             <tr
                                                 key={video._id}
-                                                className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E]/30 transition-colors"
+                                                className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E] transition-colors"
                                             >
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-4">
@@ -470,14 +484,7 @@ const DashboardPage = () => {
                                                             />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <h4
-                                                                className="font-semibold text-white line-clamp-2 cursor-pointer hover:text-red-600"
-                                                                onClick={() =>
-                                                                    navigate(
-                                                                        `/video/${video._id}`
-                                                                    )
-                                                                }
-                                                            >
+                                                            <h4 className="font-semibold text-white line-clamp-2">
                                                                 {video.title}
                                                             </h4>
                                                             <p className="text-sm text-gray-400 line-clamp-1 mt-1">
@@ -601,7 +608,7 @@ const DashboardPage = () => {
                                         {tweets.map((tweet) => (
                                             <tr
                                                 key={tweet._id}
-                                                className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E]/30 transition-colors"
+                                                className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E] transition-colors"
                                             >
                                                 <td className="p-4">
                                                     <h4 className="font-semibold text-white line-clamp-2">
@@ -689,27 +696,32 @@ const DashboardPage = () => {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                            <div className="flex flex-col gap-4 p-6">
                                 {likedVideos.map((item) => {
-                                    const video = item.video || item
+                                    // Handle structure: backend returns video details inside videoDetails
+                                    const video =
+                                        item.videoDetails || item.video || item
+                                    if (!video._id) return null
+
                                     return (
                                         <div
                                             key={video._id}
-                                            onClick={() =>
-                                                navigate(`/video/${video._id}`)
-                                            }
-                                            className="bg-[#1E2021] rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+                                            className="bg-[#1E2021] rounded-lg p-4 flex items-center gap-4 hover:bg-[#2A2D2E] transition-colors"
                                         >
-                                            <img
-                                                src={video.thumbNail}
-                                                alt={video.title}
-                                                className="w-full h-40 object-cover"
-                                            />
-                                            <div className="p-3">
-                                                <h4 className="text-white font-medium line-clamp-2 mb-1">
+                                            <div className="flex-shrink-0 w-32 h-20 bg-[#2A2D2E] rounded flex items-center justify-center">
+                                                <VideoIcon
+                                                    size={32}
+                                                    className="text-red-500"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-white font-medium truncate mb-1">
                                                     {video.title}
                                                 </h4>
-                                                <p className="text-gray-400 text-sm">
+                                                <p className="text-gray-400 text-sm line-clamp-2 mb-2">
+                                                    {video.description}
+                                                </p>
+                                                <p className="text-gray-500 text-xs">
                                                     {video.views?.toLocaleString() ||
                                                         0}{" "}
                                                     views
@@ -752,14 +764,13 @@ const DashboardPage = () => {
                                     const tweet =
                                         item.tweetDetails || item.tweet || item
                                     const owner =
-                                        item.ownerDetails || tweet.owner
+                                        item.ownerDetails || tweet.owner || {}
+                                    if (!tweet._id) return null
+
                                     return (
                                         <div
                                             key={tweet._id}
-                                            onClick={() =>
-                                                navigate(`/tweet/${tweet._id}`)
-                                            }
-                                            className="bg-[#1E2021] rounded-lg p-4 cursor-pointer hover:scale-105 transition-transform"
+                                            className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors"
                                         >
                                             {tweet.image && (
                                                 <img
@@ -772,11 +783,6 @@ const DashboardPage = () => {
                                                 {tweet.content}
                                             </p>
                                             <div className="flex items-center gap-2 mb-2">
-                                                <img
-                                                    src={owner?.avatar}
-                                                    alt={owner?.username}
-                                                    className="w-6 h-6 rounded-full"
-                                                />
                                                 <span className="text-sm text-gray-300">
                                                     @{owner?.username}
                                                 </span>
@@ -819,37 +825,27 @@ const DashboardPage = () => {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
+                            <div className="p-6 space-y-3">
                                 {subscribers.map((sub) => {
-                                    // Identify the subscriber user object
-                                    // API structure: might be { subscriber: { ... } } or just { ... }
-                                    // Based on subscriptionApi, it likely returns list of subscription documents
-                                    // with 'subscriber' populated? Or list of users?
-                                    // Let's assume subscription doc with 'subscriber' populated.
-                                    const userObj = sub.subscriber || sub
+                                    const userObj =
+                                        sub.subscriberDetails ||
+                                        sub.subscriber ||
+                                        sub
                                     if (!userObj) return null
 
                                     return (
                                         <div
                                             key={sub._id}
-                                            onClick={() =>
-                                                navigate(
-                                                    `/c/${userObj.username}`
-                                                )
-                                            }
-                                            className="bg-[#1E2021] rounded-lg p-4 cursor-pointer hover:scale-105 transition-transform flex flex-col items-center text-center"
+                                            className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors flex items-center justify-between"
                                         >
-                                            <img
-                                                src={userObj.avatar}
-                                                alt={userObj.username}
-                                                className="w-20 h-20 rounded-full mb-3 object-cover"
-                                            />
-                                            <h4 className="text-white font-bold truncate w-full">
-                                                {userObj.fullName}
-                                            </h4>
-                                            <p className="text-gray-400 text-sm truncate w-full mb-2">
-                                                @{userObj.username}
-                                            </p>
+                                            <div>
+                                                <h4 className="text-white font-semibold">
+                                                    {userObj.fullName}
+                                                </h4>
+                                                <p className="text-gray-400 text-sm">
+                                                    @{userObj.username}
+                                                </p>
+                                            </div>
                                         </div>
                                     )
                                 })}
@@ -882,10 +878,8 @@ const DashboardPage = () => {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
+                            <div className="p-6 space-y-3">
                                 {subscribedTo.map((sub) => {
-                                    // Identify the channel user object
-                                    // API structure: verified in subscriptionApi to be subscribedChannelDetails or channel or similar
                                     const channelObj =
                                         sub.subscribedChannelDetails ||
                                         sub.channel ||
@@ -895,27 +889,16 @@ const DashboardPage = () => {
                                     return (
                                         <div
                                             key={sub._id}
-                                            onClick={() =>
-                                                navigate(
-                                                    `/c/${channelObj.username}`
-                                                )
-                                            }
-                                            className="bg-[#1E2021] rounded-lg p-4 cursor-pointer hover:scale-105 transition-transform flex flex-col items-center text-center"
+                                            className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors flex items-center justify-between"
                                         >
-                                            <img
-                                                src={channelObj.avatar}
-                                                alt={channelObj.username}
-                                                className="w-20 h-20 rounded-full mb-3 object-cover"
-                                            />
-                                            <h4 className="text-white font-bold truncate w-full">
-                                                {channelObj.fullName}
-                                            </h4>
-                                            <p className="text-gray-400 text-sm truncate w-full mb-2">
-                                                @{channelObj.username}
-                                            </p>
-                                            <span className="text-xs px-2 py-1 bg-red-600/20 text-red-500 rounded-full">
-                                                Subscribed
-                                            </span>
+                                            <div>
+                                                <h4 className="text-white font-semibold">
+                                                    {channelObj.fullName}
+                                                </h4>
+                                                <p className="text-gray-400 text-sm">
+                                                    @{channelObj.username}
+                                                </p>
+                                            </div>
                                         </div>
                                     )
                                 })}
