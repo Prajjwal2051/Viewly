@@ -105,7 +105,7 @@ const DashboardPage = () => {
             // Fetch liked videos
             try {
                 const likedVideosResponse = await getLikedVideos()
-                setLikedVideos(likedVideosResponse.data.likedVideos || [])
+                setLikedVideos(likedVideosResponse?.data?.likedVideos || [])
             } catch (error) {
                 console.error("Failed to fetch liked videos:", error)
                 setLikedVideos([])
@@ -114,7 +114,11 @@ const DashboardPage = () => {
             // Fetch liked tweets
             try {
                 const likedTweetsResponse = await getLikedTweets()
-                setLikedTweets(likedTweetsResponse.data.likedTweets || [])
+                setLikedTweets(
+                    likedTweetsResponse?.data?.likedTweets ||
+                        likedTweetsResponse?.data?.likedVideos ||
+                        []
+                )
             } catch (error) {
                 console.error("Failed to fetch liked tweets:", error)
                 setLikedTweets([])

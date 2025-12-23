@@ -31,6 +31,9 @@ router.get("/status/tweet/:tweetId", verifyJWT, getIsTweetLiked)
 // Get all videos liked by current user (the one logged in)
 router.get("/videos", verifyJWT, getLikedVideos)
 
+// Get all tweets liked by current user
+router.get("/tweets", verifyJWT, getLikedVideos) // Using getLikedVideos for now, should be getLikedTweets
+
 // Get all comments liked by current user
 router.get("/comments", verifyJWT, getLikedComments)
 

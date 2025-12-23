@@ -12,7 +12,7 @@ import rateLimit from "express-rate-limit"
  */
 export const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 300, // Limit each IP to 300 requests per windowMs
     message: {
         success: false,
         message: "Too many requests from this IP, please try again later.",
@@ -30,7 +30,7 @@ export const generalLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 requests per windowMs
+    max: 20, // Limit each IP to 20 requests per windowMs
     message: {
         success: false,
         message:
@@ -48,7 +48,7 @@ export const authLimiter = rateLimit({
  */
 export const uploadLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 10, // Limit each user to 10 uploads per hour
+    max: 50, // Limit each user to 50 uploads per hour
     message: {
         success: false,
         message: "Upload limit reached. Please try again later.",
@@ -68,7 +68,7 @@ export const uploadLimiter = rateLimit({
  */
 export const commentLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 20, // Limit each user to 20 comments per hour
+    max: 100, // Limit each user to 100 comments per hour
     message: {
         success: false,
         message: "Comment limit reached. Please try again later.",
@@ -87,7 +87,7 @@ export const commentLimiter = rateLimit({
  */
 export const likeLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 100, // Limit each user to 100 likes per hour
+    max: 500, // Limit each user to 500 likes per hour
     message: {
         success: false,
         message: "Like limit reached. Please try again later.",
@@ -106,7 +106,7 @@ export const likeLimiter = rateLimit({
  */
 export const searchLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // Limit each IP to 50 searches per 15 minutes
+    max: 200, // Limit each IP to 200 searches per 15 minutes
     message: {
         success: false,
         message: "Too many search requests. Please try again later.",
