@@ -667,6 +667,77 @@ const getIsTweetLiked = asyncHandler(async (req, res) => {
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
+// ... (existing exports but I'm just replacing the lines above it to insert the function)
+// Actually I should just insert the function.
+
+/**
+ * GET LIKED TWEETS CONTROLLER
+ * Fetches paginated list of all tweets liked by the authenticated user
+ */
+const getLikedTweets = asyncHandler(async (req, res) => {
+    const userId = req.user._id
+    const { page = 1, limit = 10 } = req.query
+
+    const aggregationPipeline = [
+        {
+            $match: {
+                likedBy: new mongoose.Types.ObjectId(userId),
+                tweet: { $exists: true, $ne: null },
+            },
+        },
+        {
+            $lookup: {
+                from: "tweets",
+                localField: "tweet",
+                foreignField: "_id",
+                as: "tweetDetails",
+            },
+        },
+        { $unwind: "$tweetDetails" },
+        {
+            $lookup: {
+                from: "users",
+                localField: "tweetDetails.owner",
+                foreignField: "_id",
+                as: "ownerDetails",
+            },
+        },
+        { $unwind: "$ownerDetails" },
+        {
+            $project: {
+                "tweetDetails._id": 1,
+                "tweetDetails.content": 1,
+                "tweetDetails.createdAt": 1,
+                "tweetDetails.likes": 1,
+                "ownerDetails.username": 1,
+                "ownerDetails.fullName": 1,
+                "ownerDetails.avatar": 1,
+                createdAt: 1,
+            },
+        },
+        { $sort: { createdAt: -1 } },
+    ]
+
+    const aggregate = like.aggregate(aggregationPipeline)
+    const options = {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        customLabels: {
+            docs: "likedTweets",
+            totalDocs: "totalLikes",
+        },
+    }
+
+    const result = await like.aggregatePaginate(aggregate, options)
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, result, "Liked tweets fetched successfully"))
+})
+
+// ============================================
+// EXPORT CONTROLLERS
+// ============================================
 export {
     toggleVideoLike, // POST /likes/toggle/v/:videoId - Toggle like on a video
     toggleCommentLike, // POST /likes/toggle/c/:commentId - Toggle like on a comment
@@ -675,4 +746,5 @@ export {
     getLikedComments, // GET /likes/comments - Get all comments liked by authenticated user
     getIsVideoLiked, // GET /likes/status/v/:videoId - Check if video is liked
     getIsTweetLiked, // GET /likes/status/tweet/:tweetId - Check if tweet is liked
+    getLikedTweets, // GET /likes/tweets - Get all tweets liked by authenticated user
 }

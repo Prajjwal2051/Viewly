@@ -15,9 +15,14 @@ import { getUserTweets, deleteTweet, updateTweet } from "../api/tweetApi"
 import { getLikedVideos, getLikedTweets } from "../api/likeApi"
 import { getChannelStats } from "../api/dashboardApi"
 import { getUserChannelProfile } from "../api/userApi"
+import {
+    getUserChannelSubscribers,
+    getSubscribedChannels,
+} from "../api/subscriptionApi"
 import AnalyticsCharts from "../components/dashboard/AnalyticsCharts"
 import GrowthMetrics from "../components/dashboard/GrowthMetrics"
 import TopVideoCard from "../components/dashboard/TopVideoCard"
+import CountUp from "../components/common/CountUp" // Added import
 import {
     BarChart3,
     Video as VideoIcon,
@@ -47,6 +52,8 @@ const DashboardPage = () => {
     const [tweets, setTweets] = useState([])
     const [likedVideos, setLikedVideos] = useState([])
     const [likedTweets, setLikedTweets] = useState([])
+    const [subscribers, setSubscribers] = useState([])
+    const [subscribedTo, setSubscribedTo] = useState([])
     const [analyticsData, setAnalyticsData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [deleting, setDeleting] = useState(null)
@@ -101,6 +108,30 @@ const DashboardPage = () => {
                 totalSubscribers: subscriberCount,
                 totalTweets: userTweets.length,
             })
+
+            // Fetch subscribers
+            try {
+                const subscribersResponse = await getUserChannelSubscribers(
+                    user._id
+                )
+                setSubscribers(subscribersResponse?.data || [])
+            } catch (error) {
+                console.error("Failed to fetch subscribers:", error)
+            }
+
+            // Fetch subscribed channels
+            try {
+                const subscribedToResponse = await getSubscribedChannels(
+                    user._id
+                )
+                const subscribedList =
+                    subscribedToResponse?.data?.subscribedChannels ||
+                    subscribedToResponse?.subscribedChannels ||
+                    []
+                setSubscribedTo(subscribedList)
+            } catch (error) {
+                console.error("Failed to fetch subscribed channels:", error)
+            }
 
             // Fetch liked videos
             try {
@@ -228,12 +259,12 @@ const DashboardPage = () => {
                             Total Videos
                         </p>
                         <h3 className="text-3xl font-bold text-white">
-                            {stats.totalVideos}
+                            <CountUp end={stats.totalVideos} />
                         </h3>
                     </div>
 
                     {/* Total Views */}
-                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
+                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20 animate-fadeIn [animation-delay:100ms]">
                         <div className="flex items-center justify-between mb-4">
                             <Eye className="text-red-500" size={32} />
                             <BarChart3 className="text-red-400/30" size={48} />
@@ -242,12 +273,12 @@ const DashboardPage = () => {
                             Total Views
                         </p>
                         <h3 className="text-3xl font-bold text-white">
-                            {stats.totalViews.toLocaleString()}
+                            <CountUp end={stats.totalViews} />
                         </h3>
                     </div>
 
                     {/* Total Subscribers */}
-                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
+                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20 animate-fadeIn [animation-delay:200ms]">
                         <div className="flex items-center justify-between mb-4">
                             <Users className="text-red-500" size={32} />
                             <BarChart3 className="text-red-400/30" size={48} />
@@ -256,12 +287,12 @@ const DashboardPage = () => {
                             Subscribers
                         </p>
                         <h3 className="text-3xl font-bold text-white">
-                            {stats.totalSubscribers.toLocaleString()}
+                            <CountUp end={stats.totalSubscribers} />
                         </h3>
                     </div>
 
                     {/* Total Tweets */}
-                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6">
+                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20 animate-fadeIn [animation-delay:300ms]">
                         <div className="flex items-center justify-between mb-4">
                             <MessageSquare className="text-red-500" size={32} />
                             <BarChart3 className="text-red-400/30" size={48} />
@@ -270,7 +301,7 @@ const DashboardPage = () => {
                             Total Tweets
                         </p>
                         <h3 className="text-3xl font-bold text-white">
-                            {stats.totalTweets.toLocaleString()}
+                            <CountUp end={stats.totalTweets} />
                         </h3>
                     </div>
                 </div>
@@ -345,6 +376,28 @@ const DashboardPage = () => {
                     >
                         <Heart size={16} className="inline mr-1" />
                         Liked Tweets ({likedTweets.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("subscribers")}
+                        className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                            activeTab === "subscribers"
+                                ? "text-white border-red-600"
+                                : "text-gray-400 border-transparent hover:text-white"
+                        }`}
+                    >
+                        <Users size={16} className="inline mr-1" />
+                        Subscribers ({subscribers.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("subscribedTo")}
+                        className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                            activeTab === "subscribedTo"
+                                ? "text-white border-red-600"
+                                : "text-gray-400 border-transparent hover:text-white"
+                        }`}
+                    >
+                        <Users size={16} className="inline mr-1" />
+                        Subscribed To ({subscribedTo.length})
                     </button>
                 </div>
 
@@ -696,7 +749,10 @@ const DashboardPage = () => {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
                                 {likedTweets.map((item) => {
-                                    const tweet = item.tweet || item
+                                    const tweet =
+                                        item.tweetDetails || item.tweet || item
+                                    const owner =
+                                        item.ownerDetails || tweet.owner
                                     return (
                                         <div
                                             key={tweet._id}
@@ -712,19 +768,154 @@ const DashboardPage = () => {
                                                     className="w-full h-48 object-cover rounded-lg mb-3"
                                                 />
                                             )}
-                                            <p className="text-white line-clamp-3">
+                                            <p className="text-white line-clamp-3 mb-3">
                                                 {tweet.content}
                                             </p>
-                                            <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <img
+                                                    src={owner?.avatar}
+                                                    alt={owner?.username}
+                                                    className="w-6 h-6 rounded-full"
+                                                />
+                                                <span className="text-sm text-gray-300">
+                                                    @{owner?.username}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-sm text-gray-400">
                                                 <span className="flex items-center gap-1">
                                                     <Heart size={16} />
                                                     {tweet.likes || 0}
                                                 </span>
-                                                <span className="flex items-center gap-1">
-                                                    <MessageSquare size={16} />
-                                                    {tweet.comments || 0}
-                                                </span>
                                             </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Subscribers Section */}
+                {activeTab === "subscribers" && (
+                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                        <div className="p-6 border-b border-[#2A2D2E]">
+                            <h2 className="text-2xl font-bold flex items-center gap-2">
+                                <Users size={28} className="text-red-500" />
+                                Subscribers
+                            </h2>
+                        </div>
+
+                        {subscribers.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <Users
+                                    className="mx-auto mb-4 text-gray-400"
+                                    size={48}
+                                />
+                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                    No subscribers yet
+                                </h3>
+                                <p className="text-gray-500">
+                                    Users who subscribe to you will appear here
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
+                                {subscribers.map((sub) => {
+                                    // Identify the subscriber user object
+                                    // API structure: might be { subscriber: { ... } } or just { ... }
+                                    // Based on subscriptionApi, it likely returns list of subscription documents
+                                    // with 'subscriber' populated? Or list of users?
+                                    // Let's assume subscription doc with 'subscriber' populated.
+                                    const userObj = sub.subscriber || sub
+                                    if (!userObj) return null
+
+                                    return (
+                                        <div
+                                            key={sub._id}
+                                            onClick={() =>
+                                                navigate(
+                                                    `/c/${userObj.username}`
+                                                )
+                                            }
+                                            className="bg-[#1E2021] rounded-lg p-4 cursor-pointer hover:scale-105 transition-transform flex flex-col items-center text-center"
+                                        >
+                                            <img
+                                                src={userObj.avatar}
+                                                alt={userObj.username}
+                                                className="w-20 h-20 rounded-full mb-3 object-cover"
+                                            />
+                                            <h4 className="text-white font-bold truncate w-full">
+                                                {userObj.fullName}
+                                            </h4>
+                                            <p className="text-gray-400 text-sm truncate w-full mb-2">
+                                                @{userObj.username}
+                                            </p>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Subscribed To Section */}
+                {activeTab === "subscribedTo" && (
+                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                        <div className="p-6 border-b border-[#2A2D2E]">
+                            <h2 className="text-2xl font-bold flex items-center gap-2">
+                                <Users size={28} className="text-red-500" />
+                                Subscribed Channels
+                            </h2>
+                        </div>
+
+                        {subscribedTo.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <Users
+                                    className="mx-auto mb-4 text-gray-400"
+                                    size={48}
+                                />
+                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                    No subscriptions yet
+                                </h3>
+                                <p className="text-gray-500">
+                                    Channels you subscribe to will appear here
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
+                                {subscribedTo.map((sub) => {
+                                    // Identify the channel user object
+                                    // API structure: verified in subscriptionApi to be subscribedChannelDetails or channel or similar
+                                    const channelObj =
+                                        sub.subscribedChannelDetails ||
+                                        sub.channel ||
+                                        sub
+                                    if (!channelObj) return null
+
+                                    return (
+                                        <div
+                                            key={sub._id}
+                                            onClick={() =>
+                                                navigate(
+                                                    `/c/${channelObj.username}`
+                                                )
+                                            }
+                                            className="bg-[#1E2021] rounded-lg p-4 cursor-pointer hover:scale-105 transition-transform flex flex-col items-center text-center"
+                                        >
+                                            <img
+                                                src={channelObj.avatar}
+                                                alt={channelObj.username}
+                                                className="w-20 h-20 rounded-full mb-3 object-cover"
+                                            />
+                                            <h4 className="text-white font-bold truncate w-full">
+                                                {channelObj.fullName}
+                                            </h4>
+                                            <p className="text-gray-400 text-sm truncate w-full mb-2">
+                                                @{channelObj.username}
+                                            </p>
+                                            <span className="text-xs px-2 py-1 bg-red-600/20 text-red-500 rounded-full">
+                                                Subscribed
+                                            </span>
                                         </div>
                                     )
                                 })}
