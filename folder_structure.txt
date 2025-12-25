@@ -1,0 +1,174 @@
+Folder structure for /home/prajjwal/Desktop/Coding/VidNest
+
+VidNest/
+├── frontend/
+│   └── VideNestFrontEnd/
+│   │   ├── public/
+│   │   ├── src/
+│   │   │   ├── api/
+│   │   │   │   ├── authApi.js
+│   │   │   │   ├── client.js
+│   │   │   │   ├── commentApi.js
+│   │   │   │   ├── dashboardApi.js
+│   │   │   │   ├── likeApi.js
+│   │   │   │   ├── notificationApi.js
+│   │   │   │   ├── playlistApi.js
+│   │   │   │   ├── subscriptionApi.js
+│   │   │   │   ├── tweetApi.js
+│   │   │   │   ├── userApi.js
+│   │   │   │   └── videoApi.js
+│   │   │   ├── assets/
+│   │   │   │   ├── auth_bg_bright.png
+│   │   │   │   ├── developer_profile.jpg
+│   │   │   │   └── react.svg
+│   │   │   ├── components/
+│   │   │   │   ├── comments/
+│   │   │   │   │   └── CommentSection.jsx
+│   │   │   │   ├── common/
+│   │   │   │   │   ├── CountUp.jsx
+│   │   │   │   │   ├── LoadingSpinner.jsx
+│   │   │   │   │   └── OfflineBanner.jsx
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   ├── AnalyticsCharts.jsx
+│   │   │   │   │   ├── GrowthMetrics.jsx
+│   │   │   │   │   └── TopVideoCard.jsx
+│   │   │   │   ├── layout/
+│   │   │   │   │   ├── ui/
+│   │   │   │   │   │   ├── layout/
+│   │   │   │   │   │   │   ├── Header.jsx
+│   │   │   │   │   │   │   └── Sidebar.jsx
+│   │   │   │   │   │   ├── Button.jsx
+│   │   │   │   │   │   └── Input.jsx
+│   │   │   │   │   └── MainLayout.jsx
+│   │   │   │   ├── notifications/
+│   │   │   │   │   ├── NotificationBell.jsx
+│   │   │   │   │   └── NotificationDropdown.jsx
+│   │   │   │   ├── playlist/
+│   │   │   │   │   ├── AddToPlaylistModal.jsx
+│   │   │   │   │   ├── CreatePlaylistModal.jsx
+│   │   │   │   │   └── PlaylistCard.jsx
+│   │   │   │   ├── search/
+│   │   │   │   │   ├── DateRangePicker.jsx
+│   │   │   │   │   ├── DurationSlider.jsx
+│   │   │   │   │   └── SearchFilters.jsx
+│   │   │   │   ├── tweet/
+│   │   │   │   │   ├── TweetCard.jsx
+│   │   │   │   │   ├── TweetCardSkeleton.jsx
+│   │   │   │   │   └── TweetList.jsx
+│   │   │   │   ├── ui/
+│   │   │   │   │   ├── EmptyState.jsx
+│   │   │   │   │   ├── SettingsModal.jsx
+│   │   │   │   │   └── Toast.jsx
+│   │   │   │   └── video/
+│   │   │   │   │   ├── VideoCard.jsx
+│   │   │   │   │   ├── VideoCardSkeleton.jsx
+│   │   │   │   │   └── VideoControls.jsx
+│   │   │   ├── context/
+│   │   │   │   └── ThemeContext.jsx
+│   │   │   ├── hooks/
+│   │   │   │   ├── useDebounce.js
+│   │   │   │   └── useSearchParams.js
+│   │   │   ├── pages/
+│   │   │   │   ├── ActivityPage.jsx
+│   │   │   │   ├── DashboardPage.jsx
+│   │   │   │   ├── DiscoverPage.jsx
+│   │   │   │   ├── HomePage.jsx
+│   │   │   │   ├── LikedCommentsPage.jsx
+│   │   │   │   ├── LoginPage.jsx
+│   │   │   │   ├── NotFoundPage.jsx
+│   │   │   │   ├── NotificationsPage.jsx
+│   │   │   │   ├── PlaylistDetailPage.jsx
+│   │   │   │   ├── PlaylistsPage.jsx
+│   │   │   │   ├── ProfilePage.jsx
+│   │   │   │   ├── RegisterPage.jsx
+│   │   │   │   ├── SearchPage.jsx
+│   │   │   │   ├── SettingsPage.jsx
+│   │   │   │   ├── SubscribersPage.jsx
+│   │   │   │   ├── SubscriptionsPage.jsx
+│   │   │   │   ├── TweetPage.jsx
+│   │   │   │   ├── UploadPage.jsx
+│   │   │   │   └── VideoPlayerPage.jsx
+│   │   │   ├── store/
+│   │   │   │   ├── slices/
+│   │   │   │   │   └── authSlice.js
+│   │   │   │   └── index.js
+│   │   │   ├── utils/
+│   │   │   │   ├── constants.js
+│   │   │   │   ├── fileValidation.js
+│   │   │   │   ├── formatNumber.js
+│   │   │   │   ├── imageUrlHelper.js
+│   │   │   │   └── sanitize.js
+│   │   │   ├── App.css
+│   │   │   ├── App.jsx
+│   │   │   ├── index.css
+│   │   │   └── main.jsx
+│   │   ├── eslint.config.js
+│   │   ├── index.html
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── postcss.config.js
+│   │   ├── README.md
+│   │   ├── tailwind.config.js
+│   │   └── vite.config.js
+├── public/
+│   └── temp/
+├── src/
+│   ├── controllers/
+│   │   ├── comment.controller.js
+│   │   ├── dashboard.controller.js
+│   │   ├── like.controller_update_snippet.js
+│   │   ├── like.controller.js
+│   │   ├── notification.controller.js
+│   │   ├── playlist.controller.js
+│   │   ├── search.controller.js
+│   │   ├── subscription.controller.js
+│   │   ├── tweet.controller.js
+│   │   ├── user.controller.js
+│   │   └── video.controller.js
+│   ├── db/
+│   │   └── db_connection.js
+│   ├── middlewares/
+│   │   ├── auth.middleware.js
+│   │   ├── multer.middleware.js
+│   │   └── rate-limiter.middleware.js
+│   ├── migrations/
+│   │   ├── check-duplicates.js
+│   │   ├── fix-like-indexes.js
+│   │   ├── fix-like-indexes.mongodb
+│   │   ├── test-get-like-status.js
+│   │   └── test-tweet-like.js
+│   ├── models/
+│   │   ├── comment.model.js
+│   │   ├── like.model.js
+│   │   ├── notofication.model.js
+│   │   ├── playlist.model.js
+│   │   ├── search.model.js
+│   │   ├── subscription.model.js
+│   │   ├── tweet.model.js
+│   │   ├── user.model.js
+│   │   └── video.model.js
+│   ├── routes/
+│   │   ├── comment.routes.js
+│   │   ├── dashboard.routes.js
+│   │   ├── likes.routes.js
+│   │   ├── notification.routes.js
+│   │   ├── playlist.routes.js
+│   │   ├── search.routes.js
+│   │   ├── subscription.routes.js
+│   │   ├── tweet.routes.js
+│   │   ├── user.routes.js
+│   │   └── video.routes.js
+│   ├── utils/
+│   │   ├── ApiError.js
+│   │   ├── ApiResponse.js
+│   │   ├── asyncHandler.js
+│   │   └── cloudnary.js
+│   ├── app.js
+│   ├── constants.js
+│   └── index.js
+├── CURRENT_PROGRESS.md
+├── MISSING_FEATURES.md
+├── package-lock.json
+├── package.json
+├── Readme.md
+└── README.md
