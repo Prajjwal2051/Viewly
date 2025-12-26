@@ -114,31 +114,23 @@ const RegisterPage = () => {
     }
 
     return (
-        <div
-            className="min-h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden font-['Outfit']"
-            style={{ backgroundImage: `url(${authBgBright})` }}
-        >
+        <div className="min-h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden font-['Outfit']">
+            <div className="absolute inset-0 overflow-hidden">
+                <img
+                    src={authBgBright}
+                    alt="Background"
+                    className="w-full h-full object-cover animate-slow-zoom opacity-90"
+                />
+            </div>
+
             {/* Reduced blur and overlay opacity for cleaner look */}
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[3px]"></div>
 
-            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-center gap-10 lg:gap-20">
-                {/* Left Side: Slogan (Animated) */}
-                <div className="hidden md:block w-full md:w-1/2 text-center md:text-left space-y-6">
-                    <h1 className="text-6xl lg:text-8xl font-bold text-white tracking-tighter leading-tight drop-shadow-2xl font-['Playfair_Display'] italic">
-                        <span className="block animate-fadeInUp">
-                            Sign up to
-                        </span>
-                        <span className="block animate-fadeInUp delay-200">
-                            get your
-                        </span>
-                        <span className="block animate-fadeInUp delay-400">
-                            ideas
-                        </span>
-                    </h1>
-                </div>
+            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center h-full animate-fade-in-up">
+                {/* Left Side: Slogan (Removed) */}
 
-                {/* Right Side: Form Card (Removed border) */}
-                <div className="w-full md:w-[480px] bg-white rounded-[32px] shadow-2xl p-8 relative group/card">
+                {/* Right Side: Form Card */}
+                <div className="w-full md:w-[480px] bg-white/95 backdrop-blur-xl rounded-[32px] shadow-2xl p-8 relative group/card border border-white/40">
                     {/* Developer Info Icon */}
                     <div className="absolute top-6 right-6 z-20">
                         <div className="relative group/info">
@@ -215,7 +207,7 @@ const RegisterPage = () => {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className="flex justify-center mb-4">
-                            <div className="h-12 w-12 bg-red-600 rounded-full flex items-center justify-center">
+                            <div className="h-12 w-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
                                 <span className="text-white font-bold text-2xl font-['Outfit']">
                                     V
                                 </span>
@@ -224,7 +216,9 @@ const RegisterPage = () => {
                         <h2 className="text-3xl font-bold text-[#e60023] mb-2 font-['Playfair_Display']">
                             Welcome to Viewly
                         </h2>
-                        <p className="text-gray-600">Find new ideas to try</p>
+                        <p className="text-gray-500 font-light tracking-wide">
+                            Find new ideas to try
+                        </p>
                     </div>
 
                     {/* Register Form */}

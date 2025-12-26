@@ -20,6 +20,7 @@ import { Loader2 } from "lucide-react"
 
 // Lazy load all page components for code splitting
 const HomePage = lazy(() => import("./pages/HomePage"))
+const LandingPage = lazy(() => import("./pages/LandingPage"))
 const LoginPage = lazy(() => import("./pages/LoginPage"))
 const RegisterPage = lazy(() => import("./pages/RegisterPage"))
 const SettingsPage = lazy(() => import("./pages/SettingsPage"))
@@ -90,6 +91,7 @@ function App() {
     const location = useLocation()
     const navigate = useNavigate()
     const dispatch = useDispatch()
+    const { isAuthenticated } = useSelector((state) => state.auth)
     const background = location.state && location.state.background
     const [loading, setLoading] = useState(true)
 
@@ -151,11 +153,13 @@ function App() {
                     <Route
                         path="/"
                         element={
-                            <ProtectedRoute>
+                            isAuthenticated ? (
                                 <MainLayout>
                                     <HomePage />
                                 </MainLayout>
-                            </ProtectedRoute>
+                            ) : (
+                                <LandingPage />
+                            )
                         }
                     />
 
