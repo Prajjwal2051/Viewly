@@ -1,17 +1,59 @@
+// ============================================
+// FORGOT PASSWORD PAGE - PASSWORD RECOVERY
+// ============================================
+// Allows users to request password reset link via email
+// First step in password recovery process
+
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { forgotPassword } from "../api/authApi"
 import toast from "react-hot-toast"
 import { Mail, ArrowLeft, Loader2 } from "lucide-react"
 
+/**
+ * FORGOT PASSWORD PAGE COMPONENT
+ * Password recovery flow - sends reset link to user's email
+ * 
+ * Purpose:
+ * - Help users recover access to locked accounts
+ * - Send password reset email with secure token
+ * - Provide clear feedback on email submission
+ * 
+ * Features:
+ * - Email input validation
+ * - API call to trigger reset email
+ * - Success confirmation screen
+ * - Link back to login page
+ * - Loading states during submission
+ * 
+ * User Flow:
+ * 1. User enters their registered email
+ * 2. System sends password reset email (with token)
+ * 3. Success screen confirms email was sent
+ * 4. User checks email and clicks reset link
+ * 5. Link redirects to ResetPasswordPage with token
+ * 
+ * State:
+ * - email: User's email address
+ * - loading: Whether API request is in progress
+ * - emailSent: Success flag to show confirmation screen
+ * 
+ * @returns {JSX.Element} Forgot password form or success screen
+ */
 const ForgotPasswordPage = () => {
+    // Form state
     const [email, setEmail] = useState("")
     const [loading, setLoading] = useState(false)
     const [emailSent, setEmailSent] = useState(false)
 
+    /**
+     * HANDLE FORM SUBMISSION
+     * Validates email and sends reset link request to backend
+     */
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        // Validate email is provided
         if (!email) {
             toast.error("Please enter your email address")
             return
@@ -20,8 +62,9 @@ const ForgotPasswordPage = () => {
         setLoading(true)
 
         try {
+            // Call API to send reset email
             await forgotPassword(email)
-            setEmailSent(true)
+            setEmailSent(true)  // Show success screen
             toast.success("Password reset link sent to your email!")
         } catch (error) {
             toast.error(error?.message || "Failed to send reset link")
@@ -30,6 +73,11 @@ const ForgotPasswordPage = () => {
         }
     }
 
+    /**
+     * SUCCESS SCREEN
+     * Displayed after email is successfully sent
+     * Provides instructions to check email inbox
+     */
     if (emailSent) {
         return (
             <div className="min-h-screen bg-[#1E2021] flex items-center justify-center p-4">

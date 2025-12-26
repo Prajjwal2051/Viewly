@@ -1,31 +1,75 @@
+// ============================================
+// LANDING PAGE - PUBLIC WELCOME PAGE
+// ============================================
+// Marketing/welcome page for non-authenticated users
+// First page visitors see when accessing the website
+
 import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Lock, Github, CheckCircle, Zap, Globe, Heart } from "lucide-react"
 import authBg from "../assets/auth_bg_bright.png"
 
+/**
+ * LANDING PAGE COMPONENT
+ * Public-facing welcome page with hero section and feature highlights
+ * 
+ * Purpose:
+ * - Introduce the platform to new visitors
+ * - Showcase key features and benefits
+ * - Provide clear calls-to-action (Login/Sign Up)
+ * - Create engaging first impression with animations
+ * 
+ * Features:
+ * - Hero section with background image and animations
+ * - Feature cards highlighting platform capabilities
+ * - Smooth scroll animations (IntersectionObserver)
+ * - Responsive design for mobile and desktop
+ * - Eye-catching CTA buttons
+ * 
+ * User Flow:
+ * 1. Visitor lands on this page
+ * 2. Reads about platform features
+ * 3. Clicks Login or Sign Up to continue
+ * 
+ * @returns {JSX.Element} Landing page with hero and features
+ */
 const LandingPage = () => {
-    // Scroll animation hook equivalent
+    // Control fade-in animation on page load
     const [isVisible, setIsVisible] = useState(false)
 
+    /**
+     * ANIMATION SETUP
+     * Sets up scroll-triggered animations using IntersectionObserver
+     * 
+     * How it works:
+     * 1. Fade in main content on page load
+     * 2. Observe elements with 'animate-on-scroll' class
+     * 3. Add 'animate-active' class when element enters viewport
+     * 4. CSS handles the actual animation
+     */
     useEffect(() => {
+        // Trigger initial fade-in
         setIsVisible(true)
 
-        // Simple scroll observer for animations
+        // Set up scroll observer for additional animations
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
+                        // Element is visible, trigger animation
                         entry.target.classList.add("animate-active")
                     }
                 })
             },
-            { threshold: 0.1 }
+            { threshold: 0.1 }  // Trigger when 10% of element is visible
         )
 
+        // Observe all elements marked for scroll animation
         document
             .querySelectorAll(".animate-on-scroll")
             .forEach((el) => observer.observe(el))
 
+        // Cleanup on component unmount
         return () => observer.disconnect()
     }, [])
 

@@ -1,3 +1,9 @@
+// ============================================
+// TWEET PAGE - INDIVIDUAL TWEET/POST VIEW
+// ============================================
+// Detailed view of a single tweet with comments, likes, and interactions
+// Can be used as standalone page or modal overlay
+
 import React, { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getTweetById, toggleTweetLike } from "../api/tweetApi"
@@ -23,36 +29,78 @@ import {
     sanitizeUsername,
 } from "../utils/sanitize"
 
+/**
+ * TWEET PAGE COMPONENT
+ * Displays full tweet details with image, interactions, and comments
+ * 
+ * Purpose:
+ * - Show complete tweet content (text + optional image)
+ * - Display owner information and profile
+ * - Enable interactions (like, comment, share, subscribe)
+ * - Show all comments on the tweet
+ * 
+ * Features:
+ * - Tweet content with sanitization (XSS protection)
+ * - Like/unlike functionality with live count
+ * - Subscribe/unsubscribe to tweet author
+ * - Comment section with real-time updates
+ * - Share functionality (copy link)
+ * - Can be displayed as modal or full page
+ * 
+ * Props:
+ * @param {boolean} isModal - Whether to display as modal overlay
+ * 
+ * State Management:
+ * - tweet: Tweet data (content, owner, image, etc.)
+ * - isLiked: Whether current user has liked this tweet
+ * - likesCount: Total number of likes
+ * - isSubscribed: Whether user is subscribed to tweet owner
+ * - showComments: Toggle comments section visibility
+ * 
+ * @returns {JSX.Element} Tweet detail view with interactions
+ */
 const TweetPage = ({ isModal = false }) => {
+    // Get tweet ID from URL parameters
     const { tweetId } = useParams()
     const navigate = useNavigate()
+
+    // Get current logged-in user from Redux store
     const { user } = useSelector((state) => state.auth)
+
+    // Tweet data and metadata
     const [tweet, setTweet] = useState(null)
     const [loading, setLoading] = useState(true)
+
+    // Like state (optimistic UI updates)
     const [isLiked, setIsLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(0)
+
+    // Subscription state (follow tweet author)
     const [isSubscribed, setIsSubscribed] = useState(false)
     const [isFollowing, setIsFollowing] = useState(false) // Loading state for follow button
+
+    // UI state
     const [showComments, setShowComments] = useState(false)
 
+    /**
+     * FETCH TWEET DATA
+     * Loads tweet details when component mounts or tweetId changes
+     */
     useEffect(() => {
         const fetchTweet = async () => {
             try {
                 setLoading(true)
                 const response = await getTweetById(tweetId)
-                // response.data contains the tweet object
-                const tweetData = response.data || response // Adjust based on API structure
+                // Handle different API response structures
+                const tweetData = response.data || response
                 setTweet(tweetData)
                 setLikesCount(tweetData.likes || 0)
-                // setIsLiked(tweetData.isLiked) // If backend provides this
-                // Assuming tweetData might have subscription status or we default false
-                // For a proper implementation we might need to check 'isSubscribed' from backend
-                // or have it in ownerDetails. For now, defaulting false or simple toggle.
+                // Set subscription status if available from backend
                 setIsSubscribed(tweetData.ownerDetails?.isSubscribed || false)
             } catch (error) {
                 console.error("Failed to fetch tweet:", error)
                 toast.error("Failed to load post")
-                navigate("/")
+                navigate("/")  // Redirect to home on error
             } finally {
                 setLoading(false)
             }
@@ -61,7 +109,10 @@ const TweetPage = ({ isModal = false }) => {
         if (tweetId) fetchTweet()
     }, [tweetId, navigate])
 
-    // Fetch like status
+    /**
+     * FETCH LIKE STATUS
+     * Checks if current user has already liked this tweet
+     */
     useEffect(() => {
         const fetchLikeStatus = async () => {
             if (user && tweetId) {
@@ -76,7 +127,10 @@ const TweetPage = ({ isModal = false }) => {
         fetchLikeStatus()
     }, [tweetId, user])
 
-    // Fetch follow status
+    /**
+     * FETCH SUBSCRIPTION STATUS
+     * Checks if user is subscribed to tweet author's channel
+     */
     useEffect(() => {
         const fetchFollowStatus = async () => {
             if (user && tweet?.ownerDetails?._id) {
@@ -249,22 +303,21 @@ const TweetPage = ({ isModal = false }) => {
                                         </span>
                                         {user?._id !==
                                             tweet.ownerDetails?._id && (
-                                            <button
-                                                onClick={handleSubscribe}
-                                                disabled={isFollowing}
-                                                className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                                                    isSubscribed
-                                                        ? "bg-transparent border border-gray-500 text-gray-300 hover:border-red-500 hover:text-red-500"
-                                                        : "bg-white text-black hover:bg-gray-200"
-                                                }`}
-                                            >
-                                                {isFollowing
-                                                    ? "..."
-                                                    : isSubscribed
-                                                      ? "Following"
-                                                      : "Follow"}
-                                            </button>
-                                        )}
+                                                <button
+                                                    onClick={handleSubscribe}
+                                                    disabled={isFollowing}
+                                                    className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isSubscribed
+                                                            ? "bg-transparent border border-gray-500 text-gray-300 hover:border-red-500 hover:text-red-500"
+                                                            : "bg-white text-black hover:bg-gray-200"
+                                                        }`}
+                                                >
+                                                    {isFollowing
+                                                        ? "..."
+                                                        : isSubscribed
+                                                            ? "Following"
+                                                            : "Follow"}
+                                                </button>
+                                            )}
                                     </div>
                                     <span className="text-xs text-gray-400">
                                         @
@@ -348,21 +401,19 @@ const TweetPage = ({ isModal = false }) => {
 
                 {/* COMMENTS SECTION - RESPONSIVE (Bottom Sheet on Mobile, Sidebar on Desktop) */}
                 <div
-                    className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
-                        showComments
+                    className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${showComments
                             ? "opacity-100 pointer-events-auto"
                             : "opacity-0 pointer-events-none"
-                    }`}
+                        }`}
                     onClick={() => setShowComments(false)}
                 >
                     <div
                         className={`fixed bg-[#1E2021] border-gray-700 shadow-2xl transition-transform duration-300 ease-out flex flex-col
                             bottom-0 w-full h-[90vh] rounded-t-3xl border-t transform
                             md:top-0 md:right-0 md:h-full md:w-[450px] md:bottom-auto md:rounded-none md:border-l md:border-t-0
-                            ${
-                                showComments
-                                    ? "translate-y-0 md:translate-x-0"
-                                    : "translate-y-full md:translate-x-full"
+                            ${showComments
+                                ? "translate-y-0 md:translate-x-0"
+                                : "translate-y-full md:translate-x-full"
                             }
                         `}
                         onClick={(e) => e.stopPropagation()}
@@ -477,11 +528,10 @@ const TweetPage = ({ isModal = false }) => {
                     <div className="flex items-center gap-6 mb-4">
                         <button
                             onClick={handleLike}
-                            className={`flex items-center gap-2 transition-colors ${
-                                isLiked
+                            className={`flex items-center gap-2 transition-colors ${isLiked
                                     ? "text-red-500"
                                     : "text-white hover:text-red-600"
-                            }`}
+                                }`}
                         >
                             <Heart
                                 size={24}
