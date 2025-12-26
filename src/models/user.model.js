@@ -91,11 +91,14 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
     // Check if the password field has been modified
     if (this.isModified("password")) {
+        console.log("🔐 [PRE-SAVE] Password field was modified, hashing...")
         // Hash the password with salt rounds of 10 before saving
         // Higher number = more secure but slower
         this.password = await bcrypt.hash(this.password, 10)
+        console.log("✅ [PRE-SAVE] Password hashed successfully")
         next() // Continue with the save operation
     } else {
+        console.log("⏭️ [PRE-SAVE] Password not modified, skipping hash")
         // If password wasn't modified, skip hashing and continue
         return next()
     }

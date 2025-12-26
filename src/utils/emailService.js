@@ -19,7 +19,7 @@ import nodemailer from "nodemailer"
  * @returns {Object} Nodemailer transporter instance
  */
 const createTransporter = () => {
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port: process.env.EMAIL_PORT,
         secure: false, // true for 465, false for other ports
@@ -58,7 +58,7 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
     console.log(`📧 Email: ${email}`)
     console.log(`👤 User: ${userName}`)
     console.log(`🔗 Reset Link: ${resetUrl}`)
-    console.log(`⏰ Expires in: 15 minutes`)
+    console.log(`⏰ Expires in: 1 hour`)
     console.log("==============================================\n")
 
     // Email configuration
@@ -112,7 +112,7 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
                     <!-- Expiration warning -->
                     <div style="background-color: #FEF2F2; border-left: 4px solid #DC2626; padding: 12px; margin: 20px 0;">
                         <p style="color: #991B1B; margin: 0; font-size: 14px;">
-                            <strong>⏰ This link will expire in 15 minutes</strong> for security reasons.
+                            <strong>⏰ This link will expire in 1 hour</strong> for security reasons.
                         </p>
                     </div>
                     

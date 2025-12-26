@@ -8,6 +8,7 @@ import { uploadOnCloudinary } from "../utils/cloudnary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken" // Fixed: jwt is a default export, not named export
 import mongoose from "mongoose"
+import crypto from "crypto" // For password reset token hashing
 
 // ============================================
 // HELPER FUNCTIONS
@@ -1112,24 +1113,30 @@ const resetPassword = asyncHandler(async (req, res) => {
     }
 
     // Hash the token from URL (to match hashed token in DB)
-    const crypto = require("crypto")
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex")
 
     // Find user with valid token
+    // Need to explicitly select passwordResetToken and passwordResetExpires since they have select: false
     const user = await User.findOne({
         passwordResetToken: hashedToken,
         passwordResetExpires: { $gt: Date.now() }, // Token not expired
-    })
+    }).select("+passwordResetToken +passwordResetExpires")
 
     if (!user) {
         throw new ApiError(400, "Invalid or expired reset token")
     }
 
+    console.log("🔑 [RESET PASSWORD] Updating password for:", user.email)
+
     // Update password
     user.password = password
     user.passwordResetToken = undefined
     user.passwordResetExpires = undefined
+
+    // Save - the pre-save middleware will hash the password
     await user.save()
+
+    console.log("✅ [RESET PASSWORD] Password successfully updated and saved")
 
     res.status(200).json(
         new ApiResponse(

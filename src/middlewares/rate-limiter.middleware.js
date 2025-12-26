@@ -3,7 +3,7 @@
 // ============================================
 // Prevents spam and abuse by limiting request rates
 
-import rateLimit from "express-rate-limit"
+import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 
 /**
  * GENERAL API RATE LIMITER
@@ -57,7 +57,7 @@ export const uploadLimiter = rateLimit({
     legacyHeaders: false,
     // Use user ID instead of IP for authenticated routes
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || req.ip
+        return req.user?._id?.toString() || ipKeyGenerator(req)
     },
 })
 
@@ -76,7 +76,7 @@ export const commentLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || req.ip
+        return req.user?._id?.toString() || ipKeyGenerator(req)
     },
 })
 
@@ -95,7 +95,7 @@ export const likeLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || req.ip
+        return req.user?._id?.toString() || ipKeyGenerator(req)
     },
 })
 
