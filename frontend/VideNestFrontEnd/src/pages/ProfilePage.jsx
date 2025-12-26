@@ -1,3 +1,9 @@
+// ============================================
+// PROFILE PAGE - USER CHANNEL VIEW
+// ============================================
+// Displays user profile with videos, tweets, and channel information.
+// Shows different content based on whether viewing own profile or another user's.
+
 import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import { useParams, useNavigate } from "react-router-dom"
@@ -15,13 +21,38 @@ import {
     sanitizeUserBio,
 } from "../utils/sanitize"
 
-// Tab Configuration
+/**
+ * TAB CONFIGURATION
+ * 
+ * Defines the available tabs on the profile page:
+ * - Videos: Shows all uploaded videos
+ * - Tweets: Shows all photo posts
+ * - About: Shows channel description and statistics
+ */
 const TABS = [
     { id: "videos", label: "Videos", icon: Film },
     { id: "tweets", label: "Tweets", icon: MessageSquare },
     { id: "about", label: "About", icon: User },
 ]
 
+/**
+ * PROFILE PAGE COMPONENT
+ * 
+ * Purpose:
+ * - Show user's content (videos and tweets)
+ * - Display channel statistics (subscribers, video count)
+ * - Allow subscribing to other users' channels
+ * 
+ * Key Features:
+ * - Tab navigation (Videos, Tweets, About)
+ * - Subscribe/Unsubscribe button (not shown on own profile)
+ * - Cover image and avatar display
+ * - Responsive grid layout for content
+ * 
+ * URL Patterns:
+ * - /profile → Own profile (uses current logged-in user)
+ * - /profile/:username → Other user's profile
+ */
 const ProfilePage = () => {
     const { user } = useSelector((state) => state.auth)
     const { username } = useParams()
@@ -194,17 +225,16 @@ const ProfilePage = () => {
                         <button
                             onClick={handleSubscribe}
                             disabled={subscribing}
-                            className={`px-6 py-2 font-semibold rounded transition-colors disabled:opacity-50 ${
-                                isSubscribed
+                            className={`px-6 py-2 font-semibold rounded transition-colors disabled:opacity-50 ${isSubscribed
                                     ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
                                     : "bg-red-600 text-white hover:bg-red-700"
-                            }`}
+                                }`}
                         >
                             {subscribing
                                 ? "Loading..."
                                 : isSubscribed
-                                  ? "Subscribed"
-                                  : "Subscribe"}
+                                    ? "Subscribed"
+                                    : "Subscribe"}
                         </button>
                     )}
                 </div>
@@ -268,11 +298,10 @@ const ProfilePage = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center justify-center gap-2 px-8 py-4 font-medium transition-all duration-300 relative whitespace-nowrap flex-1 ${
-                                isActive
+                            className={`flex items-center justify-center gap-2 px-8 py-4 font-medium transition-all duration-300 relative whitespace-nowrap flex-1 ${isActive
                                     ? "text-red-600"
                                     : "text-gray-500 hover:text-white"
-                            }`}
+                                }`}
                         >
                             <Icon
                                 size={18}

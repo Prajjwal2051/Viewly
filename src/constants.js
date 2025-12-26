@@ -16,4 +16,4 @@
  * - Used in db_connection.js when establishing MongoDB connection
  * - Format: mongodb://localhost:27017/VidNest
  */
-export const DB_NAME="VidNest"
+export const DB_NAME = "VidNest"
