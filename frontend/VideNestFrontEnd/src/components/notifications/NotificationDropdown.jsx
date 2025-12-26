@@ -99,7 +99,7 @@ const NotificationDropdown = ({ notifications, onClose, onUpdate }) => {
     }
 
     return (
-        <div className="absolute right-0 mt-2 w-96 bg-[#1E2021] border border-gray-700 rounded-lg shadow-2xl z-50 max-h-[600px] flex flex-col">
+        <div className="fixed left-1/2 -translate-x-1/2 top-20 w-[calc(100vw-2rem)] max-w-sm md:absolute md:left-auto md:translate-x-0 md:top-full md:right-0 md:mt-2 md:w-96 bg-[#1E2021] border border-gray-700 rounded-lg shadow-2xl z-50 max-h-[600px] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
                 <h3 className="text-lg font-semibold text-white">

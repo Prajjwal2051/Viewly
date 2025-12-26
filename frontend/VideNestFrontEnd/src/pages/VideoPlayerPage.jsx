@@ -382,9 +382,9 @@ const VideoPlayerPage = ({ isModal = false }) => {
                 <div
                     className={`relative bg-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 ${showPlaylistModal || showCommentsPanel ? "w-[95%] max-w-[1400px]" : "w-auto max-w-[600px]"} h-[90vh] flex`}
                 >
-                    {/* VIDEO CONTAINER - Shifts left when sidebar is open */}
+                    {/* VIDEO CONTAINER - Shifts left when sidebar is open on desktop, full width on mobile */}
                     <div
-                        className={`relative h-full flex items-center justify-center transition-all duration-300 ${showPlaylistModal || showCommentsPanel ? "w-[60%]" : "w-full"}`}
+                        className={`relative h-full flex items-center justify-center transition-all duration-300 w-full ${showPlaylistModal || showCommentsPanel ? "md:w-[60%]" : "md:w-full"}`}
                     >
                         {/* Close Button */}
                         <button
@@ -752,9 +752,10 @@ const VideoPlayerPage = ({ isModal = false }) => {
                             </p>
                         </div>
                     </div>
-                    {/* PLAYLIST SIDEBAR - Slides in from right */}
+
+                    {/* PLAYLIST SIDEBAR - Slides in from right on desktop, up from bottom on mobile */}
                     {showPlaylistModal && (
-                        <div className="w-[40%] h-full bg-[#1E2021] border-l border-gray-700 overflow-y-auto">
+                        <div className="fixed bottom-0 left-0 right-0 w-full h-[70vh] z-50 rounded-t-3xl border-t border-gray-700 bg-[#1E2021] overflow-y-auto animate-slide-up md:static md:w-[40%] md:h-full md:border-l md:text-left md:rounded-none md:border-t-0 md:bg-[#1E2021] md:animate-none">
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold text-white">
@@ -781,9 +782,9 @@ const VideoPlayerPage = ({ isModal = false }) => {
                         </div>
                     )}
 
-                    {/* COMMENTS SIDEBAR - Slides in from right */}
+                    {/* COMMENTS SIDEBAR - Slides in from right on desktop, up from bottom on mobile */}
                     {showCommentsPanel && (
-                        <div className="w-[40%] h-full bg-[#1E2021] border-l border-gray-700 overflow-y-auto">
+                        <div className="fixed bottom-0 left-0 right-0 w-full h-[70vh] z-50 rounded-t-3xl border-t border-gray-700 bg-[#1E2021] overflow-y-auto animate-slide-up md:static md:w-[40%] md:h-full md:border-l md:text-left md:rounded-none md:border-t-0 md:bg-[#1E2021] md:animate-none">
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold text-white">
