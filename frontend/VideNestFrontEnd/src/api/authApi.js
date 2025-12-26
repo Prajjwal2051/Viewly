@@ -134,6 +134,49 @@ const refreshAccessToken = async () => {
     return response.data // Contains new accessToken
 }
 
+/**
+ * REQUEST PASSWORD RESET
+ * Sends email with reset link to user
+ *
+ * Backend: POST /api/v1/users/forgot-password
+ *
+ * What happens?
+ * 1. User provides email address
+ * 2. Backend generates reset token and sends email
+ * 3. User receives email with reset link (15 min expiry)
+ *
+ * @param {string} email - User's email address
+ * @returns {Promise<Object>} Success message
+ */
+const forgotPassword = async (email) => {
+    const response = await apiClient.post("/users/forgot-password", { email })
+    return response.data
+}
+
+/**
+ * RESET PASSWORD
+ * Updates password using reset token from email
+ *
+ * Backend: POST /api/v1/users/reset-password/:token
+ *
+ * What happens?
+ * 1. User submits new password with token from URL
+ * 2. Backend validates token and expiry
+ * 3. Backend updates password and clears token
+ * 4. User can login with new password
+ *
+ * @param {string} token - Reset token from URL
+ * @param {Object} data - { password, confirmPassword }
+ * @returns {Promise<Object>} Success message
+ */
+const resetPassword = async (token, data) => {
+    const response = await apiClient.post(
+        `/users/reset-password/${token}`,
+        data
+    )
+    return response.data
+}
+
 // ============================================
 // EXPORTS
 // ============================================
@@ -144,4 +187,6 @@ export {
     logoutUser, // End user session
     getCurrentUser, // Fetch logged-in user data
     refreshAccessToken, // Renew expired accessToken
+    forgotPassword, // Request password reset
+    resetPassword, // Reset password with token
 }

@@ -84,4 +84,16 @@ app.use("/api/v1/dashboard", dashboardRouter)
 app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/playlists", playlistRouter)
 
+// Error handling middleware (must be after all routes)
+import {
+    errorHandler,
+    notFoundHandler,
+} from "./middlewares/error.middleware.js"
+
+// Handle 404 errors for undefined routes
+app.use(notFoundHandler)
+
+// Global error handler
+app.use(errorHandler)
+
 export { app }

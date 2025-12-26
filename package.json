@@ -52,6 +52,7 @@
     "mongoose": "^8.19.0",
     "mongoose-aggregate-paginate-v2": "^1.1.4",
     "multer": "^2.0.2",
+    "nodemailer": "^7.0.12",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.10.0",
     "tailwind-merge": "^3.4.0"

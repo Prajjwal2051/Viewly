@@ -1012,6 +1012,135 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 })
 
 // ============================================
+// PASSWORD RESET CONTROLLERS
+// ============================================
+
+/**
+ * FORGOT PASSWORD CONTROLLER
+ * Sends password reset email to user
+ *
+ * Process:
+ * 1. Validate email input
+ * 2. Find user by email
+ * 3. Generate reset token and save to database
+ * 4. Send reset email
+ * 5. Handle errors gracefully
+ *
+ * Security Note: Don't reveal if user exists
+ *
+ * @route POST /api/v1/users/forgot-password
+ * @access Public
+ */
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body
+
+    // Validate email
+    if (!email) {
+        throw new ApiError(400, "Email is required")
+    }
+
+    // Find user by email (case-insensitive)
+    const user = await User.findOne({ email: email.toLowerCase() })
+
+    if (!user) {
+        // Don't reveal if user exists (security best practice)
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    {},
+                    "If an account exists with this email, a password reset link has been sent"
+                )
+            )
+    }
+
+    // Generate reset token
+    const resetToken = user.generatePasswordResetToken()
+    await user.save({ validateBeforeSave: false })
+
+    try {
+        // Send email
+        const { sendPasswordResetEmail } = await import(
+            "../utils/emailService.js"
+        )
+        await sendPasswordResetEmail(email, resetToken, user.fullName)
+
+        res.status(200).json(
+            new ApiResponse(200, {}, "Password reset link sent to your email")
+        )
+    } catch (error) {
+        // Clear reset token if email fails
+        user.passwordResetToken = undefined
+        user.passwordResetExpires = undefined
+        await user.save({ validateBeforeSave: false })
+
+        console.error("Email sending error:", error)
+        throw new ApiError(500, "Error sending email. Please try again later.")
+    }
+})
+
+/**
+ * RESET PASSWORD CONTROLLER
+ * Resets user password using token from email
+ *
+ * Process:
+ * 1. Validate inputs (password, confirmPassword)
+ * 2. Hash token from URL
+ * 3. Find user with valid, non-expired token
+ * 4. Update password
+ * 5. Clear reset token
+ *
+ * @route POST /api/v1/users/reset-password/:token
+ * @access Public
+ */
+const resetPassword = asyncHandler(async (req, res) => {
+    const { token } = req.params
+    const { password, confirmPassword } = req.body
+
+    // Validate inputs
+    if (!password || !confirmPassword) {
+        throw new ApiError(400, "Password and confirm password are required")
+    }
+
+    if (password !== confirmPassword) {
+        throw new ApiError(400, "Passwords do not match")
+    }
+
+    if (password.length < 6) {
+        throw new ApiError(400, "Password must be at least 6 characters")
+    }
+
+    // Hash the token from URL (to match hashed token in DB)
+    const crypto = require("crypto")
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex")
+
+    // Find user with valid token
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() }, // Token not expired
+    })
+
+    if (!user) {
+        throw new ApiError(400, "Invalid or expired reset token")
+    }
+
+    // Update password
+    user.password = password
+    user.passwordResetToken = undefined
+    user.passwordResetExpires = undefined
+    await user.save()
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            {},
+            "Password reset successful. Please login with your new password."
+        )
+    )
+})
+
+// ============================================
 // EXPORT CONTROLLERS
 // ============================================
 export {
@@ -1031,4 +1160,8 @@ export {
     // Channel & History Controllers
     getUserChannelProfile, // GET /c/:username - Get channel profile with subscriber stats
     getWatchHistory, // GET /watch-history - Get user's watched videos with owner details
+
+    // Password Reset Controllers
+    forgotPassword, // POST /forgot-password - Send password reset email
+    resetPassword, // POST /reset-password/:token - Reset password with token
 }

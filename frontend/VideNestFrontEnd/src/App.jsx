@@ -38,6 +38,8 @@ const NotificationsPage = lazy(() => import("./pages/NotificationsPage"))
 const SubscriptionsPage = lazy(() => import("./pages/SubscriptionsPage"))
 const SubscribersPage = lazy(() => import("./pages/SubscribersPage"))
 const LikedCommentsPage = lazy(() => import("./pages/LikedCommentsPage"))
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"))
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"))
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -135,6 +137,14 @@ function App() {
                     {/* PUBLIC ROUTES - No login required */}
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route
+                        path="/forgot-password"
+                        element={<ForgotPasswordPage />}
+                    />
+                    <Route
+                        path="/reset-password/:token"
+                        element={<ResetPasswordPage />}
+                    />
 
                     {/* PROTECTED ROUTES - All require authentication
                 Each route wraps its page in ProtectedRoute → MainLayout → Page */}

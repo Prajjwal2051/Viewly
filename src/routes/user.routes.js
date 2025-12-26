@@ -14,6 +14,8 @@ import {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImg,
+    forgotPassword,
+    resetPassword,
 } from "../controllers/user.controller.js"
 import { upload } from "../middlewares/multer.middleware.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
@@ -76,6 +78,23 @@ router.route("/login").post(authLimiter, loginUser)
  * @access Public (requires valid refresh token in cookie or body)
  */
 router.route("/refresh-token").post(refreshAccessToken)
+ /**
+ * FORGOT PASSWORD ROUTE
+ * Sends password reset link to user's email
+ *
+ * @route POST /api/v1/users/forgot-password
+ * @access Public
+ */
+router.route("/forgot-password").post(authLimiter, forgotPassword)
+
+/**
+ * RESET PASSWORD ROUTE
+ * Resets password using token from email
+ *
+ * @route POST /api/v1/users/reset-password/:token
+ * @access Public
+ */
+router.route("/reset-password/:token").post(authLimiter, resetPassword)
 
 // ============================================
 // PROTECTED ROUTES (Authentication Required)
