@@ -1,10 +1,47 @@
 // ============================================
-// DATE RANGE PICKER COMPONENT
+// DATE RANGE PICKER COMPONENT - UPLOAD DATE FILTER
 // ============================================
-// Allows users to filter search results by upload date range
+// Allows users to filter search results by video upload date range.
+// Uses native HTML date inputs for consistent cross-browser experience.
 
 import { useState } from "react"
 import { Calendar } from "lucide-react"
+
+/**
+ * DATE RANGE PICKER COMPONENT
+ * 
+ * Purpose:
+ * - Filter videos by upload date
+ * - Find recent content or older videos
+ * - Discover trending content from specific time periods
+ * 
+ * How it works:
+ * - Click calendar button to open date picker
+ * - Select start date (from when)
+ * - Select end date (until when)
+ * - Dates automatically filter search results
+ * 
+ * Common Use Cases:
+ * - Find videos uploaded this week/month
+ * - Browse content from a specific event date
+ * - Exclude very old videos from results
+ * - Find timely news content
+ * 
+ * UX Features:
+ * - Dropdown panel for space efficiency
+ * - Shows selected date range on button
+ * - Clear button to reset dates
+ * - Backdrop closes picker on outside click
+ * 
+ * Technical Details:
+ * - Uses native <input type="date"> for accessibility
+ * - Formatted display: "Jan 15, 2024"
+ * - Validates start date < end date (browser enforced)
+ * 
+ * @param {string} startDate - Start of date range (ISO format)
+ * @param {string} endDate - End of date range (ISO format)
+ * @param {Function} onChange - Callback to update date filter
+ */
 
 const DateRangePicker = ({ startDate, endDate, onChange }) => {
     const [showPicker, setShowPicker] = useState(false)
@@ -38,11 +75,10 @@ const DateRangePicker = ({ startDate, endDate, onChange }) => {
         <div className="relative">
             <button
                 onClick={() => setShowPicker(!showPicker)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    hasDateFilter
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${hasDateFilter
                         ? "bg-red-600 text-white"
                         : "bg-[#2A2D2E] text-gray-300 hover:bg-[#323638]"
-                }`}
+                    }`}
             >
                 <Calendar size={16} />
                 <span>

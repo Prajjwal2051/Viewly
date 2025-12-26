@@ -1,7 +1,8 @@
 // ============================================
-// NOTIFICATION DROPDOWN COMPONENT
+// NOTIFICATION DROPDOWN COMPONENT - NOTIFICATION LIST PANEL
 // ============================================
-// Displays recent notifications in a dropdown menu
+// Displays recent notifications in a dropdown menu with actions.
+// Shows likes, comments, subscriptions, and other activity.
 
 import { useNavigate } from "react-router-dom"
 import { formatDistanceToNow } from "date-fns"
@@ -12,6 +13,39 @@ import {
     deleteNotification,
 } from "../../api/notificationApi"
 import toast from "react-hot-toast"
+
+/**
+ * NOTIFICATION DROPDOWN COMPONENT
+ * 
+ * Purpose:
+ * - Display list of recent notifications
+ * - Allow marking as read
+ * - Navigate to related content on click
+ * - Delete individual notifications
+ * 
+ * Notification Types:
+ * - Video Like: "[User] liked your video"
+ * - Comment: "[User] commented on your video"
+ * - New Subscriber: "[User] subscribed to your channel"
+ * - Video Upload: "[Channel] uploaded a new video"
+ * 
+ * Interaction Flow:
+ * 1. User clicks notification bell
+ * 2. Dropdown opens with 5 most recent notifications
+ * 3. Click notification → marks as read → navigates to content
+ * 4. Click X button → deletes notification
+ * 5. "Mark All as Read" → marks all unread as read
+ * 
+ * Visual Design:
+ * - Unread: Blue indicator dot, bold text
+ * - Read: No indicator, normal text
+ * - Icon per type: Heart (like), Comment (comment), etc.
+ * - Relative timestamps: "2 hours ago", "3 days ago"
+ * 
+ * @param {Array} notifications - List of notification objects
+ * @param {Function} onClose - Callback to close dropdown
+ * @param {Function} onUpdate - Callback to refresh notification list
+ */
 
 const NotificationDropdown = ({ notifications, onClose, onUpdate }) => {
     const navigate = useNavigate()
@@ -129,9 +163,8 @@ const NotificationDropdown = ({ notifications, onClose, onUpdate }) => {
                             onClick={() =>
                                 handleNotificationClick(notification)
                             }
-                            className={`flex items-start gap-3 p-4 border-b border-gray-800 hover:bg-white/5 cursor-pointer transition-colors group ${
-                                !notification.isRead ? "bg-blue-500/5" : ""
-                            }`}
+                            className={`flex items-start gap-3 p-4 border-b border-gray-800 hover:bg-white/5 cursor-pointer transition-colors group ${!notification.isRead ? "bg-blue-500/5" : ""
+                                }`}
                         >
                             {/* Icon */}
                             <div className="flex-shrink-0 mt-1">

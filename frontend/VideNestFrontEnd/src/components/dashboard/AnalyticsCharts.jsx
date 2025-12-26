@@ -1,7 +1,8 @@
 // ============================================
-// ANALYTICS CHARTS COMPONENT
+// ANALYTICS CHARTS COMPONENT - VISUAL PERFORMANCE METRICS
 // ============================================
-// Displays visual charts for channel performance using Recharts
+// Displays visual charts for channel performance using Recharts library.
+// Shows growth trends over time with beautiful gradient area charts.
 
 import {
     LineChart,
@@ -15,6 +16,38 @@ import {
     Area,
 } from "recharts"
 
+/**
+ * ANALYTICS CHARTS COMPONENT
+ * 
+ * Purpose:
+ * - Visualize channel growth over time
+ * - Display views and subscriber trends
+ * - Help creators understand performance patterns
+ * 
+ * Why use charts instead of just numbers?
+ * - Humans process visual data 60,000x faster than text
+ * - Trends are instantly recognizable in graphs
+ * - Charts reveal patterns that raw numbers hide
+ * 
+ * What is Recharts?
+ * - React charting library built on D3.js
+ * - Provides responsive, animated charts
+ * - Easy to customize with props
+ * 
+ * Technical Details:
+ * - Uses AreaChart for filled gradient effect
+ * - ResponsiveContainer adapts to screen size
+ * - Custom tooltips show exact values on hover
+ * - Date formatting on X-axis for readability
+ * 
+ * Data Format Expected:
+ * viewsGrowth: [{ date: "2024-01-15", views: 1200 }, ...]
+ * subscribersGrowth: [{ date: "2024-01-15", subscribers: 150 }, ...]
+ * 
+ * @param {Object} data - Analytics data object
+ * @param {Array} data.viewsGrowth - Daily views over last 30 days
+ * @param {Array} data.subscribersGrowth - Daily subscribers over last 30 days
+ */
 const AnalyticsCharts = ({ data }) => {
     // Default empty data if not provided
     const viewsData = data?.viewsGrowth || []

@@ -1,13 +1,48 @@
 // ============================================
-// NOTIFICATION BELL COMPONENT
+// NOTIFICATION BELL COMPONENT - NOTIFICATION CENTER TRIGGER
 // ============================================
-// Displays notification bell icon with unread count badge and dropdown
+// Displays notification bell icon with unread count badge and dropdown.
+// Auto-polls for new notifications every 30 seconds.
 
 import { useState, useEffect, useRef } from "react"
 import { Bell } from "lucide-react"
 import { useSelector } from "react-redux"
 import { getNotifications } from "../../api/notificationApi"
 import NotificationDropdown from "./NotificationDropdown"
+
+/**
+ * NOTIFICATION BELL COMPONENT
+ * 
+ * Purpose:
+ * - Show notification bell in header
+ * - Display unread notification count badge
+ * - Open dropdown on click to view notifications
+ * 
+ * Key Features:
+ * - Auto-polling: Checks for new notifications every 30 seconds
+ * - Real-time updates: Badge updates when new notifications arrive
+ * - Click-outside-to-close: Dropdown closes when clicking elsewhere
+ * - Red badge: Shows unread count (only when > 0)
+ * 
+ * How Auto-Polling Works:
+ * 1. Component mounts
+ * 2. Fetch initial notification count
+ * 3. Set interval to fetch every 30 seconds
+ * 4. Update badge when new notifications found
+ * 5. Clear interval on unmount (prevent memory leak)
+ * 
+ * Why Auto-Poll Instead of WebSockets?
+ * - Simpler to implement
+ * - Works with any backend setup
+ * - Less server resources
+ * - Good enough for notifications (30s delay acceptable)
+ * 
+ * UX Design:
+ * - Bell icon is always visible in header
+ * - Red badge appears when unread notifications exist
+ * - Badge shows number (1-9) or "9+" for many
+ * - Clicking bell opens dropdown with recent notifications
+ */
 
 const NotificationBell = () => {
     const { user } = useSelector((state) => state.auth)

@@ -1,10 +1,41 @@
 // ============================================
-// DURATION SLIDER COMPONENT
+// DURATION SLIDER COMPONENT - VIDEO LENGTH FILTER
 // ============================================
-// Custom slider for filtering videos by duration range
+// Custom dual-range slider for filtering videos by duration.
+// Allows users to set minimum and maximum video length in seconds.
 
 import { useState, useEffect } from "react"
 import { Clock } from "lucide-react"
+
+/**
+ * DURATION SLIDER COMPONENT
+ * 
+ * Purpose:
+ * - Filter search results by video length
+ * - Find videos within specific duration range
+ * - Useful for finding quick content or long-form videos
+ * 
+ * How it works:
+ * - Two sliders: minimum and maximum duration
+ * - Range: 0 seconds to 3600 seconds (1 hour)
+ * - Live preview shows selected range
+ * - Apply button confirms selection
+ * 
+ * Common Use Cases:
+ * - Find short videos (< 5 min) for quick viewing
+ * - Find long tutorials (> 20 min) for in-depth learning
+ * - Exclude very long videos when browsing casually
+ * 
+ * Technical Details:
+ * - Uses HTML range input for accessibility
+ * - Formats seconds to MM:SS display
+ * - Local state prevents API calls on every drag
+ * - Apply button sends final filter to parent
+ * 
+ * @param {string} minDuration - Current minimum duration filter (seconds)
+ * @param {string} maxDuration - Current maximum duration filter (seconds)
+ * @param {Function} onChange - Callback to update filter values
+ */
 
 const DurationSlider = ({ minDuration, maxDuration, onChange }) => {
     const [showSlider, setShowSlider] = useState(false)
@@ -68,11 +99,10 @@ const DurationSlider = ({ minDuration, maxDuration, onChange }) => {
         <div className="relative">
             <button
                 onClick={() => setShowSlider(!showSlider)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    hasFilter
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${hasFilter
                         ? "bg-red-600 text-white"
                         : "bg-[#2A2D2E] text-gray-300 hover:bg-[#323638]"
-                }`}
+                    }`}
             >
                 <Clock size={16} />
                 <span>

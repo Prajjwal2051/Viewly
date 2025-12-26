@@ -1,11 +1,45 @@
 // ============================================
-// GROWTH METRICS COMPONENT
+// GROWTH METRICS COMPONENT - PERFORMANCE INDICATORS
 // ============================================
-// Displays growth indicators and percentage changes
+// Displays growth indicators and percentage changes with visual trend icons.
+// Shows 30-day performance comparison with color-coded trends.
 
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { formatNumber, formatPercentage } from "../../utils/formatNumber"
 
+/**
+ * GROWTH METRICS COMPONENT
+ * 
+ * Purpose:
+ * - Display key performance metrics with growth indicators
+ * - Show percentage change from previous period
+ * - Provide at-a-glance performance assessment
+ * 
+ * Key Features:
+ * - Color-coded trend indicators:
+ *   • Green with up arrow = Growth (positive)
+ *   • Red with down arrow = Decline (negative)
+ *   • Gray with minus = Stable (no change)
+ * - Formatted numbers with commas (1,234,567)
+ * - Percentage display with + or - prefix
+ * 
+ * Psychology of Growth Metrics:
+ * - Green = Success, encourages creators
+ * - Red = Alert, prompts improvement action
+ * - Visual arrows make trends instantly recognizable
+ * 
+ * Use Cases:
+ * - Dashboard page showing channel health
+ * - Quick performance check at a glance
+ * - Motivation to improve or maintain performance
+ * 
+ * @param {Object} metrics - Channel metrics data
+ * @param {Object} metrics.last30Days - 30-day period statistics
+ * @param {number} metrics.last30Days.views - Total views in last 30 days
+ * @param {number} metrics.last30Days.viewsGrowthPercentage - Views growth %
+ * @param {number} metrics.last30Days.newSubscribers - New subscribers count
+ * @param {number} metrics.last30Days.subscriberGrowthPercentage - Subscriber growth %
+ */
 const GrowthMetrics = ({ metrics }) => {
     // Default structure if not provided
     const last30Days = metrics?.last30Days || {

@@ -1,3 +1,9 @@
+// ============================================
+// ADD TO PLAYLIST MODAL - VIDEO ORGANIZATION INTERFACE
+// ============================================
+// Modal for adding/removing videos from playlists.
+// Shows all user playlists with checkmarks indicating video presence.
+
 import React, { useState, useEffect } from "react"
 import { X, Loader2, Plus, Check, ListVideo } from "lucide-react"
 import { useSelector } from "react-redux"
@@ -8,6 +14,41 @@ import {
 } from "../../api/playlistApi"
 import CreatePlaylistModal from "./CreatePlaylistModal"
 import toast from "react-hot-toast"
+
+/**
+ * ADD TO PLAYLIST MODAL COMPONENT
+ * 
+ * Purpose:
+ * - Allow users to organize videos into playlists
+ * - Add or remove video from multiple playlists
+ * - Create new playlists on the fly
+ * 
+ * How it works:
+ * 1. Opens when user clicks "Add to Playlist" button
+ * 2. Loads all user's playlists
+ * 3. Shows checkmarks on playlists already containing this video
+ * 4. Click playlist to toggle video in/out
+ * 5. Changes save immediately with toast feedback
+ * 
+ * Key Features:
+ * - Visual checkmarks show current playlist membership
+ * - "Create Playlist" button at top
+ * - Nested modal for playlist creation
+ * - Optimistic UI updates (instant checkmark changes)
+ * - Loading states for each playlist action
+ * 
+ * Use Cases:
+ * - Save video to "Watch Later" playlist
+ * - Organize tutorials into category playlists
+ * - Build themed video collections
+ * - Quick-save videos while browsing
+ * 
+ * @param {boolean} isOpen - Controls modal visibility
+ * @param {Function} onClose - Callback to close modal
+ * @param {string} videoId - ID of video being added to playlists
+ * @param {string} videoTitle - Video title for display
+ * @param {boolean} isSidebar - Adjust styling for sidebar display
+ */
 
 const AddToPlaylistModal = ({
     isOpen,
@@ -59,14 +100,14 @@ const AddToPlaylistModal = ({
                     prev.map((p) =>
                         p._id === playlistId
                             ? {
-                                  ...p,
-                                  videos: (p.videos || []).filter(
-                                      (v) =>
-                                          (typeof v === "string"
-                                              ? v
-                                              : v._id) !== videoId
-                                  ),
-                              }
+                                ...p,
+                                videos: (p.videos || []).filter(
+                                    (v) =>
+                                        (typeof v === "string"
+                                            ? v
+                                            : v._id) !== videoId
+                                ),
+                            }
                             : p
                     )
                 )
@@ -164,18 +205,16 @@ const AddToPlaylistModal = ({
                                             handleAddToPlaylist(playlist._id)
                                         }
                                         disabled={isAdding}
-                                        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                                            inPlaylist
+                                        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${inPlaylist
                                                 ? "bg-green-600/10 border-green-600/50 hover:border-red-600 hover:bg-red-600/10"
                                                 : "bg-[#2A2D2E] border-gray-600 hover:border-red-600 hover:bg-[#2A2D2E]/80"
-                                        } ${isAdding ? "opacity-50 cursor-wait" : ""}`}
+                                            } ${isAdding ? "opacity-50 cursor-wait" : ""}`}
                                     >
                                         <div
-                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                                                inPlaylist
+                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${inPlaylist
                                                     ? "bg-green-600 border-green-600"
                                                     : "border-gray-500"
-                                            }`}
+                                                }`}
                                         >
                                             {inPlaylist && (
                                                 <Check
@@ -298,19 +337,17 @@ const AddToPlaylistModal = ({
                                                 )
                                             }
                                             disabled={isAdding}
-                                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                                                inPlaylist
+                                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${inPlaylist
                                                     ? "bg-green-600/10 border-green-600/50 hover:border-red-600 hover:bg-red-600/10"
                                                     : "bg-[#2A2D2E] border-gray-600 hover:border-red-600 hover:bg-[#2A2D2E]/80"
-                                            } ${isAdding ? "opacity-50 cursor-wait" : ""}`}
+                                                } ${isAdding ? "opacity-50 cursor-wait" : ""}`}
                                         >
                                             {/* Checkbox/Check */}
                                             <div
-                                                className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                                                    inPlaylist
+                                                className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${inPlaylist
                                                         ? "bg-green-600 border-green-600"
                                                         : "border-gray-500"
-                                                }`}
+                                                    }`}
                                             >
                                                 {inPlaylist && (
                                                     <Check

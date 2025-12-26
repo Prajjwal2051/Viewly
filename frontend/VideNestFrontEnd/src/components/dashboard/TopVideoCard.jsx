@@ -1,7 +1,8 @@
 // ============================================
-// TOP VIDEO CARD COMPONENT
+// TOP VIDEO CARD COMPONENT - FEATURED VIDEO HIGHLIGHT
 // ============================================
-// Highlights the most popular video on the channel
+// Highlights the most popular video on the channel with enhanced styling.
+// Appears on the Dashboard page as a showcase of best-performing content.
 
 import { Play, Heart, MessageSquare, Calendar, Video } from "lucide-react"
 import { Link } from "react-router-dom"
@@ -12,6 +13,34 @@ import {
     sanitizeVideoDescription,
 } from "../../utils/sanitize"
 
+/**
+ * TOP VIDEO CARD COMPONENT
+ * 
+ * Purpose:
+ * - Showcase channel's most successful video
+ * - Provide quick access to top-performing content
+ * - Display key performance metrics (views, likes, comments)
+ * 
+ * Why highlight top video?
+ * - Helps creators understand what content works best
+ * - Encourages creating similar successful content
+ * - Provides motivational boost seeing best results
+ * 
+ * Design Features:
+ * - Gradient background for premium feel
+ * - "Top Performing" badge in corner
+ * - Large video icon as visual anchor
+ * - Hover effects for interactivity
+ * 
+ * @param {Object} video - Top performing video data
+ * @param {string} video._id - Video ID for linking
+ * @param {string} video.title - Video title
+ * @param {string} video.description - Video description
+ * @param {number} video.views - Total view count
+ * @param {number} video.likes - Total likes
+ * @param {number} video.comments - Total comments
+ * @param {Date} video.createdAt - Upload date
+ */
 const TopVideoCard = ({ video }) => {
     if (!video) return null
 
@@ -82,9 +111,9 @@ const TopVideoCard = ({ video }) => {
                             <span>
                                 {video.createdAt
                                     ? formatDistanceToNow(
-                                          new Date(video.createdAt),
-                                          { addSuffix: true }
-                                      )
+                                        new Date(video.createdAt),
+                                        { addSuffix: true }
+                                    )
                                     : "Recently"}
                             </span>
                         </div>

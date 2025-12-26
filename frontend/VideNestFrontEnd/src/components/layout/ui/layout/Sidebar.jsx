@@ -1,9 +1,9 @@
 // ============================================
-// SIDEBAR COMPONENT - RESPONSIVE NAVIGATION
+// SIDEBAR COMPONENT - RESPONSIVE NAVIGATION MENU
 // ============================================
-// Mobile: Bottom navigation bar (horizontal)
-// Desktop: Left sidebar navigation (vertical)
-// Pinterest Theme: White background, Pinterest red accents
+// Adaptive navigation that changes layout based on screen size.
+// Mobile: Bottom horizontal navigation bar with icons
+// Desktop: Left vertical sidebar with icons and labels
 
 import { useNavigate, useLocation } from "react-router-dom"
 import {
@@ -19,6 +19,38 @@ import { useDispatch } from "react-redux"
 import { logout } from "../../../../store/slices/authSlice.js"
 import { logoutUser } from "../../../../api/authApi"
 import toast from "react-hot-toast"
+
+/**
+ * SIDEBAR COMPONENT
+ * 
+ * Purpose:
+ * - Provide consistent navigation across all pages
+ * - Adapt layout based on screen size (mobile vs desktop)
+ * - Highlight current page with visual indicators
+ * 
+ * Responsive Behavior:
+ * - Mobile (<768px): Bottom bar, icons only, 5 items
+ * - Tablet (768-1280px): Left sidebar, icons only, compact
+ * - Desktop (>1280px): Left sidebar, icons + labels, expanded
+ * 
+ * Navigation Items:
+ * - Home: Video feed and discover
+ * - Discover: Trending and categories
+ * - Playlists: Organized video collections
+ * - Create: Upload videos or tweets
+ * - Activity: Notifications and subscriptions
+ * - Profile: User account and settings
+ * 
+ * Active State Indicators:
+ * - Mobile: Red pulse line at top of icon
+ * - Desktop: Red background, bouncing icon
+ * 
+ * Design Pattern:
+ * - Bottom bar on mobile (easier thumb reach)
+ * - Left sidebar on desktop (standard convention)
+ * - Smooth transitions and hover effects
+ * - Fixed positioning (always visible)
+ */
 
 const Sidebar = () => {
     const navigate = useNavigate()
@@ -67,9 +99,8 @@ const Sidebar = () => {
                             <button
                                 key={item.id}
                                 onClick={() => navigate(item.path)}
-                                className={`relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-                                    active ? "text-red-600" : "text-gray-400"
-                                }`}
+                                className={`relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 ${active ? "text-red-600" : "text-gray-400"
+                                    }`}
                             >
                                 {/* Active Indicator */}
                                 {active && (

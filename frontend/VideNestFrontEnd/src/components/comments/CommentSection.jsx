@@ -1,3 +1,9 @@
+// ============================================
+// COMMENT SECTION COMPONENT - DISCUSSION INTERFACE
+// ============================================
+// Full-featured comment system for videos and tweets.
+// Supports adding, editing, deleting comments with real-time updates.
+
 import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import { Loader2, Send, Trash2, Edit2, MoreVertical } from "lucide-react"
@@ -11,6 +17,38 @@ import {
 import toast from "react-hot-toast"
 import Input from "../layout/ui/Input"
 import { sanitizeComment, sanitizeDisplayName } from "../../utils/sanitize"
+
+/**
+ * COMMENT SECTION COMPONENT
+ * 
+ * Purpose:
+ * - Display all comments on a video or tweet
+ * - Allow users to post new comments
+ * - Enable editing and deleting own comments
+ * - Support pagination for large comment threads
+ * 
+ * Key Features:
+ * - Real-time comment posting with optimistic updates
+ * - Inline editing (click Edit → modify → Save)
+ * - Delete confirmation
+ * - Pagination (Load More button)
+ * - Shows commenter avatar and name
+ * - Timestamps ("2 hours ago", "3 days ago")
+ * - XSS protection via sanitization
+ * 
+ * Dual Mode Operation:
+ * - Video Comments: Pass videoId prop
+ * - Tweet Comments: Pass tweetId prop
+ * 
+ * Authentication:
+ * - Anyone can view comments
+ * - Must be logged in to post
+ * - Can only edit/delete own comments
+ * 
+ * @param {string} videoId - Video ID if commenting on video
+ * @param {string} tweetId - Tweet ID if commenting on tweet
+ * @param {boolean} hideHeader - Hide "Comments" header (optional)
+ */
 
 const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
     const { user } = useSelector((state) => state.auth)

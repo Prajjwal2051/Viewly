@@ -1,8 +1,49 @@
+// ============================================
+// TWEET LIST COMPONENT - PHOTO POST FEED DISPLAY
+// ============================================
+// Fetches and displays a list of tweets (photo posts) in a masonry layout.
+// Can show all tweets or filter by specific user.
+
 import React, { useEffect, useState } from "react"
 import TweetCard from "./TweetCard"
 import { getUserTweets, getAllTweets } from "../../api/tweetApi"
 import { Loader2, MessageSquare } from "lucide-react"
 import EmptyState from "../ui/EmptyState"
+
+/**
+ * TWEET LIST COMPONENT
+ * 
+ * Purpose:
+ * - Display feed of photo posts (tweets)
+ * - Support both all-tweets feed and user-specific feed
+ * - Handle loading and error states gracefully
+ * 
+ * Two Display Modes:
+ * 1. All Tweets Mode (userId not provided)
+ *    - Shows public feed from all users
+ *    - Used on HomePage and Discover page
+ * 
+ * 2. User Tweets Mode (userId provided)
+ *    - Shows tweets from specific user only
+ *    - Used on Profile page
+ * 
+ * Data Flow:
+ * 1. Component mounts
+ * 2. useEffect triggers fetch based on userId
+ * 3. API returns tweets (may be wrapped in data object)
+ * 4. Extract array from various response formats
+ * 5. Apply limit if specified
+ * 6. Render TweetCard components
+ * 
+ * Technical Details:
+ * - Handles multiple API response formats
+ * - Supports optional limit parameter
+ * - Shows loading spinner during fetch
+ * - Displays EmptyState when no tweets found
+ * 
+ * @param {string} userId - User ID to filter tweets (optional)
+ * @param {number} limit - Max tweets to display (optional)
+ */
 
 const TweetList = ({ userId, limit }) => {
     const [tweets, setTweets] = useState([])
