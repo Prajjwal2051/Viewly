@@ -19,6 +19,7 @@ import Button from "../components/layout/ui/Button"
 import authBgBright from "../assets/auth_bg_bright.png"
 import { Eye, EyeOff, Info, Github, Mail } from "lucide-react"
 import developerProfile from "../assets/developer_profile.jpg"
+import logo from "../assets/logo.png"
 
 const RegisterPage = () => {
     // Form state
@@ -207,10 +208,12 @@ const RegisterPage = () => {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className="flex justify-center mb-4">
-                            <div className="h-12 w-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
-                                <span className="text-white font-bold text-2xl font-['Outfit']">
-                                    V
-                                </span>
+                            <div className="h-20 w-20 flex items-center justify-center transition-transform duration-300 hover:scale-110 rounded-full overflow-hidden shadow-lg shadow-red-500/20">
+                                <img
+                                    src={logo}
+                                    alt="Viewly"
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                         </div>
                         <h2 className="text-3xl font-bold text-[#e60023] mb-2 font-['Playfair_Display']">
@@ -220,7 +223,6 @@ const RegisterPage = () => {
                             Find new ideas to try
                         </p>
                     </div>
-
                     {/* Register Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <Input
@@ -325,7 +327,6 @@ const RegisterPage = () => {
                             {loading ? "Creating Account..." : "Continue"}
                         </Button>
                     </form>
-
                     <div className="mt-6 text-center">
                         <p className="text-gray-400 text-xs mb-4 px-8">
                             By continuing, you agree to Viewly's{" "}

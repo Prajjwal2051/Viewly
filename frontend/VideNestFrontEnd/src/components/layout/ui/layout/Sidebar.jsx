@@ -19,20 +19,21 @@ import { useDispatch } from "react-redux"
 import { logout } from "../../../../store/slices/authSlice.js"
 import { logoutUser } from "../../../../api/authApi"
 import toast from "react-hot-toast"
+import logo from "../../../../assets/logo.png"
 
 /**
  * SIDEBAR COMPONENT
- * 
+ *
  * Purpose:
  * - Provide consistent navigation across all pages
  * - Adapt layout based on screen size (mobile vs desktop)
  * - Highlight current page with visual indicators
- * 
+ *
  * Responsive Behavior:
  * - Mobile (<768px): Bottom bar, icons only, 5 items
  * - Tablet (768-1280px): Left sidebar, icons only, compact
  * - Desktop (>1280px): Left sidebar, icons + labels, expanded
- * 
+ *
  * Navigation Items:
  * - Home: Video feed and discover
  * - Discover: Trending and categories
@@ -40,11 +41,11 @@ import toast from "react-hot-toast"
  * - Create: Upload videos or tweets
  * - Activity: Notifications and subscriptions
  * - Profile: User account and settings
- * 
+ *
  * Active State Indicators:
  * - Mobile: Red pulse line at top of icon
  * - Desktop: Red background, bouncing icon
- * 
+ *
  * Design Pattern:
  * - Bottom bar on mobile (easier thumb reach)
  * - Left sidebar on desktop (standard convention)
@@ -99,8 +100,9 @@ const Sidebar = () => {
                             <button
                                 key={item.id}
                                 onClick={() => navigate(item.path)}
-                                className={`relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 ${active ? "text-red-600" : "text-gray-400"
-                                    }`}
+                                className={`relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+                                    active ? "text-red-600" : "text-gray-400"
+                                }`}
                             >
                                 {/* Active Indicator */}
                                 {active && (
@@ -125,14 +127,28 @@ const Sidebar = () => {
                 {/* LOGO */}
                 <div
                     onClick={() => navigate("/")}
-                    className="mb-8 pl-6 pr-4 cursor-pointer group"
+                    className="mb-8 pl-0 xl:pl-6 pr-0 xl:pr-4 cursor-pointer group w-full flex justify-center xl:justify-start"
                 >
-                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-600 text-white font-bold text-xl xl:hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
-                        V
+                    {/* Mobile/Tablet Logo (Icon Only) */}
+                    <div className="xl:hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12 rounded-full overflow-hidden">
+                        <img
+                            src={logo}
+                            alt="Viewly"
+                            className="h-10 w-10 object-cover rounded-full"
+                        />
                     </div>
-                    <h1 className="hidden xl:block text-2xl font-bold text-red-600 tracking-tight transition-all duration-300 group-hover:scale-105">
-                        Viewly
-                    </h1>
+
+                    {/* Desktop Logo (Icon + Text) */}
+                    <div className="hidden xl:flex items-center gap-2 transition-all duration-300 group-hover:scale-105">
+                        <img
+                            src={logo}
+                            alt="Viewly"
+                            className="h-8 w-8 object-cover rounded-full"
+                        />
+                        <h1 className="text-2xl font-bold text-red-600 tracking-tight">
+                            Viewly
+                        </h1>
+                    </div>
                 </div>
 
                 {/* NAVIGATION LINKS */}
