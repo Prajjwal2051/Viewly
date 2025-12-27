@@ -245,12 +245,14 @@ const VideoCard = ({ video }) => {
                     </p>
 
                     {/* Stats - Adjusted */}
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap overflow-hidden">
                         <span>{formatViews(video.views)} views</span>
                         <span>•</span>
                         <span>{formatViews(likesCount)} likes</span>
                         <span>•</span>
-                        <span>{formatDate(video.createdAt)}</span>
+                        <span className="truncate">
+                            {formatDate(video.createdAt)}
+                        </span>
                     </div>
                 </div>
             </div>

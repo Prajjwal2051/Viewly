@@ -32,13 +32,13 @@ import {
 /**
  * TWEET PAGE COMPONENT
  * Displays full tweet details with image, interactions, and comments
- * 
+ *
  * Purpose:
  * - Show complete tweet content (text + optional image)
  * - Display owner information and profile
  * - Enable interactions (like, comment, share, subscribe)
  * - Show all comments on the tweet
- * 
+ *
  * Features:
  * - Tweet content with sanitization (XSS protection)
  * - Like/unlike functionality with live count
@@ -46,17 +46,17 @@ import {
  * - Comment section with real-time updates
  * - Share functionality (copy link)
  * - Can be displayed as modal or full page
- * 
+ *
  * Props:
  * @param {boolean} isModal - Whether to display as modal overlay
- * 
+ *
  * State Management:
  * - tweet: Tweet data (content, owner, image, etc.)
  * - isLiked: Whether current user has liked this tweet
  * - likesCount: Total number of likes
  * - isSubscribed: Whether user is subscribed to tweet owner
  * - showComments: Toggle comments section visibility
- * 
+ *
  * @returns {JSX.Element} Tweet detail view with interactions
  */
 const TweetPage = ({ isModal = false }) => {
@@ -100,7 +100,7 @@ const TweetPage = ({ isModal = false }) => {
             } catch (error) {
                 console.error("Failed to fetch tweet:", error)
                 toast.error("Failed to load post")
-                navigate("/")  // Redirect to home on error
+                navigate("/") // Redirect to home on error
             } finally {
                 setLoading(false)
             }
@@ -239,36 +239,109 @@ const TweetPage = ({ isModal = false }) => {
 
     if (isModal) {
         return (
-            <div className="relative w-full h-full bg-[#1E2021] flex flex-col overflow-hidden">
-                {/* CLOSE BUTTON */}
-                <button
-                    onClick={() => navigate(-1)}
-                    className="absolute top-4 left-4 z-50 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors"
-                >
-                    <X size={24} />
-                </button>
-
-                {/* CONTENT AREA: IMAGE (Flex-1 to take available space) */}
-                <div className="flex-1 flex items-center justify-center bg-[#1E2021] overflow-hidden relative w-full">
-                    {tweet.image ? (
-                        <img
-                            src={tweet.image}
-                            alt="Tweet content"
-                            className="w-full h-full object-contain"
+            <div className="relative w-full h-full bg-transparent flex flex-col overflow-hidden p-0">
+                {/* CLOSE BUTTON - Popup Tab Style (Hidden behind box, pops up on hover) */}
+                <div className="w-full h-12 flex items-end px-6 shrink-0 relative z-40 group cursor-pointer">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-[#1E2021] rounded-t-2xl text-white hover:bg-[#2A2D2E] transition-all duration-300 transform translate-y-[120%] group-hover:translate-y-0 shadow-[-4px_-4px_10px_rgba(0,0,0,0.2)] ease-out"
+                    >
+                        <X
+                            size={18}
+                            className="text-red-500 group-hover:text-red-400 transition-colors"
                         />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center p-8">
-                            <div className="w-full max-w-3xl flex flex-col items-center justify-center bg-[#1E2021] rounded-3xl p-8 shadow-2xl">
-                                <p className="text-gray-100 text-xl md:text-3xl font-normal text-center leading-relaxed whitespace-pre-wrap tracking-wide">
-                                    {sanitizeTweetContent(tweet.content)}
-                                </p>
+                        <span className="text-xs font-bold text-gray-300 group-hover:text-white uppercase tracking-widest transition-colors mb-0.5">
+                            Close
+                        </span>
+                    </button>
+
+                    {/* Visual Hint (Optional: Shows user something is there) */}
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-transparent group-hover:bg-transparent transition-colors"></div>
+                </div>
+
+                {/* CONTENT BOX - The actual card (In front of the tab) */}
+                <div className="flex-1 w-full bg-[#1E2021] flex flex-col overflow-hidden relative z-50 rounded-b-none rounded-tr-3xl rounded-tl-3xl md:rounded-br-none shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-[#2A2D2E]">
+                    {/* CONTENT AREA: IMAGE (Flex-1 to take available space) */}
+                    <div className="flex-1 flex items-center justify-center bg-[#1E2021] overflow-hidden relative w-full min-h-0">
+                        {tweet.image ? (
+                            <img
+                                src={tweet.image}
+                                alt="Tweet content"
+                                className="w-full h-full object-contain"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-start p-6 md:p-16">
+                                <div className="w-full max-w-3xl bg-transparent">
+                                    <p className="text-gray-100 text-lg md:text-2xl font-normal text-left leading-relaxed whitespace-pre-wrap tracking-wide">
+                                        {sanitizeTweetContent(tweet.content)}
+                                    </p>
+                                </div>
                             </div>
+                        )}
+                        {/* Desktop/Tablet Action Overlay (Floating Right) - Only show if image exists */}
+                        <div
+                            className={`hidden ${
+                                tweet.image ? "md:flex" : "md:hidden"
+                            } absolute right-4 lg:right-6 top-1/2 -translate-y-1/2 flex-col gap-6 z-30`}
+                        >
+                            {/* Like */}
+                            <button
+                                onClick={handleLike}
+                                className="group flex flex-col items-center gap-1"
+                            >
+                                <div
+                                    className={`p-3 rounded-full backdrop-blur-md transition-all ${
+                                        isLiked
+                                            ? "bg-red-600/20 text-red-500"
+                                            : "bg-black/40 text-white hover:bg-white/20"
+                                    }`}
+                                >
+                                    <Heart
+                                        size={28}
+                                        className={
+                                            isLiked ? "fill-current" : ""
+                                        }
+                                    />
+                                </div>
+                                <span className="text-xs font-bold text-white drop-shadow-md">
+                                    {likesCount}
+                                </span>
+                            </button>
+
+                            {/* Comment */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setShowComments(true)
+                                }}
+                                className="group flex flex-col items-center gap-1"
+                            >
+                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-white/20 transition-all">
+                                    <MessageCircle size={28} />
+                                </div>
+                                <span className="text-xs font-bold text-white drop-shadow-md">
+                                    Comment
+                                </span>
+                            </button>
+
+                            {/* Share */}
+                            <button
+                                onClick={handleShare}
+                                className="group flex flex-col items-center gap-1"
+                            >
+                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-white/20 transition-all">
+                                    <Share2 size={28} />
+                                </div>
+                                <span className="text-xs font-bold text-white drop-shadow-md">
+                                    Share
+                                </span>
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 {/* FOOTER: INFO & ACTIONS (Static block below image) */}
-                <div className="w-full bg-[#1E2021] border-t border-gray-800 p-4 transition-transform z-40">
+                <div className="w-full bg-[#1E2021] border-t border-gray-800 p-4 transition-transform z-40 shrink-0">
                     <div className="max-w-screen-xl mx-auto flex flex-col gap-4">
                         {/* Top Row: User Info & Follow Button */}
                         <div className="flex items-center justify-between">
@@ -303,21 +376,22 @@ const TweetPage = ({ isModal = false }) => {
                                         </span>
                                         {user?._id !==
                                             tweet.ownerDetails?._id && (
-                                                <button
-                                                    onClick={handleSubscribe}
-                                                    disabled={isFollowing}
-                                                    className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isSubscribed
-                                                            ? "bg-transparent border border-gray-500 text-gray-300 hover:border-red-500 hover:text-red-500"
-                                                            : "bg-white text-black hover:bg-gray-200"
-                                                        }`}
-                                                >
-                                                    {isFollowing
-                                                        ? "..."
-                                                        : isSubscribed
-                                                            ? "Following"
-                                                            : "Follow"}
-                                                </button>
-                                            )}
+                                            <button
+                                                onClick={handleSubscribe}
+                                                disabled={isFollowing}
+                                                className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                    isSubscribed
+                                                        ? "bg-transparent border border-gray-500 text-gray-300 hover:border-red-500 hover:text-red-500"
+                                                        : "bg-white text-black hover:bg-gray-200"
+                                                }`}
+                                            >
+                                                {isFollowing
+                                                    ? "..."
+                                                    : isSubscribed
+                                                      ? "Following"
+                                                      : "Follow"}
+                                            </button>
+                                        )}
                                     </div>
                                     <span className="text-xs text-gray-400">
                                         @
@@ -338,7 +412,11 @@ const TweetPage = ({ isModal = false }) => {
 
                         {/* Actions Row */}
                         <div className="flex items-center justify-between border-t border-gray-800 pt-3 mt-1">
-                            <div className="flex items-center gap-4 sm:gap-6">
+                            <div
+                                className={`flex ${
+                                    tweet.image ? "md:hidden" : "md:flex"
+                                } items-center gap-4 sm:gap-6`}
+                            >
                                 {/* Like */}
                                 <button
                                     onClick={handleLike}
@@ -401,19 +479,21 @@ const TweetPage = ({ isModal = false }) => {
 
                 {/* COMMENTS SECTION - RESPONSIVE (Bottom Sheet on Mobile, Sidebar on Desktop) */}
                 <div
-                    className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${showComments
+                    className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+                        showComments
                             ? "opacity-100 pointer-events-auto"
                             : "opacity-0 pointer-events-none"
-                        }`}
+                    }`}
                     onClick={() => setShowComments(false)}
                 >
                     <div
                         className={`fixed bg-[#1E2021] border-gray-700 shadow-2xl transition-transform duration-300 ease-out flex flex-col
                             bottom-0 w-full h-[90vh] rounded-t-3xl border-t transform
                             md:top-0 md:right-0 md:h-full md:w-[450px] md:bottom-auto md:rounded-none md:border-l md:border-t-0
-                            ${showComments
-                                ? "translate-y-0 md:translate-x-0"
-                                : "translate-y-full md:translate-x-full"
+                            ${
+                                showComments
+                                    ? "translate-y-0 md:translate-x-0"
+                                    : "translate-y-full md:translate-x-full"
                             }
                         `}
                         onClick={(e) => e.stopPropagation()}
@@ -445,6 +525,8 @@ const TweetPage = ({ isModal = false }) => {
                         </div>
                     </div>
                 </div>
+
+                {/* Closing Content Box */}
             </div>
         )
     }
@@ -528,10 +610,11 @@ const TweetPage = ({ isModal = false }) => {
                     <div className="flex items-center gap-6 mb-4">
                         <button
                             onClick={handleLike}
-                            className={`flex items-center gap-2 transition-colors ${isLiked
+                            className={`flex items-center gap-2 transition-colors ${
+                                isLiked
                                     ? "text-red-500"
                                     : "text-white hover:text-red-600"
-                                }`}
+                            }`}
                         >
                             <Heart
                                 size={24}

@@ -755,36 +755,40 @@ const VideoPlayerPage = ({ isModal = false }) => {
 
                     {/* PLAYLIST SIDEBAR - Slides in from right on desktop, up from bottom on mobile */}
                     {showPlaylistModal && (
-                        <div className="fixed bottom-0 left-0 right-0 w-full h-[70vh] z-50 rounded-t-3xl border-t border-gray-700 bg-[#1E2021] overflow-y-auto animate-slide-up md:static md:w-[40%] md:h-full md:border-l md:text-left md:rounded-none md:border-t-0 md:bg-[#1E2021] md:animate-none">
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-2xl font-bold text-white">
-                                        Add to Playlist
-                                    </h2>
-                                    <button
-                                        onClick={() =>
+                        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:static md:inset-auto md:bg-transparent md:backdrop-blur-none md:w-[40%] md:h-full md:border-l md:border-gray-700">
+                            <div className="fixed bottom-0 left-0 right-0 w-full h-[70vh] z-50 rounded-t-3xl border-t border-gray-700 bg-[#1E2021] overflow-y-auto animate-slide-up md:static md:w-full md:h-full md:rounded-none md:border-t-0 md:bg-[#1E2021] md:animate-none">
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-white">
+                                            Add to Playlist
+                                        </h2>
+                                        <button
+                                            onClick={() =>
+                                                setShowPlaylistModal(false)
+                                            }
+                                            className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    {/* Playlist content will be rendered by AddToPlaylistModal component */}
+                                    <AddToPlaylistModal
+                                        isOpen={true}
+                                        onClose={() =>
                                             setShowPlaylistModal(false)
                                         }
-                                        className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
-                                    >
-                                        <X size={20} />
-                                    </button>
+                                        videoId={videoId}
+                                        videoTitle={video?.title}
+                                        isSidebar={true}
+                                    />
                                 </div>
-                                {/* Playlist content will be rendered by AddToPlaylistModal component */}
-                                <AddToPlaylistModal
-                                    isOpen={true}
-                                    onClose={() => setShowPlaylistModal(false)}
-                                    videoId={videoId}
-                                    videoTitle={video?.title}
-                                    isSidebar={true}
-                                />
                             </div>
                         </div>
                     )}
 
                     {/* COMMENTS SIDEBAR - Slides in from right on desktop, up from bottom on mobile */}
                     <div
-                        className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:static md:inset-auto md:bg-transparent md:backdrop-blur-none ${
+                        className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:static md:inset-auto md:bg-transparent md:backdrop-blur-none md:w-[40%] md:h-full md:border-l md:border-gray-700 ${
                             showCommentsPanel
                                 ? "opacity-100 pointer-events-auto md:pointer-events-auto"
                                 : "opacity-0 pointer-events-none md:pointer-events-none md:hidden"
@@ -793,7 +797,7 @@ const VideoPlayerPage = ({ isModal = false }) => {
                     >
                         <div
                             className={`fixed bottom-0 left-0 right-0 w-full h-[90vh] z-50 rounded-t-3xl border-t border-gray-700 bg-[#1E2021] overflow-y-auto transition-transform duration-300 ease-out transform
-                                md:static md:w-[40%] md:h-full md:border-l md:text-left md:rounded-none md:border-t-0 md:bg-[#1E2021] md:transform-none
+                                md:static md:w-full md:h-full md:rounded-none md:border-t-0 md:bg-[#1E2021] md:transform-none
                                 ${
                                     showCommentsPanel
                                         ? "translate-y-0"
