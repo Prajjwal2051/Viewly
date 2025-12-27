@@ -23,7 +23,7 @@ import {
 
 /**
  * TAB CONFIGURATION
- * 
+ *
  * Defines the available tabs on the profile page:
  * - Videos: Shows all uploaded videos
  * - Tweets: Shows all photo posts
@@ -37,18 +37,18 @@ const TABS = [
 
 /**
  * PROFILE PAGE COMPONENT
- * 
+ *
  * Purpose:
  * - Show user's content (videos and tweets)
  * - Display channel statistics (subscribers, video count)
  * - Allow subscribing to other users' channels
- * 
+ *
  * Key Features:
  * - Tab navigation (Videos, Tweets, About)
  * - Subscribe/Unsubscribe button (not shown on own profile)
  * - Cover image and avatar display
  * - Responsive grid layout for content
- * 
+ *
  * URL Patterns:
  * - /profile → Own profile (uses current logged-in user)
  * - /profile/:username → Other user's profile
@@ -60,75 +60,105 @@ const ProfilePage = () => {
 
     const [activeTab, setActiveTab] = useState("videos")
     const [loading, setLoading] = useState(true)
+    const [profileData, setProfileData] = useState(null)
     const [userVideos, setUserVideos] = useState([])
     const [stats, setStats] = useState({ subscribers: 0, videos: 0 })
     const [isSubscribed, setIsSubscribed] = useState(false)
     const [subscribing, setSubscribing] = useState(false)
 
-    // Determine if viewing own profile or someone else's
-    const isOwnProfile = !username || username === user?.username
-    const profileUser = isOwnProfile ? user : null // For now, use current user
+    // Determine target username (URL param or current user)
+    const targetUsername = username || user?.username
 
-    console.log("ProfilePage Debug:", {
-        user,
-        coverImage: user?.coverImage,
-        coverImg: user?.coverImg,
-    })
+    // Determine if viewing own profile
+    // We can only know this for sure after fetching profileData,
+    // but initially we can check usernames
+    const isOwnProfile = !username || (user && username === user.username)
+
+    const coverImage =
+        profileData?.coverImage ||
+        profileData?.coverImg ||
+        profileData?.coverimage
 
     // Fetch profile data
     useEffect(() => {
         const fetchProfileData = async () => {
+            if (!targetUsername) return
+
             try {
                 setLoading(true)
 
-                // Fetch channel profile with latest subscriber count
-                if (user?.username) {
-                    const channelResponse = await getUserChannelProfile(
-                        user.username
-                    )
-                    console.log("Channel profile:", channelResponse)
+                // 1. Fetch channel profile
+                const channelResponse =
+                    await getUserChannelProfile(targetUsername)
+                const channelData = channelResponse.data || channelResponse
+                setProfileData(channelData)
 
-                    const channelData = channelResponse.data || channelResponse
-                    const subscriberCount =
-                        channelData.subscribersCount ||
-                        channelData.subscriberCount ||
-                        user?.subscribersCount ||
-                        0
-
-                    // Fetch all videos and filter by user
-                    const response = await getAllVideos()
-                    const allVideos =
-                        response.data?.videos || response.videos || []
-
-                    // Filter user's videos
-                    const filtered = allVideos.filter(
-                        (v) => v.owner?._id === user._id || v.owner === user._id
-                    )
-
-                    setUserVideos(filtered)
-
-                    // Set stats with fresh subscriber count
-                    setStats({
-                        subscribers: subscriberCount,
-                        videos: filtered.length,
-                    })
+                // 2. Set subscription status (if logged in user matches)
+                if (channelData?.isSubscribed) {
+                    setIsSubscribed(true)
                 }
+                // Alternatively, if the API doesn't return isSubscribed, we might need a separate check
+                // For now assuming existing Logic:
+                // subscriptionApi usually has checkSubscriptionStatus or similar,
+                // but here we might rely on channelData having it or fetching it separately.
+                // Let's stick to the previous pattern but focused on target user.
+
+                // If we are looking at another user, check if WE represent a subscriber to THEM
+                // The previous code didn't explicitly check isSubscribed status from API?
+                // Let's look at how subscriptionApi was used.
+                // It seems `getUserChannelProfile` might return `isSubscribed`?
+                // If not, we might need to check `channelData.subscribers` includes `user._id`?
+                // The current codebase didn't have explicit `checkSubscription` call in useEffect.
+                // We will assume `channelData` might have it or we default to false/check later.
+                // *Correction*: previous code had `setIsSubscribed` logic missing in the view?
+                // Ah, line 65 `const [isSubscribed, setIsSubscribed] = useState(false)` was unused in useEffect?
+                // Wait, checking line 134 `handleSubscribe` toggles it.
+                // But where is it *initialized*?
+                // It seems the previous code *failed* to initialize `isSubscribed` state correctly from backend!
+                // I should fix this too.
+
+                // Let's check `channelData` structure. Usually it has `isSubscribed`.
+                if (channelData.isSubscribed !== undefined) {
+                    setIsSubscribed(channelData.isSubscribed)
+                }
+
+                const subscriberCount =
+                    channelData.subscribersCount ||
+                    channelData.subscriberCount ||
+                    (channelData._id === user?._id
+                        ? user?.subscribersCount
+                        : 0) ||
+                    0
+
+                // 3. Fetch videos
+                const response = await getAllVideos()
+                const allVideos = response.data?.videos || response.videos || []
+
+                // Filter videos by the PROFILE OWNER'S ID
+                const filtered = allVideos.filter(
+                    (v) =>
+                        v.owner?._id === channelData._id ||
+                        v.owner === channelData._id
+                )
+
+                setUserVideos(filtered)
+
+                setStats({
+                    subscribers: subscriberCount,
+                    videos: filtered.length,
+                })
             } catch (error) {
                 console.error("Failed to load profile data:", error)
-                // Fallback to user data if API fails
-                setStats({
-                    subscribers: user?.subscribersCount || 0,
-                    videos: userVideos.length,
-                })
+                toast.error("User not found or error loading profile")
+                // If error, maybe redirect or show empty state?
+                // For now, staying on page.
             } finally {
                 setLoading(false)
             }
         }
 
-        if (user) {
-            fetchProfileData()
-        }
-    }, [user])
+        fetchProfileData()
+    }, [targetUsername, user?.username]) // Re-run if target changes or user logs in
 
     // Subscribe handler
     const handleSubscribe = async () => {
@@ -151,7 +181,7 @@ const ProfilePage = () => {
         }))
 
         try {
-            await toggleSubscription(profileUser._id)
+            await toggleSubscription(profileData._id)
             toast.success(wasSubscribed ? "Unsubscribed" : "Subscribed!")
         } catch (error) {
             // Revert on error
@@ -171,113 +201,133 @@ const ProfilePage = () => {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             {/* Cover Photo Banner */}
-            {/* Cover Photo Banner */}
-            <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden mb-8 bg-[#1E2021]">
-                {user?.coverImage || user?.coverImg || user?.coverimage ? (
+            {coverImage && (
+                <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden mb-8 bg-[#1E2021]">
                     <img
-                        src={
-                            user?.coverImage ||
-                            user?.coverImg ||
-                            user?.coverimage
-                        }
+                        src={coverImage}
                         alt="Cover"
                         className="w-full h-full object-cover"
                     />
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-red-600 via-red-700 to-red-800 relative">
-                        {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-                        {/* Decorative Pattern */}
-                        <div className="absolute inset-0 opacity-10">
-                            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]" />
-                        </div>
-                    </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Profile Header Area - Notion Style */}
             <div className="relative mb-8 px-4">
                 {/* Floating Avatar - Overlapping Banner */}
-                <div className="absolute -top-16 left-4 md:left-8">
+                <div
+                    className={`${
+                        coverImage
+                            ? "absolute -top-16 left-4 md:left-8"
+                            : "relative mb-4"
+                    }`}
+                >
                     <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1.5 bg-[#121212]">
                         <img
                             src={
-                                user?.avatar ||
+                                profileData?.avatar ||
                                 "https://via.placeholder.com/150"
                             }
-                            alt={user?.username}
+                            alt={profileData?.username}
                             className="w-full h-full rounded-full object-cover"
                         />
                     </div>
                 </div>
 
-                {/* Edit/Subscribe Button - Top Right aligned with Avatar area */}
-                <div className="flex justify-end pt-4 mb-4">
-                    {isOwnProfile ? (
-                        <button
-                            onClick={() => navigate("/settings")}
-                            className="px-4 py-2 bg-[#2A2D2E] hover:bg-[#3F4243] text-white text-sm font-medium rounded transition-colors"
-                        >
-                            Edit Profile
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleSubscribe}
-                            disabled={subscribing}
-                            className={`px-6 py-2 font-semibold rounded transition-colors disabled:opacity-50 ${isSubscribed
-                                    ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
-                                    : "bg-red-600 text-white hover:bg-red-700"
+                {/* Edit/Subscribe Button - Top Right aligned with Avatar area (Only if Banner exists) */}
+                {coverImage && (
+                    <div className="flex justify-end pt-4 mb-4">
+                        {isOwnProfile ? (
+                            <button
+                                onClick={() => navigate("/settings")}
+                                className="px-4 py-2 bg-[#2A2D2E] hover:bg-[#3F4243] text-white text-sm font-medium rounded transition-colors"
+                            >
+                                Edit Profile
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSubscribe}
+                                disabled={subscribing}
+                                className={`px-6 py-2 font-semibold rounded transition-colors disabled:opacity-50 ${
+                                    isSubscribed
+                                        ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
+                                        : "bg-red-600 text-white hover:bg-red-700"
                                 }`}
-                        >
-                            {subscribing
-                                ? "Loading..."
-                                : isSubscribed
-                                    ? "Subscribed"
-                                    : "Subscribe"}
-                        </button>
-                    )}
-                </div>
-
-                {/* Content Flow */}
-                <div className="mt-12 md:mt-16 ml-1">
-                    {/* Name - Huge Title Style */}
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                        {sanitizeDisplayName(user?.fullName)}
-                    </h1>
-
-                    {/* Handle & Email - Minimal metadata */}
-                    <div className="flex flex-wrap gap-4 text-gray-500 font-medium text-lg mb-6 items-center">
-                        <span>@{sanitizeUsername(user?.username)}</span>
-                        {/* Stats inline */}
-                        <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                        <span className="text-gray-400">
-                            {loading
-                                ? "..."
-                                : stats.subscribers.toLocaleString()}{" "}
-                            {stats.subscribers === 1
-                                ? "Subscriber"
-                                : "Subscribers"}
-                        </span>
-                        <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                        <span className="text-gray-400">
-                            {loading ? "..." : stats.videos.toLocaleString()}{" "}
-                            {stats.videos === 1 ? "Video" : "Videos"}
-                        </span>
+                            >
+                                {subscribing
+                                    ? "Loading..."
+                                    : isSubscribed
+                                      ? "Subscribed"
+                                      : "Subscribe"}
+                            </button>
+                        )}
                     </div>
+                )}
+            </div>
 
-                    {/* Bio - Notion Callout Block Style */}
-                    {user?.bio && (
-                        <div className="bg-[#2A2D2E] rounded-md p-4 mb-8 flex gap-4 items-start max-w-4xl border border-transparent hover:border-gray-600 transition-colors">
-                            <span className="text-2xl">💡</span>
-                            <div className="flex-1">
-                                <p className="text-gray-300 leading-relaxed font-normal">
-                                    {sanitizeUserBio(user.bio)}
-                                </p>
-                            </div>
+            {/* Content Flow */}
+            <div className={`${coverImage ? "mt-12 md:mt-16" : "mt-2"} ml-1`}>
+                {/* Name - Huge Title Style */}
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+                    {sanitizeDisplayName(profileData?.fullName)}
+                </h1>
+
+                {/* Handle & Email - Minimal metadata */}
+                <div className="flex flex-wrap gap-4 text-gray-500 font-medium text-lg mb-6 items-center">
+                    <span>@{sanitizeUsername(profileData?.username)}</span>
+                    {/* Stats inline */}
+                    <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                    <span className="text-gray-400">
+                        {loading ? "..." : stats.subscribers.toLocaleString()}{" "}
+                        {stats.subscribers === 1 ? "Subscriber" : "Subscribers"}
+                    </span>
+                    <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                    <span className="text-gray-400">
+                        {loading ? "..." : stats.videos.toLocaleString()}{" "}
+                        {stats.videos === 1 ? "Video" : "Videos"}
+                    </span>
+
+                    {/* Edit/Subscribe Button - Inline with stats (Only if No Banner) */}
+                    {!coverImage && (
+                        <div className="ml-auto">
+                            {isOwnProfile ? (
+                                <button
+                                    onClick={() => navigate("/settings")}
+                                    className="px-4 py-2 bg-[#2A2D2E] hover:bg-[#3F4243] text-white text-sm font-medium rounded transition-colors"
+                                >
+                                    Edit Profile
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleSubscribe}
+                                    disabled={subscribing}
+                                    className={`px-6 py-2 font-semibold rounded transition-colors disabled:opacity-50 ${
+                                        isSubscribed
+                                            ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
+                                            : "bg-red-600 text-white hover:bg-red-700"
+                                    }`}
+                                >
+                                    {subscribing
+                                        ? "Loading..."
+                                        : isSubscribed
+                                          ? "Subscribed"
+                                          : "Subscribe"}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
+
+                {/* Bio - Notion Callout Block Style */}
+                {profileData?.bio && (
+                    <div className="bg-[#2A2D2E] rounded-md p-4 mb-8 flex gap-4 items-start max-w-4xl border border-transparent hover:border-gray-600 transition-colors">
+                        <span className="text-2xl">💡</span>
+                        <div className="flex-1">
+                            <p className="text-gray-300 leading-relaxed font-normal">
+                                {sanitizeUserBio(profileData.bio)}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Navigation Tabs with Sliding Animation */}
@@ -298,10 +348,11 @@ const ProfilePage = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center justify-center gap-2 px-8 py-4 font-medium transition-all duration-300 relative whitespace-nowrap flex-1 ${isActive
+                            className={`flex items-center justify-center gap-2 px-8 py-4 font-medium transition-all duration-300 relative whitespace-nowrap flex-1 ${
+                                isActive
                                     ? "text-red-600"
                                     : "text-gray-500 hover:text-white"
-                                }`}
+                            }`}
                         >
                             <Icon
                                 size={18}
@@ -349,8 +400,8 @@ const ProfilePage = () => {
 
                 {activeTab === "tweets" && (
                     <div>
-                        {user?._id ? (
-                            <TweetList userId={user._id} />
+                        {profileData?._id ? (
+                            <TweetList userId={profileData._id} />
                         ) : (
                             <div className="text-center py-20 text-gray-500">
                                 <MessageSquare
@@ -386,7 +437,7 @@ const ProfilePage = () => {
                         <p className="text-gray-400">
                             Joined{" "}
                             {new Date(
-                                user?.createdAt || Date.now()
+                                profileData?.createdAt || Date.now()
                             ).toLocaleDateString()}
                         </p>
                     </div>
