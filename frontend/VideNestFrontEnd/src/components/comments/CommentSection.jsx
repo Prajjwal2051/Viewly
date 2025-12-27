@@ -20,13 +20,13 @@ import { sanitizeComment, sanitizeDisplayName } from "../../utils/sanitize"
 
 /**
  * COMMENT SECTION COMPONENT
- * 
+ *
  * Purpose:
  * - Display all comments on a video or tweet
  * - Allow users to post new comments
  * - Enable editing and deleting own comments
  * - Support pagination for large comment threads
- * 
+ *
  * Key Features:
  * - Real-time comment posting with optimistic updates
  * - Inline editing (click Edit → modify → Save)
@@ -35,16 +35,16 @@ import { sanitizeComment, sanitizeDisplayName } from "../../utils/sanitize"
  * - Shows commenter avatar and name
  * - Timestamps ("2 hours ago", "3 days ago")
  * - XSS protection via sanitization
- * 
+ *
  * Dual Mode Operation:
  * - Video Comments: Pass videoId prop
  * - Tweet Comments: Pass tweetId prop
- * 
+ *
  * Authentication:
  * - Anyone can view comments
  * - Must be logged in to post
  * - Can only edit/delete own comments
- * 
+ *
  * @param {string} videoId - Video ID if commenting on video
  * @param {string} tweetId - Tweet ID if commenting on tweet
  * @param {boolean} hideHeader - Hide "Comments" header (optional)
@@ -283,42 +283,9 @@ const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <>
-                                            <p className="text-gray-300 text-sm">
-                                                {sanitizeComment(
-                                                    comment.content
-                                                )}
-                                            </p>
-
-                                            {/* ACTIONS (Edit / Delete) */}
-                                            <div className="flex items-center gap-4 mt-2">
-                                                {/* Owner controls */}
-                                                {user?._id === owner?._id && (
-                                                    <>
-                                                        <button
-                                                            onClick={() =>
-                                                                handleEdit(
-                                                                    comment
-                                                                )
-                                                            }
-                                                            className="text-gray-500 hover:text-blue-500 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    comment._id
-                                                                )
-                                                            }
-                                                            className="text-gray-500 hover:text-red-600 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </>
+                                        <p className="text-gray-300 text-sm">
+                                            {sanitizeComment(comment.content)}
+                                        </p>
                                     )}
                                 </div>
                             </div>

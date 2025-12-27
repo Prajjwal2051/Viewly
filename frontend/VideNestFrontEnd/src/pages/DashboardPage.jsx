@@ -22,6 +22,7 @@ import {
 import AnalyticsCharts from "../components/dashboard/AnalyticsCharts"
 import GrowthMetrics from "../components/dashboard/GrowthMetrics"
 import TopVideoCard from "../components/dashboard/TopVideoCard"
+import MyCommentsTab from "../components/dashboard/MyCommentsTab"
 import CountUp from "../components/common/CountUp" // Added import
 import {
     BarChart3,
@@ -58,7 +59,7 @@ const DashboardPage = () => {
     const [loading, setLoading] = useState(true)
     const [deleting, setDeleting] = useState(null)
     const [editingItem, setEditingItem] = useState(null) // { type: 'video'|'tweet', data: ... }
-    const [activeTab, setActiveTab] = useState("myVideos") // 'myVideos', 'myTweets', 'likedVideos', 'likedTweets'
+    const [activeTab, setActiveTab] = useState("myVideos") // 'myVideos', 'myTweets', 'myComments', 'likedVideos', 'likedTweets', 'subscribers', 'subscribedTo'
 
     useEffect(() => {
         if (!user) {
@@ -390,6 +391,17 @@ const DashboardPage = () => {
                     >
                         <Heart size={16} className="inline mr-1" />
                         Liked Tweets ({likedTweets.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("myComments")}
+                        className={`px-4 py-2 md:px-6 md:py-3 font-medium transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
+                            activeTab === "myComments"
+                                ? "text-white border-red-600"
+                                : "text-gray-400 border-transparent hover:text-white"
+                        }`}
+                    >
+                        <MessageSquare size={16} className="inline mr-1" />
+                        My Comments
                     </button>
                     <button
                         onClick={() => setActiveTab("subscribers")}
@@ -800,6 +812,9 @@ const DashboardPage = () => {
                         )}
                     </div>
                 )}
+
+                {/* My Comments Section */}
+                {activeTab === "myComments" && <MyCommentsTab />}
 
                 {/* Subscribers Section */}
                 {activeTab === "subscribers" && (

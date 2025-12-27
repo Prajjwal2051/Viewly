@@ -13,15 +13,29 @@ import {
     getAllComment,
     getTweetComments,
     updateComment,
+    getUserComments,
 } from "../controllers/comment.controller.js"
 
 // Initialize Express router
 const router = Router()
 
 /**
+ * GET USER'S OWN COMMENTS ROUTE
+ * Retrieves all comments made by the authenticated user
+ *
+ * @route GET /api/v1/comments/user/me
+ * @access Private (requires authentication)
+ * @middleware verifyJWT - Ensures user is logged in
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Comments per page (default: 20)
+ * @returns {Object} Paginated user comments with context
+ */
+router.get("/user/me", verifyJWT, getUserComments)
+
+/**
  * GET VIDEO COMMENTS ROUTE
  * Retrieves paginated comments for a specific video
- * 
+ *
  * @route GET /api/v1/comments/:videoId
  * @access Public (anyone can view comments)
  * @param {string} videoId - MongoDB ObjectId of the video
@@ -34,7 +48,7 @@ router.get("/:videoId", getAllComment)
 /**
  * GET TWEET COMMENTS ROUTE
  * Retrieves paginated comments for a specific tweet
- * 
+ *
  * @route GET /api/v1/comments/t/:tweetId
  * @access Public (anyone can view tweet comments)
  * @param {string} tweetId - MongoDB ObjectId of the tweet
@@ -47,7 +61,7 @@ router.get("/t/:tweetId", getTweetComments)
 /**
  * ADD COMMENT ROUTE
  * Allows authenticated users to post a comment
- * 
+ *
  * @route POST /api/v1/comments
  * @access Private (requires authentication)
  * @middleware verifyJWT - Ensures user is logged in
@@ -62,7 +76,7 @@ router.post("/", verifyJWT, commentLimiter, addComment)
 /**
  * UPDATE COMMENT ROUTE
  * Allows user to edit their own comment
- * 
+ *
  * @route PATCH /api/v1/comments/:commentId
  * @access Private (only comment owner)
  * @middleware verifyJWT - Ensures user is logged in
@@ -75,7 +89,7 @@ router.patch("/:commentId", verifyJWT, updateComment)
 /**
  * DELETE COMMENT ROUTE
  * Allows user to delete their own comment
- * 
+ *
  * @route DELETE /api/v1/comments/:commentId
  * @access Private (only comment owner)
  * @middleware verifyJWT - Ensures user is logged in
