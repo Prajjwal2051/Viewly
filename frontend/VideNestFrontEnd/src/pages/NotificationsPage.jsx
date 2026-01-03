@@ -18,8 +18,8 @@ import {
 } from "lucide-react"
 import {
     getNotifications,
-    markNotificationAsRead,
-    markAllNotificationsAsRead,
+    markAsRead,
+    markAllAsRead,
     deleteNotification,
 } from "../api/notificationApi"
 import toast from "react-hot-toast"
@@ -75,7 +75,7 @@ const NotificationsPage = () => {
         try {
             // Mark as read if not already
             if (!notification.isRead) {
-                await markNotificationAsRead(notification._id)
+                await markAsRead(notification._id)
                 fetchNotifications()
             }
 
@@ -90,7 +90,7 @@ const NotificationsPage = () => {
 
     const handleMarkAllAsRead = async () => {
         try {
-            await markAllNotificationsAsRead()
+            await markAllAsRead()
             toast.success("All notifications marked as read")
             fetchNotifications()
         } catch (error) {
