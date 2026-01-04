@@ -70,14 +70,34 @@ const LoginPage = () => {
             dispatch(loginStart())
             const response = await loginUser(formData)
 
-            // Assuming response contains user object and tokens
-            const { user, accessToken } = response.data
+            console.log("Login response:", response) // Debug log
 
-            // Helper function to safely store tokens
+            // Backend returns: ApiResponse { statusCode, data: { user, accessToken, refreshToken }, message }
+            // Interceptor returns: response.data = the whole ApiResponse object
+            // So response.data contains { user, accessToken, refreshToken }
+            let user, accessToken
+
+            if (response.data) {
+                // Response structure: { data: { user, accessToken } }
+                user = response.data.user
+                accessToken = response.data.accessToken
+            } else if (response.user) {
+                // Fallback: direct structure { user, accessToken }
+                user = response.user
+                accessToken = response.accessToken
+            } else {
+                throw new Error("Invalid response structure from server")
+            }
+
+            if (!user || !accessToken) {
+                console.error("Missing data:", { user, accessToken })
+                throw new Error("Login failed: incomplete server response")
+            }
+
+            // Store token and update state
             localStorage.setItem("accessToken", accessToken)
-
             dispatch(loginSuccess(user))
-            toast.success(`Welcome back, ${user.username}!`)
+            toast.success(`Welcome back, ${user.username || user.fullName}!`)
             navigate("/") // Redirect to home page
         } catch (err) {
             const errorMessage = err.message || "Invalid credentials"
