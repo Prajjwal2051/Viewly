@@ -34,28 +34,6 @@
 
 ---
 
-## ⚠️ COPYRIGHT NOTICE
-
-```
-© 2026 VidNest - All Rights Reserved
-
-This project and its contents are the intellectual property of the author.
-
-UNAUTHORIZED COPYING, MODIFICATION, DISTRIBUTION, OR USE OF THIS CODE
-FOR COMMERCIAL OR EDUCATIONAL PURPOSES WITHOUT EXPLICIT WRITTEN PERMISSION
-FROM THE AUTHOR IS STRICTLY PROHIBITED.
-
-This includes but is not limited to:
-- Copying code for assignments, projects, or portfolios
-- Using this codebase as a template for similar projects
-- Redistributing any part of this code in any form
-- Claiming authorship or creating derivative works
-
-For licensing inquiries, please contact the author.
-```
-
----
-
 ## 📋 Table of Contents
 
 - [Features](#-features)
@@ -135,7 +113,7 @@ For licensing inquiries, please contact the author.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     CLIENT (Browser)                        │
-│  React 19 + Vite + Tailwind CSS + Redux Toolkit            │
+│  React 19 + Vite + Tailwind CSS + Redux Toolkit             │
 └────────────┬────────────────────────────────────────────────┘
              │ HTTP/HTTPS
              │
@@ -156,7 +134,7 @@ For licensing inquiries, please contact the author.
              │
 ┌────────────▼────────────────────────────────────────────────┐
 │                    DATA ACCESS LAYER                        │
-│  Mongoose ODM + MongoDB Aggregation Pipelines              │
+│  Mongoose ODM + MongoDB Aggregation Pipelines               │
 └────────────┬────────────────────────────────────────────────┘
              │
      ┌───────┴────────┬─────────────┐
