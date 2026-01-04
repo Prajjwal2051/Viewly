@@ -205,7 +205,7 @@ const LoginPage = () => {
                             value={formData.usernameOrEmail}
                             onChange={handleChange}
                             required
-                            className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri']"
+                            className="!bg-gray-50 dark:!bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 !text-gray-800 dark:!text-gray-800 placeholder-gray-400 focus:!bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri']"
                             disabled={loading}
                         />
 
@@ -218,7 +218,7 @@ const LoginPage = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
-                                className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri'] pr-12"
+                                className="!bg-gray-50 dark:!bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 !text-gray-800 dark:!text-gray-800 placeholder-gray-400 focus:!bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri'] pr-12"
                                 disabled={loading}
                             />
                             <button

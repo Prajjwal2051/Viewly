@@ -232,7 +232,7 @@ const RegisterPage = () => {
                             value={formData.username}
                             onChange={handleChange}
                             required
-                            className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px]"
+                            className="!bg-gray-50 dark:!bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 !text-gray-800 dark:!text-gray-800 placeholder-gray-400 focus:!bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px]"
                             disabled={loading}
                         />
                         <Input
@@ -242,7 +242,7 @@ const RegisterPage = () => {
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri']"
+                            className="!bg-gray-50 dark:!bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 !text-gray-800 dark:!text-gray-800 placeholder-gray-400 focus:!bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri']"
                             disabled={loading}
                         />
                         <Input
@@ -252,7 +252,7 @@ const RegisterPage = () => {
                             value={formData.fullName}
                             onChange={handleChange}
                             required
-                            className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri']"
+                            className="!bg-gray-50 dark:!bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 !text-gray-800 dark:!text-gray-800 placeholder-gray-400 focus:!bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri']"
                             disabled={loading}
                         />
                         <div className="relative">
@@ -263,7 +263,7 @@ const RegisterPage = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
-                                className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri'] pr-12"
+                                className="!bg-gray-50 dark:!bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 !text-gray-800 dark:!text-gray-800 placeholder-gray-400 focus:!bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri'] pr-12"
                                 disabled={loading}
                             />
                             <button
@@ -286,7 +286,7 @@ const RegisterPage = () => {
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                                 required
-                                className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri'] pr-12"
+                                className="!bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 !text-gray-800 placeholder-gray-400 focus:!bg-white focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all text-[15px] font-['Calibri'] pr-12"
                                 disabled={loading}
                             />
                             <button
