@@ -97,12 +97,22 @@ const RegisterPage = () => {
                 data.append("coverImage", coverImage)
             }
 
-            const response = await registerUser(data)
-            const { user, accessToken } = response.data
-            localStorage.setItem("accessToken", accessToken)
-            dispatch(loginSuccess(user))
-            toast.success(`🎉 Welcome to Viewly, ${user.username}!`)
-            navigate("/")
+            await registerUser(data)
+
+            // Clear the form
+            setFormData({
+                username: "",
+                email: "",
+                fullName: "",
+                password: "",
+                confirmPassword: "",
+            })
+            setAvatar(null)
+            setCoverImage(null)
+
+            dispatch(loginFailure(null)) // Reset loading state
+            toast.success(`🎉 Account created successfully! Please login.`)
+            navigate("/login")
         } catch (error) {
             dispatch(loginFailure(error.message || "Registration failed"))
             const errorMessage = error.message || "Unable to create account."
