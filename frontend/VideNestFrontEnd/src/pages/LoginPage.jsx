@@ -71,7 +71,7 @@ const LoginPage = () => {
             const response = await loginUser(formData)
 
             // Assuming response contains user object and tokens
-            const { user, accessToken } = response
+            const { user, accessToken } = response.data
 
             // Helper function to safely store tokens
             localStorage.setItem("accessToken", accessToken)

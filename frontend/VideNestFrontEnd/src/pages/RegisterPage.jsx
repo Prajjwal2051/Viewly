@@ -98,7 +98,7 @@ const RegisterPage = () => {
             }
 
             const response = await registerUser(data)
-            const { user, accessToken } = response
+            const { user, accessToken } = response.data
             localStorage.setItem("accessToken", accessToken)
             dispatch(loginSuccess(user))
             toast.success(`🎉 Welcome to Viewly, ${user.username}!`)
