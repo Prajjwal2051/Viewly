@@ -147,6 +147,7 @@ import notificationRouter from "./routes/notification.routes.js"
 import dashboardRouter from "./routes/dashboard.routes.js"
 import tweetRouter from "./routes/tweet.routes.js"
 import playlistRouter from "./routes/playlist.routes.js"
+import healthRoutes from "./routes/health.route.js"
 
 /**
  * ROUTE DECLARATIONS
@@ -170,6 +171,7 @@ app.use("/api/v1/notifications", notificationRouter)  // User notifications
 app.use("/api/v1/dashboard", dashboardRouter)     // Channel analytics
 app.use("/api/v1/tweets", tweetRouter)            // Tweet/post operations
 app.use("/api/v1/playlists", playlistRouter)      // Playlist management
+app.use("/api/v1",healthRoutes);                   // api healthCheck route
 
 // ============================================
 // ERROR HANDLING MIDDLEWARE
