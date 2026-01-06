@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
-import { Loader2, Send, Trash2, Edit2, MoreVertical } from "lucide-react"
+import { Loader2, Send, Trash2, Edit2, MoreVertical, User } from "lucide-react"
 import {
     getVideoComments,
     getTweetComments,
@@ -60,6 +60,7 @@ const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
     const [hasMore, setHasMore] = useState(true)
     const [editingCommentId, setEditingCommentId] = useState(null)
     const [editContent, setEditContent] = useState("")
+    const [avatarErrors, setAvatarErrors] = useState({})
 
     // Initial Fetch
     useEffect(() => {
@@ -196,11 +197,23 @@ const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
 
             {/* ADD COMMENT FORM */}
             <form onSubmit={handleSubmit} className="mb-8 flex gap-4">
-                <img
-                    src={user?.avatar || "https://via.placeholder.com/40"}
-                    alt="User"
-                    className="w-10 h-10 rounded-full object-cover"
-                />
+                {user?.avatar && !avatarErrors["user-input"] ? (
+                    <img
+                        src={user.avatar}
+                        alt="User"
+                        onError={() =>
+                            setAvatarErrors((prev) => ({
+                                ...prev,
+                                "user-input": true,
+                            }))
+                        }
+                        className="w-10 h-10 rounded-full object-cover"
+                    />
+                ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                        <User size={20} className="text-gray-400" />
+                    </div>
+                )}
                 <div className="flex-1">
                     <input
                         value={newComment}
@@ -231,14 +244,26 @@ const CommentSection = ({ videoId, tweetId, hideHeader = false }) => {
                         const owner = comment.ownerDetails || comment.owner
                         return (
                             <div key={comment._id} className="flex gap-4 group">
-                                <img
-                                    src={
-                                        owner?.avatar ||
-                                        "https://via.placeholder.com/40"
-                                    }
-                                    alt={owner?.username}
-                                    className="w-10 h-10 rounded-full object-cover"
-                                />
+                                {owner?.avatar && !avatarErrors[comment._id] ? (
+                                    <img
+                                        src={owner.avatar}
+                                        alt={owner?.username}
+                                        onError={() =>
+                                            setAvatarErrors((prev) => ({
+                                                ...prev,
+                                                [comment._id]: true,
+                                            }))
+                                        }
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                        <User
+                                            size={20}
+                                            className="text-gray-400"
+                                        />
+                                    </div>
+                                )}
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="font-semibold text-white text-sm">

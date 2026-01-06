@@ -15,7 +15,7 @@ import { Eye, EyeOff, Info, Github, Mail } from "lucide-react"
 import developerProfile from "../assets/developer_profile.jpg"
 import logo from "../assets/logo.png"
 
-console.log("Login Background Path:", authBgBright)
+// console.log("Login Background Path:", authBgBright)
 
 const LoginPage = () => {
     // Form state handling

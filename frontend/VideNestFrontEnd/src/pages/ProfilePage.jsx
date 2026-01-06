@@ -65,6 +65,7 @@ const ProfilePage = () => {
     const [stats, setStats] = useState({ subscribers: 0, videos: 0 })
     const [isSubscribed, setIsSubscribed] = useState(false)
     const [subscribing, setSubscribing] = useState(false)
+    const [avatarError, setAvatarError] = useState(false)
 
     // Determine target username (URL param or current user)
     const targetUsername = username || user?.username
@@ -222,14 +223,18 @@ const ProfilePage = () => {
                     }`}
                 >
                     <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1.5 bg-[#121212]">
-                        <img
-                            src={
-                                profileData?.avatar ||
-                                "https://via.placeholder.com/150"
-                            }
-                            alt={profileData?.username}
-                            className="w-full h-full rounded-full object-cover"
-                        />
+                        {profileData?.avatar && !avatarError ? (
+                            <img
+                                src={profileData.avatar}
+                                alt={profileData?.username}
+                                onError={() => setAvatarError(true)}
+                                className="w-full h-full rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
+                                <User size={60} className="text-gray-400" />
+                            </div>
+                        )}
                     </div>
                 </div>
 

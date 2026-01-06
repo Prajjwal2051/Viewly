@@ -27,6 +27,7 @@ const VideoCard = ({ video }) => {
     const { user } = useSelector((state) => state.auth)
     const [isLiked, setIsLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(video.likes || 0)
+    const [avatarError, setAvatarError] = useState(false)
 
     // Fetch initial like status when component mounts
     useEffect(() => {
@@ -131,13 +132,13 @@ const VideoCard = ({ video }) => {
             className="group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer shadow-lg bg-[#2A2D2E] hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] transition-all duration-300 border border-transparent hover:border-white/10 flex flex-col"
         >
             {/* TOP SECTION: VIDEO THUMBNAIL & OVERLAY */}
-            <div className="relative w-full isolate overflow-hidden bg-[#1E2021]">
+            <div className="relative w-full h-[250px] isolate overflow-hidden bg-[#1E2021]">
                 <img
                     src={
                         video.thumbNail || "https://via.placeholder.com/640x360"
                     }
                     alt={video.title}
-                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {/* DURATION BADGE */}
@@ -201,13 +202,14 @@ const VideoCard = ({ video }) => {
             </div>
 
             {/* BOTTOM SECTION: INFO */}
-            <div className="p-3 flex gap-3">
+            <div className="p-3 flex gap-3 bg-[#2A2D2E]">
                 {/* Avatar with Fallback */}
-                {video.owner?.avatar ? (
+                {video.owner?.avatar && !avatarError ? (
                     <img
                         src={video.owner.avatar}
                         alt={video.owner?.username}
-                        className="h-9 w-9 rounded-full object-cover border border-white/10 shrink-0 mt-1"
+                        onError={() => setAvatarError(true)}
+                        className="h-9 w-9 rounded-full object-cover border border-white/10 shrink-0 mt-1 cursor-pointer hover:border-red-500 transition-colors"
                         onClick={(e) => {
                             e.stopPropagation()
                             navigate(`/channel/${video.owner?.username}`)
@@ -215,7 +217,7 @@ const VideoCard = ({ video }) => {
                     />
                 ) : (
                     <div
-                        className="h-9 w-9 rounded-full bg-gray-700 border border-white/10 shrink-0 mt-1 flex items-center justify-center"
+                        className="h-9 w-9 rounded-full bg-gray-700 border border-white/10 shrink-0 mt-1 flex items-center justify-center cursor-pointer hover:border-red-500 transition-colors"
                         onClick={(e) => {
                             e.stopPropagation()
                             navigate(`/channel/${video.owner?.username}`)

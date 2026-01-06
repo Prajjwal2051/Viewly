@@ -25,6 +25,7 @@ const TweetCard = ({ tweet }) => {
     const { user } = useSelector((state) => state.auth)
     const [isLiked, setIsLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(tweet.likes || 0)
+    const [avatarError, setAvatarError] = useState(false)
 
     console.log(`TweetCard: ${tweet._id}`, {
         image: tweet.image,
@@ -120,12 +121,12 @@ const TweetCard = ({ tweet }) => {
         >
             {/* TOP SECTION: IMAGE & ACTIONS OVERLAY - Only show if image exists */}
             {hasImage && (
-                <div className="relative w-full isolate overflow-hidden bg-[#1E2021]">
+                <div className="relative w-full h-[400px] isolate overflow-hidden bg-[#1E2021]">
                     {/* Image */}
                     <img
                         src={getOptimizedUrl(tweet.image, { width: 600 })} // Resize to ~600px width (enough for card)
                         alt={sanitizeTweetContent(tweet.content)}
-                        className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
 
                     {/* HOVER OVERLAY - ACTION ICONS */}
@@ -252,10 +253,11 @@ const TweetCard = ({ tweet }) => {
                 <div className="flex items-center justify-between mt-auto pt-2 relative z-20">
                     <div className="flex items-center gap-3">
                         {/* Avatar */}
-                        {tweet.ownerDetails?.avatar ? (
+                        {tweet.ownerDetails?.avatar && !avatarError ? (
                             <img
                                 src={tweet.ownerDetails.avatar}
                                 alt={tweet.ownerDetails?.username}
+                                onError={() => setAvatarError(true)}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     navigate(

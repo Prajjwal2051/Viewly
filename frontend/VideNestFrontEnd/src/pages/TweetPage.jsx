@@ -19,6 +19,7 @@ import {
     X,
     MessageCircle,
     MoreVertical,
+    User,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import toast from "react-hot-toast"
@@ -81,6 +82,7 @@ const TweetPage = ({ isModal = false }) => {
 
     // UI state
     const [showComments, setShowComments] = useState(false)
+    const [avatarError, setAvatarError] = useState(false)
 
     /**
      * FETCH TWEET DATA
@@ -262,12 +264,12 @@ const TweetPage = ({ isModal = false }) => {
                 {/* CONTENT BOX - The actual card (In front of the tab) */}
                 <div className="flex-1 w-full bg-[#1E2021] flex flex-col overflow-hidden relative z-50 rounded-b-none rounded-tr-3xl rounded-tl-3xl md:rounded-br-none shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-[#2A2D2E]">
                     {/* CONTENT AREA: IMAGE (Flex-1 to take available space) */}
-                    <div className="flex-1 flex items-center justify-center bg-[#1E2021] overflow-hidden relative w-full min-h-0">
+                    <div className="flex-1 flex items-center justify-center bg-[#1E2021] overflow-hidden relative w-full min-h-0 max-h-[75vh]">
                         {tweet.image ? (
                             <img
                                 src={tweet.image}
                                 alt="Tweet content"
-                                className="w-full h-full object-contain"
+                                className="max-w-full max-h-full object-contain"
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-start p-6 md:p-16">
@@ -346,20 +348,35 @@ const TweetPage = ({ isModal = false }) => {
                         {/* Top Row: User Info & Follow Button */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <img
-                                    src={
-                                        tweet.ownerDetails?.avatar ||
-                                        "https://via.placeholder.com/40"
-                                    }
-                                    alt={tweet.ownerDetails?.username}
-                                    className="w-10 h-10 rounded-full object-cover border border-white/10 cursor-pointer"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        navigate(
-                                            `/channel/${tweet.ownerDetails?.username}`
-                                        )
-                                    }}
-                                />
+                                {tweet.ownerDetails?.avatar && !avatarError ? (
+                                    <img
+                                        src={tweet.ownerDetails.avatar}
+                                        alt={tweet.ownerDetails?.username}
+                                        onError={() => setAvatarError(true)}
+                                        className="w-10 h-10 rounded-full object-cover border border-white/10 cursor-pointer"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate(
+                                                `/channel/${tweet.ownerDetails?.username}`
+                                            )
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-10 h-10 rounded-full bg-gray-700 border border-white/10 cursor-pointer flex items-center justify-center"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate(
+                                                `/channel/${tweet.ownerDetails?.username}`
+                                            )
+                                        }}
+                                    >
+                                        <User
+                                            size={20}
+                                            className="text-gray-400"
+                                        />
+                                    </div>
+                                )}
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span
@@ -571,17 +588,30 @@ const TweetPage = ({ isModal = false }) => {
             >
                 {/* Header: Author */}
                 <div className="sticky top-0 z-20 bg-[#2A2D2E]/95 backdrop-blur-sm p-4 border-b border-[#2A2D2E] flex items-center gap-3">
-                    <img
-                        src={
-                            tweet.ownerDetails?.avatar ||
-                            "https://via.placeholder.com/40"
-                        }
-                        alt={tweet.ownerDetails?.username}
-                        className="w-10 h-10 rounded-full object-cover cursor-pointer"
-                        onClick={() =>
-                            navigate(`/channel/${tweet.ownerDetails?.username}`)
-                        }
-                    />
+                    {tweet.ownerDetails?.avatar && !avatarError ? (
+                        <img
+                            src={tweet.ownerDetails.avatar}
+                            alt={tweet.ownerDetails?.username}
+                            onError={() => setAvatarError(true)}
+                            className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                            onClick={() =>
+                                navigate(
+                                    `/channel/${tweet.ownerDetails?.username}`
+                                )
+                            }
+                        />
+                    ) : (
+                        <div
+                            className="w-10 h-10 rounded-full bg-gray-700 cursor-pointer flex items-center justify-center"
+                            onClick={() =>
+                                navigate(
+                                    `/channel/${tweet.ownerDetails?.username}`
+                                )
+                            }
+                        >
+                            <User size={20} className="text-gray-400" />
+                        </div>
+                    )}
                     <div className="flex-1">
                         <h3
                             className="font-semibold cursor-pointer hover:underline"

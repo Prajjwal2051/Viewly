@@ -98,6 +98,7 @@ const VideoPlayerPage = ({ isModal = false }) => {
     const [showSpeedMenu, setShowSpeedMenu] = useState(false)
     const [showPlaylistModal, setShowPlaylistModal] = useState(false)
     const [showCommentsPanel, setShowCommentsPanel] = useState(false)
+    const [avatarError, setAvatarError] = useState(false)
 
     // Check for openComments in location state
     useEffect(() => {
@@ -684,10 +685,11 @@ const VideoPlayerPage = ({ isModal = false }) => {
                         {/* BOTTOM OVERLAY - INFO */}
                         <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20 pb-6 px-4">
                             <div className="flex items-center gap-3 mb-3">
-                                {video.owner?.avatar ? (
+                                {video.owner?.avatar && !avatarError ? (
                                     <img
                                         src={video.owner.avatar}
                                         alt={video.owner?.username}
+                                        onError={() => setAvatarError(true)}
                                         className="w-10 h-10 rounded-full object-cover border-2 border-white/20 cursor-pointer"
                                         onClick={(e) => {
                                             e.stopPropagation()
@@ -874,14 +876,33 @@ const VideoPlayerPage = ({ isModal = false }) => {
                         {/* Channel & Description Area */}
                         <div className="mt-6 p-4 bg-[#2A2D2E]/50 rounded-xl border border-[#2A2D2E]">
                             <div className="flex items-center gap-4 mb-4">
-                                <img
-                                    src={
-                                        video.owner?.avatar ||
-                                        "https://via.placeholder.com/40"
-                                    }
-                                    alt={video.owner?.username}
-                                    className="w-12 h-12 rounded-full object-cover border border-gray-700"
-                                />
+                                {video.owner?.avatar && !avatarError ? (
+                                    <img
+                                        src={video.owner.avatar}
+                                        alt={video.owner?.username}
+                                        onError={() => setAvatarError(true)}
+                                        className="w-12 h-12 rounded-full object-cover border border-gray-700 cursor-pointer"
+                                        onClick={() =>
+                                            navigate(
+                                                `/channel/${video.owner?.username}`
+                                            )
+                                        }
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-12 h-12 rounded-full bg-gray-700 border border-gray-700 cursor-pointer flex items-center justify-center"
+                                        onClick={() =>
+                                            navigate(
+                                                `/channel/${video.owner?.username}`
+                                            )
+                                        }
+                                    >
+                                        <User
+                                            size={24}
+                                            className="text-gray-400"
+                                        />
+                                    </div>
+                                )}
                                 <div>
                                     <h3 className="font-semibold text-white text-lg">
                                         {video.owner?.username ||
