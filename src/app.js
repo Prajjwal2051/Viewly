@@ -61,6 +61,7 @@ app.use(
             "Authorization",     // For JWT tokens
             "X-Requested-With",  // Standard header
             "Accept",            // Response format preference
+            "X-Request-Id",      // Custom header for request tracking/debugging
         ],
     })
 )
@@ -171,7 +172,7 @@ app.use("/api/v1/notifications", notificationRouter)  // User notifications
 app.use("/api/v1/dashboard", dashboardRouter)     // Channel analytics
 app.use("/api/v1/tweets", tweetRouter)            // Tweet/post operations
 app.use("/api/v1/playlists", playlistRouter)      // Playlist management
-app.use("/api/v1/health",healthRoutes);                   // api healthCheck route
+app.use("/api/v1/health", healthRoutes);                   // api healthCheck route
 
 // ============================================
 // ERROR HANDLING MIDDLEWARE

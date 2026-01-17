@@ -121,6 +121,9 @@ function App() {
                 // Other errors just mean user is not logged in
                 console.log("No Active Session")
                 dispatch(loginFailure(null))
+            } finally {
+                // Always set loading to false after auth check completes
+                setLoading(false)
             }
 
             // const token = localStorage.getItem("accessToken")
