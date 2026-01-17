@@ -102,61 +102,6 @@ apiClient.interceptors.response.use(
     },
     async (error) => {
         const originalRequest = error.config
-<<<<<<< HEAD
-
-        console.error("[API Client] Request error:", {
-            url: error.config?.url,
-            status: error.response?.status,
-            message: error.response?.data?.message,
-        })
-
-        // Handle 401 Unauthorized - Token expired
-
-        if (error.response?.status === 401) {
-            const currentPath = window.location.pathname
-
-            //if the user is already in auth pages then we should not redirect them
-            if (
-                currentPath !== "/login" &&
-                currentPath !== "/register" &&
-                currentPath !== "/forgot-password"
-            ) {
-                if (originalRequest.url?.includes("/users/refresh-token")) {
-                    // token refresh failed - session truly expired
-                    toast.error("Session expired. Please login again", {
-                        id: "session-expired",
-                        duration: 4000,
-                    })
-                    // now i have to redirect it to the login page
-                    setTimeout(() => {
-                        window.location.href = "/login?sessionExpired=true"
-                    }, 1000)
-                } else {
-                    try {
-                        // again we will attempt the refresing token automtically
-                        await axios.post(
-                            `${API_BASE_URL}/users/refresh-token`,
-                            {},
-                            {
-                                withCredentials: true,
-                            }
-                        )
-                        return apiClient(originalRequest)
-                    } catch (refreshError) {
-                        toast.error("Session expired. Please login again", {
-                            id: "session-expired",
-                            duration: 4000,
-                        })
-                        // now i have to redirect it to the login page
-                        setTimeout(() => {
-                            window.location.href = "/login?sessionExpired=true"
-                        }, 1000)
-                    }
-                }
-            }
-        }
-
-=======
         const currentPath = window.location.pathname
         const isPublicPage = [
             "/login",
@@ -225,8 +170,6 @@ apiClient.interceptors.response.use(
                 }
             }
         }
-
->>>>>>> 07ab1db (refactor: Enhance request interceptor with unique request ID and improved error logging)
         // if (error.response?.status === 401) {
         //     const currentPath = window.location.pathname
         //     // Only redirect if not already on login/register page
