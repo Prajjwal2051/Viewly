@@ -77,7 +77,7 @@ const Sidebar = () => {
     const handleLogout = async () => {
         try {
             await logoutUser()
-            localStorage.removeItem("accessToken")
+            // localStorage.removeItem("accessToken") removing cuz we will use the cookies only
             dispatch(logout())
             toast.success("Logged out successfully")
             navigate("/login")

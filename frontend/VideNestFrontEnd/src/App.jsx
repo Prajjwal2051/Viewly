@@ -13,8 +13,8 @@ import {
     useNavigate,
 } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
-import { Toaster } from "react-hot-toast"
-import { loginSuccess, logout } from "./store/slices/authSlice"
+import toast, { Toaster } from "react-hot-toast"
+import { loginFailure, loginSuccess, logout } from "./store/slices/authSlice"
 import { getCurrentUser } from "./api/authApi"
 import { Loader2 } from "lucide-react"
 
@@ -95,30 +95,83 @@ function App() {
     const background = location.state && location.state.background
     const [loading, setLoading] = useState(true)
 
+    /**
+     * CHECK AUTHENTICATION ON APP LOAD
+     *
+     * How it works:
+     * 1. App loads
+     * 2. Call /current-user endpoint
+     * 3. Browser automatically sends accessToken cookie
+     * 4. If valid → Get user data → Update Redux
+     * 5. If invalid (401) → Interceptor tries refresh → Redirects if needed
+     *
+     * No need to check localStorage - cookies handle everything!
+     */
     useEffect(() => {
         const checkAuth = async () => {
-            const token = localStorage.getItem("accessToken")
-            if (token) {
-                try {
-                    const response = await getCurrentUser()
-                    const user = response.data || response // Adjust based on API response structure
-                    if (user) {
-                        dispatch(loginSuccess(user))
-                    } else {
-                        dispatch(logout())
-                    }
-                } catch (error) {
-                    console.error("Auth check failed:", error)
-                    dispatch(logout())
+            try {
+                // Browser automatically sends cookies with this request
+                const response = await getCurrentUser()
+                if (response.data?.user) {
+                    dispatch(loginSuccess(response.data.user))
+                    console.log("User authenticated from cookie")
                 }
-            } else {
-                dispatch(logout())
+            } catch (error) {
+                // 401 error will be handled by interceptor (auto-refresh or redirect)
+                // Other errors just mean user is not logged in
+                console.log("No Active Session")
+                dispatch(loginFailure(null))
             }
-            setLoading(false)
+
+            // const token = localStorage.getItem("accessToken")
+            // if (token) {
+            //     try {
+            //         const response = await getCurrentUser()
+            //         const user = response.data || response // Adjust based on API response structure
+            //         if (user) {
+            //             dispatch(loginSuccess(user))
+            //         } else {
+            //             dispatch(logout())
+            //         }
+            //     } catch (error) {
+            //         console.error("Auth check failed:", error)
+            //         dispatch(logout())
+            //     }
+            // } else {
+            //     dispatch(logout())
+            // }
+            // setLoading(false)
         }
 
         checkAuth()
     }, [dispatch])
+
+    /**
+     * Optional: Clean up old localStorage tokens on app load
+     * Run this once to migrate existing users
+     */
+
+    useEffect(() => {
+        const migrateAuth = () => {
+            const hasOldToken =
+                localStorage.getItem("accessToken") ||
+                localStorage.getItem("refreshToken")
+
+            if (hasOldToken) {
+                console.log("Cleaning up old localStorage Tokens...")
+
+                localStorage.removeItem("accessToken")
+                localStorage.removeItem("refreshToken")
+
+                console.log("Migration is completed - using secure cookies now")
+                toast.success("Security upgrade applied! ", {
+                    duration: 3000,
+                    icon: "🔒",
+                })
+            }
+        }
+        migrateAuth()
+    }, [])
 
     if (loading) {
         return (

@@ -111,7 +111,7 @@ const Header = () => {
     const handleLogout = async () => {
         try {
             await logoutUser()
-            localStorage.removeItem("accessToken")
+            // localStorage.removeItem("accessToken") remving cuz we will handle it by cookies
             dispatch(logout())
             toast.success("Logged out successfully")
             navigate("/login")

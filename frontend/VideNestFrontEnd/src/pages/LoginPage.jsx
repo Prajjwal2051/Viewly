@@ -35,7 +35,7 @@ const LoginPage = () => {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search)
         if (params.get("sessionExpired") === "true") {
-            toast.error("⏰ Your session has expired. Please log in again.")
+            toast.error("Your session has expired. Please log in again.")
             // Clean up URL
             window.history.replaceState({}, "", "/login")
         }
@@ -50,12 +50,26 @@ const LoginPage = () => {
     }
 
     /**
-     * HANDLE SUBMIT
+     * HANDLE SUBMIT (older version)
      * 1. Validate inputs
      * 2. Dispatch loginStart action
      * 3. Call backend API
      * 4. Dispatch loginSuccess on success, or loginFailure on error
      * 5. Redirect to home page
+     */
+    /**
+     * HANDLE SUBMIT (SECURE VERSION)
+     *
+     * What changed?
+     * ❌ REMOVED: localStorage.setItem("accessToken", ...)
+     * ✅ SECURE: Tokens now in HTTP-only cookies (set by backend)
+     *
+     * Flow:
+     * 1. User submits login form
+     * 2. Backend validates credentials
+     * 3. Backend sets HTTP-only cookies (accessToken + refreshToken)
+     * 4. Frontend receives user data (NO tokens in response)
+     * 5. All future requests include cookies automatically
      */
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -75,27 +89,36 @@ const LoginPage = () => {
             // Backend returns: ApiResponse { statusCode, data: { user, accessToken, refreshToken }, message }
             // Interceptor returns: response.data = the whole ApiResponse object
             // So response.data contains { user, accessToken, refreshToken }
-            let user, accessToken
+            // But we DON'T store accessToken anymore!  ---> this is the new thing in secure version
+            let user
+            // let accessToken
 
             if (response.data) {
                 // Response structure: { data: { user, accessToken } }
                 user = response.data.user
-                accessToken = response.data.accessToken
+                // accessToken = response.data.accessToken
             } else if (response.user) {
                 // Fallback: direct structure { user, accessToken }
                 user = response.user
-                accessToken = response.accessToken
+                // accessToken = response.accessToken
             } else {
                 throw new Error("Invalid response structure from server")
             }
 
-            if (!user || !accessToken) {
-                console.error("Missing data:", { user, accessToken })
+            // if (!user || !accessToken) {
+            //     console.error("Missing data:", { user, accessToken })
+            //     throw new Error("Login failed: incomplete server response")
+            // }
+            if (!user) {
+                console.error("Missing data:", { user })
                 throw new Error("Login failed: incomplete server response")
             }
+            // SECURE: Only store user data in Redux (NO tokens!)
+            // Tokens are already in HTTP-only cookies (set by backend)
 
             // Store token and update state
-            localStorage.setItem("accessToken", accessToken)
+            // localStorage.setItem("accessToken", accessToken)
+
             dispatch(loginSuccess(user))
             toast.success(`Welcome back, ${user.username || user.fullName}!`)
             navigate("/") // Redirect to home page

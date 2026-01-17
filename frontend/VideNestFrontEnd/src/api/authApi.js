@@ -52,7 +52,8 @@ const registerUser = async (formData) => {
  * 5. refreshToken sent in HTTP-only cookie (automatically stored by browser)
  *
  * Why two tokens?
- * - accessToken: Short-lived (1 day), stored in localStorage, sent with every request
+ * ( from now we will be using cookies and not storing tokens in the local storage:) )
+ * - accessToken: Short-lived (1 day), stored in localStorage ( from now we will be using cookies and not storing in the local storage:) ), sent with every request
  * - refreshToken: Long-lived (10 days), in cookie, used to get new accessToken when it expires
  *
  * @param {Object} credentials - { username/email, password }
@@ -71,7 +72,7 @@ const loginUser = async (credentials) => {
  * What happens?
  * 1. Backend clears refreshToken from cookie
  * 2. Backend removes refreshToken from user document in DB
- * 3. Frontend must clear accessToken from localStorage (done in component)
+ * 3. Frontend must clear accessToken from localStorage (done in component) // update it as we are using cookies
  *
  * Security note:
  * - Must send request to backend (can't just clear localStorage)

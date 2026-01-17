@@ -60,7 +60,7 @@ apiClient.interceptors.request.use(
         // }
 
         // just adding a request Id for debugging
-        config.headers["X-Request=Id"] =
+        config.headers["X-Request-Id"] =
             `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
         // Return modified config (request proceeds with token)
@@ -102,6 +102,7 @@ apiClient.interceptors.response.use(
     },
     async (error) => {
         const originalRequest = error.config
+<<<<<<< HEAD
 
         console.error("[API Client] Request error:", {
             url: error.config?.url,
@@ -155,6 +156,77 @@ apiClient.interceptors.response.use(
             }
         }
 
+=======
+        const currentPath = window.location.pathname
+        const isPublicPage = [
+            "/login",
+            "/register",
+            "/forgot-password",
+            "/",
+        ].includes(currentPath)
+        const isAuthCheckRequest = originalRequest.url?.includes(
+            "/users/current-user"
+        )
+
+        // Only log errors that aren't expected (not 401 on public pages or auth check)
+        if (
+            !(
+                error.response?.status === 401 &&
+                (isPublicPage || isAuthCheckRequest)
+            )
+        ) {
+            console.error("[API Client] Request error:", {
+                url: error.config?.url,
+                status: error.response?.status,
+                message: error.response?.data?.message,
+            })
+        }
+
+        // Handle 401 Unauthorized - Token expired and it is also XSS attack free
+
+        if (error.response?.status === 401) {
+            //if the user is already in auth pages then we should not redirect them
+            if (
+                currentPath !== "/login" &&
+                currentPath !== "/register" &&
+                currentPath !== "/forgot-password"
+            ) {
+                if (originalRequest.url?.includes("/users/refresh-token")) {
+                    // token refresh failed - session truly expired
+                    toast.error("Session expired. Please login again", {
+                        id: "session-expired",
+                        duration: 4000,
+                    })
+                    // now i have to redirect it to the login page
+                    setTimeout(() => {
+                        window.location.href = "/login?sessionExpired=true"
+                    }, 1000)
+                } else {
+                    try {
+                        // again we will attempt the refresing token automtically
+                        await axios.post(
+                            `${API_BASE_URL}/users/refresh-token`,
+                            {},
+                            {
+                                withCredentials: true,
+                            }
+                        )
+                        return apiClient(originalRequest)
+                    } catch (refreshError) {
+                        toast.error("Session expired. Please login again", {
+                            id: "session-expired",
+                            duration: 4000,
+                        })
+                        // now i have to redirect it to the login page
+                        setTimeout(() => {
+                            window.location.href = "/login?sessionExpired=true"
+                        }, 1000)
+                    }
+                }
+            }
+        }
+
+>>>>>>> 07ab1db (refactor: Enhance request interceptor with unique request ID and improved error logging)
         // if (error.response?.status === 401) {
         //     const currentPath = window.location.pathname
         //     // Only redirect if not already on login/register page
@@ -170,6 +242,18 @@ apiClient.interceptors.response.use(
         //         window.location.href = "/login"
         //     }
         // }
+
+        // Handle 403 Forbidden - Access denied
+        if (error.response?.status === 403) {
+            const message =
+                error.response?.data?.message ||
+                "You don't have permission to access this resource."
+
+            toast.error(message, {
+                duration: 4000,
+                icon: "🚫",
+            })
+        }
 
         // Handle 429 Too Many Requests - Rate limit exceeded
         if (error.response?.status === 429) {
@@ -207,8 +291,23 @@ apiClient.interceptors.response.use(
         }
 
         // NETWORK ERROR: Backend unreachable (server down, no internet)
+
+        if (error.request) {
+            console.log("[API Client] Network error - no response received")
+            return Promise.reject({
+                message: "Network error. Please check your connection",
+                type: "NETWORK_ERROR",
+            })
+        }
+
+        // Handle request setup errors
+        console.error(
+            "[API Client] Request configuration error:",
+            error.message
+        )
         return Promise.reject({
-            message: "Network error. Please check your connection.",
+            message: "Request failed. Please try again.",
+            type: "REQUEST_ERROR",
         })
     }
 )
