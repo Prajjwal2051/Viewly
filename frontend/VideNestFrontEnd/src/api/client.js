@@ -41,7 +41,7 @@ const apiClient = axios.create({
  *
  * Flow:
  * 1. User calls API (e.g., apiClient.get('/videos'))
- * 2. Interceptor runs → checks localStorage for token ( with Credientals:true this is not needed as browser automatically handles it from cookies)
+ * 2. Interceptor runs → checks localStorage for token ( with Credientals:true this is not needed as browser automatically handles it from)
  * 3. If token exists → adds to Authorization header
  * 4. Request sent to backend with token
  * 5. Backend verifies token and responds
@@ -60,8 +60,8 @@ apiClient.interceptors.request.use(
         // }
 
         // just adding a request Id for debugging
-        config.headers['X-Request=Id']=`req_${Date.now()}_${Math.random().toString(36).substring(2,9)}`
-
+        config.headers["X-Request=Id"] =
+            `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
         // Return modified config (request proceeds with token)
         return config
@@ -91,6 +91,7 @@ apiClient.interceptors.request.use(
 
 // Import toast for notifications
 import toast from "react-hot-toast"
+import { Thermometer } from "lucide-react"
 
 apiClient.interceptors.response.use(
     (response) => {
@@ -100,9 +101,60 @@ apiClient.interceptors.response.use(
         return response.data // ApiResponse { statusCode, data, message, success }
     },
     async (error) => {
-        console.error("[API Client] Request error:", error)
+        const originalRequest = error.config
+
+        console.error("[API Client] Request error:", {
+            url: error.config?.url,
+            status: error.response?.status,
+            message: error.response?.data?.message,
+        })
 
         // Handle 401 Unauthorized - Token expired
+
+        if (error.response?.status === 401) {
+            const currentPath = window.location.pathname
+
+            //if the user is already in auth pages then we should not redirect them
+            if (
+                currentPath !== "/login" &&
+                currentPath !== "/register" &&
+                currentPath !== "/forgot-password"
+            ) {
+                if (originalRequest.url?.includes("/users/refresh-token")) {
+                    // token refresh failed - session truly expired
+                    toast.error("Session expired. Please login again", {
+                        id: "session-expired",
+                        duration: 4000,
+                    })
+                    // now i have to redirect it to the login page
+                    setTimeout(() => {
+                        window.location.href = "/login?sessionExpired=true"
+                    }, 1000)
+                } else {
+                    try {
+                        // again we will attempt the refresing token automtically
+                        await axios.post(
+                            `${API_BASE_URL}/users/refresh-token`,
+                            {},
+                            {
+                                withCredentials: true,
+                            }
+                        )
+                        return apiClient(originalRequest)
+                    } catch (refreshError) {
+                        toast.error("Session expired. Please login again", {
+                            id: "session-expired",
+                            duration: 4000,
+                        })
+                        // now i have to redirect it to the login page
+                        setTimeout(() => {
+                            window.location.href = "/login?sessionExpired=true"
+                        }, 1000)
+                    }
+                }
+            }
+        }
+
         // if (error.response?.status === 401) {
         //     const currentPath = window.location.pathname
         //     // Only redirect if not already on login/register page
