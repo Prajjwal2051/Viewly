@@ -47,47 +47,47 @@ import { subscription } from "../models/subscription.model.js"
  */
 const getChannelStats = asyncHandler(async (req, res) => {
     console.log("\n" + "=".repeat(60))
-    console.log("📊 GET CHANNEL STATISTICS REQUEST")
+    console.log(" GET CHANNEL STATISTICS REQUEST")
     console.log("=".repeat(60))
 
     // STEP 1: Extract channel ID from params or use current user's ID
     const channelId = req.params.channelId || req.user._id
     const userId = req.user._id
 
-    console.log("\n[STEP 1] 📝 Extracting Request Data")
-    console.log("   ➜ Channel ID:", channelId)
-    console.log("   ➜ User ID:", userId)
-    console.log("   ➜ User:", req.user?.username)
+    console.log("\n[STEP 1]  Extracting Request Data")
+    console.log("   Channel ID:", channelId)
+    console.log("   User ID:", userId)
+    console.log("   User:", req.user?.username)
 
-    console.log("\n[STEP 2] ✅ Validating User ID")
+    console.log("\n[STEP 2] Validating User ID")
     // STEP 2: Validate user ID exists
     if (!userId) {
-        console.log("   ❌ User ID not provided")
+        console.log("   User ID not provided")
         throw new ApiError(400, "User ID not provided")
     }
-    console.log("   ✓ User ID exists")
+    console.log("   User ID exists")
 
     // STEP 3: Validate user ID format
     if (!mongoose.isValidObjectId(userId)) {
-        console.log("   ❌ Invalid MongoDB ObjectId format")
+        console.log("   Invalid MongoDB ObjectId format")
         throw new ApiError(400, "Invalid User ID provided")
     }
-    console.log("   ✓ User ID format is valid")
+    console.log("   User ID format is valid")
 
-    console.log("\n[STEP 3] 👤 Verifying Channel Exists")
+    console.log("\n[STEP 3]  Verifying Channel Exists")
     // STEP 4: Verify channel exists
     const channel = await User.findById(channelId)
     if (!channel) {
-        console.log("   ❌ Channel not found in database")
+        console.log("   Channel not found in database")
         throw new ApiError(404, "Channel does not exist")
     }
-    console.log("   ✓ Channel found:", channel.username)
+    console.log("   Channel found:", channel.username)
 
-    console.log("\n[STEP 4] 🔒 Verifying Authorization")
+    console.log("\n[STEP 4]  Verifying Authorization")
     // STEP 5: Check authorization - only channel owner can view stats
     // Convert both to strings for proper comparison
     if (channelId.toString() !== userId.toString()) {
-        console.log("   ❌ User is not the channel owner")
+        console.log("   User is not the channel owner")
         console.log("      Channel ID:", channelId.toString())
         console.log("      User ID:", userId.toString())
         throw new ApiError(
@@ -95,9 +95,9 @@ const getChannelStats = asyncHandler(async (req, res) => {
             "You are not authorized to view stats of this channel"
         )
     }
-    console.log("   ✓ User authorized to view channel statistics")
+    console.log("   User authorized to view channel statistics")
 
-    console.log("\n[STEP 5] 📊 Calculating Channel Statistics...")
+    console.log("\n[STEP 5]  Calculating Channel Statistics...")
 
     // ============================================
     // BASIC STATISTICS
