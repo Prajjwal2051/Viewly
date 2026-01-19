@@ -7,9 +7,11 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import mongoSanitize from "express-mongo-sanitize"
 
 // Initialize Express application
 const app = express()
+app.use(mongoSanitize())
 
 console.log("CORS_ORIGIN:", process.env.CORS_ORIGIN) // DEBUG log
 
