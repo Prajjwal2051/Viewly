@@ -1,16 +1,62 @@
 // ============================================
-// BUTTON COMPONENT - REUSABLE UI ELEMENT
+// BUTTON COMPONENT - REUSABLE INTERACTIVE ELEMENT
 // ============================================
-// Flexible button with multiple variants and sizes.
-// Prevents repetitive Tailwind classes across the app.
+// Flexible button with multiple visual variants and sizes.
+// Eliminates repetitive Tailwind classes and ensures design consistency.
 
 /**
- * Props explained:
- * - children: Button text/icon (e.g., "Submit" or <Icon />)
- * - variant: Visual style ("default", "ghost", "outline")
- * - size: Padding size ("default", "icon", "sm")
- * - className: Additional custom styles to merge
- * - ...props: Spreads remaining props (onClick, disabled, type, etc.)
+ * BUTTON COMPONENT
+ * 
+ * Purpose:
+ * - Provide consistent button styling across entire app
+ * - Support multiple visual styles (variants)
+ * - Handle different size requirements
+ * - Include proper disabled states
+ * 
+ * Why use a custom Button?
+ * - Design consistency: All buttons follow same patterns
+ * - Easy updates: Change button style once, affects all instances
+ * - Accessibility: Built-in disabled states and focus handling
+ * - Less code: Avoid repeating long Tailwind classes
+ * 
+ * Variants Explained:
+ * 
+ * 1. default (Primary Action)
+ *    - Red background (#ef4444)
+ *    - White text
+ *    - Example: "Submit", "Save", "Login"
+ * 
+ * 2. ghost (Subtle Action)
+ *    - Transparent background
+ *    - Gray text, hover shows background
+ *    - Example: "Cancel", icon buttons
+ * 
+ * 3. outline (Secondary Action)
+ *    - Border with no fill
+ *    - Gray border and text
+ *    - Example: "Reset", "Clear"
+ * 
+ * Sizes Explained:
+ * - default: Normal buttons (px-4 py-2)
+ * - icon: Square buttons for icons only (p-2)
+ * - sm: Compact buttons for tight spaces (px-3 py-1.5)
+ * 
+ * Usage Examples:
+ * 
+ * Primary button:
+ * <Button onClick={handleSubmit}>Submit</Button>
+ * 
+ * Icon button:
+ * <Button variant="ghost" size="icon"><X /></Button>
+ * 
+ * Disabled button:
+ * <Button disabled={isLoading}>Loading...</Button>
+ * 
+ * @param {ReactNode} children - Button content (text or icon)
+ * @param {string} variant - Visual style (default|ghost|outline)
+ * @param {string} size - Button size (default|icon|sm)
+ * @param {string} className - Additional Tailwind classes
+ * @param {Object} props - All standard HTML button props (onClick, disabled, etc.)
  */
 const Button = ({
     children,

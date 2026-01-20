@@ -43,7 +43,7 @@ import { Video } from "../models/video.model.js"
  */
 const searchVideos = asyncHandler(async (req, res) => {
     console.log("\n" + "=".repeat(60));
-    console.log("🔍 SEARCH VIDEOS REQUEST");
+    console.log(" SEARCH VIDEOS REQUEST");
     console.log("=".repeat(60));
 
     // STEP 1: Extract search parameters from query string with defaults
@@ -59,35 +59,35 @@ const searchVideos = asyncHandler(async (req, res) => {
         limit = 10,
     } = req.query
 
-    console.log("\n[STEP 1] 📝 Processing Search Parameters");
-    console.log("   ➜ Search Query:", query || "(none - showing all videos)");
-    console.log("   ➜ Category:", category || "(all categories)");
-    console.log("   ➜ Date Range:", startDate || endDate ? `${startDate || 'any'} to ${endDate || 'now'}` : "(all time)");
-    console.log("   ➜ Duration:", minDuration || maxDuration ? `${minDuration || 0}s to ${maxDuration || '∞'}s` : "(any length)");
-    console.log("   ➜ Sort By:", sortBy);
-    console.log("   ➜ Page:", page);
-    console.log("   ➜ Limit:", limit);
+    console.log("\n[STEP 1]  Processing Search Parameters");
+    console.log("   Search Query:", query || "(none - showing all videos)");
+    console.log("   Category:", category || "(all categories)");
+    console.log("   Date Range:", startDate || endDate ? `${startDate || 'any'} to ${endDate || 'now'}` : "(all time)");
+    console.log("   Duration:", minDuration || maxDuration ? `${minDuration || 0}s to ${maxDuration || '∞'}s` : "(any length)");
+    console.log("   Sort By:", sortBy);
+    console.log("   Page:", page);
+    console.log("   Limit:", limit);
 
-    console.log("\n[STEP 2] 🔧 Building Search Filter");
+    console.log("\n[STEP 2]  Building Search Filter");
     // STEP 2: Initialize base search filter
     // Only search through published videos for public access
     const searchFilter = {
         isPublished: true,
     }
-    console.log("   ✓ Base filter: isPublished = true");
+    console.log("   Base filter: isPublished = true");
 
     // STEP 3: Add full-text search if query is provided
     // Uses MongoDB text index for efficient text search across title, description, tags
     if (query.trim()) {
         searchFilter.$text = { $search: query }
-        console.log("   ✓ Added text search for:", `"${query}"`);
+        console.log("   Added text search for:", `"${query}"`);
     }
 
     // STEP 4: Add category filter if specified
     // Filters videos by specific category (e.g., "Education", "Entertainment")
     if (category) {
         searchFilter.category = category
-        console.log("   ✓ Added category filter:", category);
+        console.log("   Added category filter:", category);
     }
 
     // STEP 5: Add date range filter if start or end date provided

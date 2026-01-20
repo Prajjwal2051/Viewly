@@ -3,15 +3,44 @@ import { forwardRef } from "react"
 // ============================================
 // INPUT COMPONENT - REUSABLE FORM FIELD
 // ============================================
-// Styled text input with consistent design across all forms.
+// Styled text input with consistent dark-mode design across all forms.
+// Provides accessibility support via ref forwarding for form libraries.
 
 /**
- * Props explained:
- * - className: Additional custom styles to merge with defaults
- * - ...props: Spreads all HTML input props (type, placeholder, value, onChange, etc.)
- *
- * Usage example:
- * <Input type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
+ * INPUT COMPONENT
+ * 
+ * Purpose:
+ * - Provide consistent input styling across all forms
+ * - Support dark mode theming
+ * - Enable accessibility with ref forwarding
+ * - Work with form libraries (react-hook-form, formik)
+ * 
+ * Why use a custom Input instead of plain <input>?
+ * - Consistent design: All inputs look the same
+ * - Dark mode support: Automatic color switching
+ * - Reduced code: Don't repeat Tailwind classes everywhere
+ * - Focus states: Built-in red ring on focus
+ * - Accessibility: Proper contrast ratios for readability
+ * 
+ * Ref Forwarding Explained:
+ * - forwardRef allows parent components to access the input element
+ * - Needed for react-hook-form's register() function
+ * - Enables programmatic focus control (e.g., focus on error)
+ * 
+ * Usage Examples:
+ * 
+ * Basic:
+ * <Input type="email" placeholder="Enter email" />
+ * 
+ * With react-hook-form:
+ * <Input {...register("email")} />
+ * 
+ * With custom styling:
+ * <Input className="text-lg" placeholder="Search..." />
+ * 
+ * @param {string} className - Additional Tailwind classes to merge
+ * @param {Object} props - All standard HTML input props (type, placeholder, etc.)
+ * @param {React.Ref} ref - Forwarded ref for form library integration
  */
 const Input = forwardRef(({ className = "", ...props }, ref) => {
     return (

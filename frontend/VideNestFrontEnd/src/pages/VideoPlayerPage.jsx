@@ -13,7 +13,10 @@ import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { getVideoById, getAllVideos } from "../api/videoApi"
 import { toggleVideoLike, getIsVideoLiked } from "../api/likeApi"
-import { toggleSubscription } from "../api/subscriptionApi"
+import {
+    toggleSubscription,
+    getSubscriptionStatus,
+} from "../api/subscriptionApi"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
 import VideoCard from "../components/video/VideoCard"
 import {
@@ -36,7 +39,14 @@ import {
     User,
 } from "lucide-react"
 import AddToPlaylistModal from "../components/playlist/AddToPlaylistModal"
+import CommentSection from "../components/comments/CommentSection"
+import VideoControls from "../components/video/VideoControls"
 import toast from "react-hot-toast"
+import {
+    sanitizeVideoTitle,
+    sanitizeVideoDescription,
+    sanitizeUsername,
+} from "../utils/sanitize"
 
 // Format duration to simple format (21 sec, 2 min, 1 hr)
 const formatDuration = (seconds) => {
@@ -88,6 +98,7 @@ const VideoPlayerPage = ({ isModal = false }) => {
     const [showSpeedMenu, setShowSpeedMenu] = useState(false)
     const [showPlaylistModal, setShowPlaylistModal] = useState(false)
     const [showCommentsPanel, setShowCommentsPanel] = useState(false)
+    const [avatarError, setAvatarError] = useState(false)
 
     // Check for openComments in location state
     useEffect(() => {
@@ -253,18 +264,36 @@ const VideoPlayerPage = ({ isModal = false }) => {
         }
     }, [videoId, navigate, isModal, user])
 
-    // Subscribe Handler
+    // Fetch follow status
+    useEffect(() => {
+        const fetchFollowStatus = async () => {
+            if (user && video?.owner?._id) {
+                try {
+                    const data = await getSubscriptionStatus(video.owner._id)
+                    setIsSubscribed(data.isSubscribed || false)
+                } catch (error) {
+                    console.error("Failed to fetch follow status:", error)
+                }
+            }
+        }
+        fetchFollowStatus()
+    }, [video?.owner?._id, user])
+
+    // Follow Handler
     const handleSubscribe = async () => {
         if (!user) {
-            toast.error("Please login to subscribe")
+            toast.error("Please login to follow")
             navigate("/login")
             return
         }
 
         if (user._id === video.owner._id) {
-            toast.error("You cannot subscribe to your own channel")
+            toast.error("You cannot follow yourself")
             return
         }
+
+        // Prevent rapid clicks
+        if (subscribing) return
 
         setSubscribing(true)
         const wasSubscribed = isSubscribed
@@ -274,13 +303,33 @@ const VideoPlayerPage = ({ isModal = false }) => {
         setSubscriberCount((prev) => (wasSubscribed ? prev - 1 : prev + 1))
 
         try {
-            await toggleSubscription(video.owner._id)
-            toast.success(wasSubscribed ? "Unsubscribed" : "Subscribed!")
+            const response = await toggleSubscription(video.owner._id)
+            console.log("Toggle response:", response)
+
+            // Use actual API response
+            const newState =
+                response.data?.isSubscribed ??
+                response.isSubscribed ??
+                !wasSubscribed
+            setIsSubscribed(newState)
+
+            // Fix subscriber count if needed
+            if (newState !== !wasSubscribed) {
+                setSubscriberCount((prev) =>
+                    wasSubscribed ? prev + 1 : prev - 1
+                )
+            }
+
+            const username = video.owner?.username || "user"
+            toast.success(
+                newState ? `Following @${username}` : `Unfollowed @${username}`
+            )
         } catch (error) {
             // Revert on error
             setIsSubscribed(wasSubscribed)
             setSubscriberCount((prev) => (wasSubscribed ? prev + 1 : prev - 1))
-            toast.error("Failed to update subscription")
+            toast.error("Failed to update follow status")
+            console.error("Follow error:", error)
         } finally {
             setSubscribing(false)
         }
@@ -334,9 +383,9 @@ const VideoPlayerPage = ({ isModal = false }) => {
                 <div
                     className={`relative bg-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 ${showPlaylistModal || showCommentsPanel ? "w-[95%] max-w-[1400px]" : "w-auto max-w-[600px]"} h-[90vh] flex`}
                 >
-                    {/* VIDEO CONTAINER - Shifts left when sidebar is open */}
+                    {/* VIDEO CONTAINER - Shifts left when sidebar is open on desktop, full width on mobile */}
                     <div
-                        className={`relative h-full flex items-center justify-center transition-all duration-300 ${showPlaylistModal || showCommentsPanel ? "w-[60%]" : "w-full"}`}
+                        className={`relative h-full flex items-center justify-center transition-all duration-300 w-full ${showPlaylistModal || showCommentsPanel ? "md:w-[60%]" : "md:w-full"}`}
                     >
                         {/* Close Button */}
                         <button
@@ -636,10 +685,11 @@ const VideoPlayerPage = ({ isModal = false }) => {
                         {/* BOTTOM OVERLAY - INFO */}
                         <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20 pb-6 px-4">
                             <div className="flex items-center gap-3 mb-3">
-                                {video.owner?.avatar ? (
+                                {video.owner?.avatar && !avatarError ? (
                                     <img
                                         src={video.owner.avatar}
                                         alt={video.owner?.username}
+                                        onError={() => setAvatarError(true)}
                                         className="w-10 h-10 rounded-full object-cover border-2 border-white/20 cursor-pointer"
                                         onClick={(e) => {
                                             e.stopPropagation()
@@ -678,22 +728,24 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                         </span>
                                         <button
                                             onClick={handleSubscribe}
-                                            className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-white/10 text-white" : "bg-red-600 text-white"}`}
+                                            className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-red-600/20 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white" : "bg-red-600 text-white hover:bg-red-700"}`}
                                         >
                                             {isSubscribed
-                                                ? "Subscribed"
-                                                : "Subscribe"}
+                                                ? "Unfollow"
+                                                : "Follow"}
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
                             <h1 className="text-white text-2xl font-bold leading-tight line-clamp-2 mb-2 w-[85%]">
-                                {video.title}
+                                {sanitizeVideoTitle(video.title)}
                             </h1>
                             {video.description && (
                                 <p className="text-gray-200/90 text-base line-clamp-2 w-[85%] mb-1">
-                                    {video.description}
+                                    {sanitizeVideoDescription(
+                                        video.description
+                                    )}
                                 </p>
                             )}
                             <p className="text-gray-400 text-sm">
@@ -702,38 +754,65 @@ const VideoPlayerPage = ({ isModal = false }) => {
                             </p>
                         </div>
                     </div>
-                    {/* PLAYLIST SIDEBAR - Slides in from right */}
+
+                    {/* PLAYLIST SIDEBAR - Slides in from right on desktop, up from bottom on mobile */}
                     {showPlaylistModal && (
-                        <div className="w-[40%] h-full bg-[#1E2021] border-l border-gray-700 overflow-y-auto">
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-2xl font-bold text-white">
-                                        Add to Playlist
-                                    </h2>
-                                    <button
-                                        onClick={() =>
+                        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:static md:inset-auto md:bg-transparent md:backdrop-blur-none md:w-[40%] md:h-full md:border-l md:border-gray-700">
+                            <div className="fixed bottom-0 left-0 right-0 w-full h-[70vh] z-50 rounded-t-3xl border-t border-gray-700 bg-[#1E2021] overflow-y-auto animate-slide-up md:static md:w-full md:h-full md:rounded-none md:border-t-0 md:bg-[#1E2021] md:animate-none">
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-white">
+                                            Add to Playlist
+                                        </h2>
+                                        <button
+                                            onClick={() =>
+                                                setShowPlaylistModal(false)
+                                            }
+                                            className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    {/* Playlist content will be rendered by AddToPlaylistModal component */}
+                                    <AddToPlaylistModal
+                                        isOpen={true}
+                                        onClose={() =>
                                             setShowPlaylistModal(false)
                                         }
-                                        className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
-                                    >
-                                        <X size={20} />
-                                    </button>
+                                        videoId={videoId}
+                                        videoTitle={video?.title}
+                                        isSidebar={true}
+                                    />
                                 </div>
-                                {/* Playlist content will be rendered by AddToPlaylistModal component */}
-                                <AddToPlaylistModal
-                                    isOpen={true}
-                                    onClose={() => setShowPlaylistModal(false)}
-                                    videoId={videoId}
-                                    videoTitle={video?.title}
-                                    isSidebar={true}
-                                />
                             </div>
                         </div>
                     )}
 
-                    {/* COMMENTS SIDEBAR - Slides in from right */}
-                    {showCommentsPanel && (
-                        <div className="w-[40%] h-full bg-[#1E2021] border-l border-gray-700 overflow-y-auto">
+                    {/* COMMENTS SIDEBAR - Slides in from right on desktop, up from bottom on mobile */}
+                    <div
+                        className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:static md:inset-auto md:bg-transparent md:backdrop-blur-none md:w-[40%] md:h-full md:border-l md:border-gray-700 ${
+                            showCommentsPanel
+                                ? "opacity-100 pointer-events-auto md:pointer-events-auto"
+                                : "opacity-0 pointer-events-none md:pointer-events-none md:hidden"
+                        }`}
+                        onClick={() => setShowCommentsPanel(false)}
+                    >
+                        <div
+                            className={`fixed bottom-0 left-0 right-0 w-full h-[90vh] z-50 rounded-t-3xl border-t border-gray-700 bg-[#1E2021] overflow-y-auto transition-transform duration-300 ease-out transform
+                                md:static md:w-full md:h-full md:rounded-none md:border-t-0 md:bg-[#1E2021] md:transform-none
+                                ${
+                                    showCommentsPanel
+                                        ? "translate-y-0"
+                                        : "translate-y-full"
+                                }
+                            `}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Drag Indicator (Mobile only) */}
+                            <div className="w-full flex justify-center pt-3 pb-1 md:hidden">
+                                <div className="w-12 h-1.5 bg-gray-600 rounded-full"></div>
+                            </div>
+
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold text-white">
@@ -748,29 +827,14 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                         <X size={20} />
                                     </button>
                                 </div>
-
-                                {/* Comment Input */}
-                                <div className="mb-6">
-                                    <textarea
-                                        placeholder="Add a comment..."
-                                        className="w-full bg-[#2A2D2E] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-600 resize-none"
-                                        rows="3"
-                                    ></textarea>
-                                    <button className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors">
-                                        Post Comment
-                                    </button>
-                                </div>
-
-                                {/* Comments List */}
-                                <div className="space-y-4">
-                                    <p className="text-gray-400 text-center py-8">
-                                        No comments yet. Be the first to
-                                        comment!
-                                    </p>
-                                </div>
+                                {/* Use actual CommentSection component */}
+                                <CommentSection
+                                    videoId={videoId}
+                                    hideHeader={true}
+                                />
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         )
@@ -812,14 +876,33 @@ const VideoPlayerPage = ({ isModal = false }) => {
                         {/* Channel & Description Area */}
                         <div className="mt-6 p-4 bg-[#2A2D2E]/50 rounded-xl border border-[#2A2D2E]">
                             <div className="flex items-center gap-4 mb-4">
-                                <img
-                                    src={
-                                        video.owner?.avatar ||
-                                        "https://via.placeholder.com/40"
-                                    }
-                                    alt={video.owner?.username}
-                                    className="w-12 h-12 rounded-full object-cover border border-gray-700"
-                                />
+                                {video.owner?.avatar && !avatarError ? (
+                                    <img
+                                        src={video.owner.avatar}
+                                        alt={video.owner?.username}
+                                        onError={() => setAvatarError(true)}
+                                        className="w-12 h-12 rounded-full object-cover border border-gray-700 cursor-pointer"
+                                        onClick={() =>
+                                            navigate(
+                                                `/channel/${video.owner?.username}`
+                                            )
+                                        }
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-12 h-12 rounded-full bg-gray-700 border border-gray-700 cursor-pointer flex items-center justify-center"
+                                        onClick={() =>
+                                            navigate(
+                                                `/channel/${video.owner?.username}`
+                                            )
+                                        }
+                                    >
+                                        <User
+                                            size={24}
+                                            className="text-gray-400"
+                                        />
+                                    </div>
+                                )}
                                 <div>
                                     <h3 className="font-semibold text-white text-lg">
                                         {video.owner?.username ||
@@ -832,7 +915,7 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                             : "subscribers"}
                                     </p>
                                 </div>
-                                {/* Subscribe Button */}
+                                {/* Follow Button */}
                                 <button
                                     onClick={handleSubscribe}
                                     disabled={
@@ -841,15 +924,15 @@ const VideoPlayerPage = ({ isModal = false }) => {
                                     }
                                     className={`ml-auto px-6 py-2 font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                         isSubscribed
-                                            ? "bg-[#2A2D2E] text-white hover:bg-gray-700"
-                                            : "bg-[#1E2021] text-black hover:bg-gray-200"
+                                            ? "bg-red-600/20 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+                                            : "bg-red-600 text-white hover:bg-red-700"
                                     }`}
                                 >
                                     {subscribing
                                         ? "Loading..."
                                         : isSubscribed
-                                          ? "Subscribed"
-                                          : "Subscribe"}
+                                          ? "Unfollow"
+                                          : "Follow"}
                                 </button>
                             </div>
 

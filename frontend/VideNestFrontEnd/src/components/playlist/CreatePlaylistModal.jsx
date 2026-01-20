@@ -1,7 +1,53 @@
+// ============================================
+// CREATE PLAYLIST MODAL - PLAYLIST CREATION/EDITING FORM
+// ============================================
+// Modal form for creating new playlists or editing existing ones.
+// Includes name, description, and privacy settings.
+
 import React, { useState, useEffect } from "react"
 import { X, Loader2, Globe, Lock } from "lucide-react"
 import { createPlaylist, updatePlaylist } from "../../api/playlistApi"
 import toast from "react-hot-toast"
+
+/**
+ * CREATE PLAYLIST MODAL COMPONENT
+ * 
+ * Purpose:
+ * - Create new playlists to organize videos
+ * - Edit existing playlist details
+ * - Set privacy (public vs private)
+ * 
+ * Form Fields:
+ * 1. Name (required, max 100 characters)
+ *    - Example: "Learning React", "Cooking Tutorials"
+ * 2. Description (optional, max 500 characters)
+ *    - Example: "Best React tutorials for beginners"
+ * 3. Privacy Toggle
+ *    - Public: Anyone can view and share
+ *    - Private: Only you can see this playlist
+ * 
+ * Validation Rules:
+ * - Name is required and cannot be empty
+ * - Name max length: 100 characters
+ * - Description max length: 500 characters
+ * - Shows error toasts for validation failures
+ * 
+ * Dual Mode Operation:
+ * - Create Mode: Empty form, "Create Playlist" button
+ * - Edit Mode: Pre-filled form, "Update Playlist" button
+ * 
+ * Privacy Explained:
+ * - Public playlists appear in search results
+ * - Public playlists can be shared via link
+ * - Private playlists are hidden from others
+ * - Only playlist owner can change privacy
+ * 
+ * @param {boolean} isOpen - Controls modal visibility
+ * @param {Function} onClose - Callback to close modal
+ * @param {Function} onSuccess - Callback after successful create/update
+ * @param {Object} initialData - Pre-fill data for edit mode (optional)
+ * @param {boolean} isEdit - Toggles between create and edit mode
+ */
 
 const CreatePlaylistModal = ({
     isOpen,
@@ -90,7 +136,7 @@ const CreatePlaylistModal = ({
             )
             toast.error(
                 error.message ||
-                    `Failed to ${isEdit ? "update" : "create"} playlist`
+                `Failed to ${isEdit ? "update" : "create"} playlist`
             )
         } finally {
             setLoading(false)
@@ -173,11 +219,10 @@ const CreatePlaylistModal = ({
                                 type="button"
                                 onClick={() => setIsPublic(true)}
                                 disabled={loading}
-                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
-                                    isPublic
+                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${isPublic
                                         ? "bg-green-600/20 border-green-600 text-green-400"
                                         : "bg-[#2A2D2E] border-gray-600 text-gray-400 hover:border-gray-500"
-                                }`}
+                                    }`}
                             >
                                 <Globe size={18} />
                                 <span className="font-medium">Public</span>
@@ -186,11 +231,10 @@ const CreatePlaylistModal = ({
                                 type="button"
                                 onClick={() => setIsPublic(false)}
                                 disabled={loading}
-                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
-                                    !isPublic
+                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${!isPublic
                                         ? "bg-gray-600/20 border-gray-500 text-gray-300"
                                         : "bg-[#2A2D2E] border-gray-600 text-gray-400 hover:border-gray-500"
-                                }`}
+                                    }`}
                             >
                                 <Lock size={18} />
                                 <span className="font-medium">Private</span>

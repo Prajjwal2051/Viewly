@@ -1,6 +1,14 @@
+// ============================================
+// TWEET PAGE - INDIVIDUAL TWEET/POST VIEW
+// ============================================
+// Detailed view of a single tweet with comments, likes, and interactions
+// Can be used as standalone page or modal overlay
+
 import React, { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getTweetById, toggleTweetLike } from "../api/tweetApi"
+import { getIsTweetLiked } from "../api/likeApi"
+import { getSubscriptionStatus } from "../api/subscriptionApi"
 import { toggleSubscription } from "../api/subscriptionApi"
 import CommentSection from "../components/comments/CommentSection"
 import {
@@ -11,40 +19,90 @@ import {
     X,
     MessageCircle,
     MoreVertical,
+    User,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import toast from "react-hot-toast"
 import { useSelector } from "react-redux"
+import {
+    sanitizeTweetContent,
+    sanitizeDisplayName,
+    sanitizeUsername,
+} from "../utils/sanitize"
 
+/**
+ * TWEET PAGE COMPONENT
+ * Displays full tweet details with image, interactions, and comments
+ *
+ * Purpose:
+ * - Show complete tweet content (text + optional image)
+ * - Display owner information and profile
+ * - Enable interactions (like, comment, share, subscribe)
+ * - Show all comments on the tweet
+ *
+ * Features:
+ * - Tweet content with sanitization (XSS protection)
+ * - Like/unlike functionality with live count
+ * - Subscribe/unsubscribe to tweet author
+ * - Comment section with real-time updates
+ * - Share functionality (copy link)
+ * - Can be displayed as modal or full page
+ *
+ * Props:
+ * @param {boolean} isModal - Whether to display as modal overlay
+ *
+ * State Management:
+ * - tweet: Tweet data (content, owner, image, etc.)
+ * - isLiked: Whether current user has liked this tweet
+ * - likesCount: Total number of likes
+ * - isSubscribed: Whether user is subscribed to tweet owner
+ * - showComments: Toggle comments section visibility
+ *
+ * @returns {JSX.Element} Tweet detail view with interactions
+ */
 const TweetPage = ({ isModal = false }) => {
+    // Get tweet ID from URL parameters
     const { tweetId } = useParams()
     const navigate = useNavigate()
+
+    // Get current logged-in user from Redux store
     const { user } = useSelector((state) => state.auth)
+
+    // Tweet data and metadata
     const [tweet, setTweet] = useState(null)
     const [loading, setLoading] = useState(true)
+
+    // Like state (optimistic UI updates)
     const [isLiked, setIsLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(0)
-    const [isSubscribed, setIsSubscribed] = useState(false)
-    const [showComments, setShowComments] = useState(false)
 
+    // Subscription state (follow tweet author)
+    const [isSubscribed, setIsSubscribed] = useState(false)
+    const [isFollowing, setIsFollowing] = useState(false) // Loading state for follow button
+
+    // UI state
+    const [showComments, setShowComments] = useState(false)
+    const [avatarError, setAvatarError] = useState(false)
+
+    /**
+     * FETCH TWEET DATA
+     * Loads tweet details when component mounts or tweetId changes
+     */
     useEffect(() => {
         const fetchTweet = async () => {
             try {
                 setLoading(true)
                 const response = await getTweetById(tweetId)
-                // response.data contains the tweet object
-                const tweetData = response.data || response // Adjust based on API structure
+                // Handle different API response structures
+                const tweetData = response.data || response
                 setTweet(tweetData)
                 setLikesCount(tweetData.likes || 0)
-                // setIsLiked(tweetData.isLiked) // If backend provides this
-                // Assuming tweetData might have subscription status or we default false
-                // For a proper implementation we might need to check 'isSubscribed' from backend
-                // or have it in ownerDetails. For now, defaulting false or simple toggle.
+                // Set subscription status if available from backend
                 setIsSubscribed(tweetData.ownerDetails?.isSubscribed || false)
             } catch (error) {
                 console.error("Failed to fetch tweet:", error)
                 toast.error("Failed to load post")
-                navigate("/")
+                navigate("/") // Redirect to home on error
             } finally {
                 setLoading(false)
             }
@@ -53,35 +111,114 @@ const TweetPage = ({ isModal = false }) => {
         if (tweetId) fetchTweet()
     }, [tweetId, navigate])
 
+    /**
+     * FETCH LIKE STATUS
+     * Checks if current user has already liked this tweet
+     */
+    useEffect(() => {
+        const fetchLikeStatus = async () => {
+            if (user && tweetId) {
+                try {
+                    const data = await getIsTweetLiked(tweetId)
+                    setIsLiked(data.isLiked || false)
+                } catch (error) {
+                    console.error("Failed to fetch like status:", error)
+                }
+            }
+        }
+        fetchLikeStatus()
+    }, [tweetId, user])
+
+    /**
+     * FETCH SUBSCRIPTION STATUS
+     * Checks if user is subscribed to tweet author's channel
+     */
+    useEffect(() => {
+        const fetchFollowStatus = async () => {
+            if (user && tweet?.ownerDetails?._id) {
+                try {
+                    const data = await getSubscriptionStatus(
+                        tweet.ownerDetails._id
+                    )
+                    setIsSubscribed(data.isSubscribed || false)
+                } catch (error) {
+                    console.error("Failed to fetch follow status:", error)
+                }
+            }
+        }
+        fetchFollowStatus()
+    }, [tweet?.ownerDetails?._id, user])
+
     const handleSubscribe = async (e) => {
         e?.stopPropagation()
+
         if (!user) {
-            toast.error("Please login to subscribe")
+            toast.error("Please login to follow")
             return
         }
-        if (user._id === tweet?.ownerDetails?._id) return
 
+        // Prevent self-follow with error message
+        if (user._id === tweet?.ownerDetails?._id) {
+            toast.error("You cannot follow yourself")
+            return
+        }
+
+        // Prevent rapid clicks
+        if (isFollowing) return
+
+        setIsFollowing(true)
         const wasSubscribed = isSubscribed
         setIsSubscribed(!wasSubscribed) // Optimistic
 
         try {
-            await toggleSubscription(tweet.ownerDetails._id)
-            toast.success(wasSubscribed ? "Unsubscribed" : "Subscribed!")
+            const response = await toggleSubscription(tweet.ownerDetails._id)
+            console.log("Toggle response:", response)
+
+            // Use actual API response
+            const newState =
+                response.data?.isSubscribed ??
+                response.isSubscribed ??
+                !wasSubscribed
+            setIsSubscribed(newState)
+
+            const username = tweet.ownerDetails?.username || "user"
+            toast.success(
+                newState ? `Following @${username}` : `Unfollowed @${username}`
+            )
         } catch (error) {
             setIsSubscribed(wasSubscribed)
-            toast.error("Failed to update subscription")
+            toast.error("Failed to update follow status")
+            console.error("Follow error:", error)
+        } finally {
+            setIsFollowing(false)
         }
     }
 
     const handleLike = async () => {
+        if (!user) {
+            toast.error("Please login to like tweets")
+            return
+        }
+
+        // Optimistic update
+        const wasLiked = isLiked
+        const newLikedState = !isLiked
+        setIsLiked(newLikedState)
+        setLikesCount((prev) => {
+            const newCount = newLikedState ? prev + 1 : prev - 1
+            return Math.max(0, newCount) // Prevent negative counts
+        })
+
         try {
-            const response = await toggleTweetLike(tweet._id)
-            setIsLiked(response.data.isliked)
-            setLikesCount((prev) =>
-                response.data.isliked ? prev + 1 : prev - 1
-            )
+            await toggleTweetLike(tweet._id)
+            // Show success toast with context
+            toast.success(newLikedState ? "Liked" : "Unliked")
         } catch (error) {
-            toast.error("Failed to like post")
+            // Revert on error
+            setIsLiked(wasLiked)
+            setLikesCount((prev) => (newLikedState ? prev - 1 : prev + 1))
+            console.error("Error liking tweet:", error)
+            toast.error("Failed to like tweet")
         }
     }
 
@@ -93,6 +230,8 @@ const TweetPage = ({ isModal = false }) => {
         )
     }
 
+    if (!tweet) return null
+
     const handleShare = (e) => {
         e?.stopPropagation()
         const link = window.location.href
@@ -100,170 +239,311 @@ const TweetPage = ({ isModal = false }) => {
         toast.success("Link copied to clipboard!")
     }
 
-    // IMMERSIVE MODAL LAYOUT (REELS STYLE)
     if (isModal) {
         return (
-            <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
-                {/* CLOSE BUTTON */}
-                <button
-                    onClick={() => navigate(-1)}
-                    className="absolute top-4 left-4 z-50 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors"
-                >
-                    <X size={24} />
-                </button>
-
-                {/* CONTENT - CENTRAL & IMMERSIVE */}
-                <div className="relative w-full h-full flex items-center justify-center bg-black">
-                    {tweet.image ? (
-                        <img
-                            src={tweet.image}
-                            alt="Tweet content"
-                            className="max-w-full max-h-full object-contain shadow-2xl"
+            <div className="relative w-full h-full bg-transparent flex flex-col overflow-hidden p-0">
+                {/* CLOSE BUTTON - Popup Tab Style (Hidden behind box, pops up on hover) */}
+                <div className="w-full h-12 flex items-end px-6 shrink-0 relative z-40 group cursor-pointer">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-[#1E2021] rounded-t-2xl text-white hover:bg-[#2A2D2E] transition-all duration-300 transform translate-y-[120%] group-hover:translate-y-0 shadow-[-4px_-4px_10px_rgba(0,0,0,0.2)] ease-out"
+                    >
+                        <X
+                            size={18}
+                            className="text-red-500 group-hover:text-red-400 transition-colors"
                         />
-                    ) : (
-                        <div className="w-full flex items-center justify-center">
-                            <p className="text-white text-3xl md:text-4xl font-bold text-center leading-snug tracking-wide">
-                                {tweet.content}
-                            </p>
-                        </div>
-                    )}
+                        <span className="text-xs font-bold text-gray-300 group-hover:text-white uppercase tracking-widest transition-colors mb-0.5">
+                            Close
+                        </span>
+                    </button>
+
+                    {/* Visual Hint (Optional: Shows user something is there) */}
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-transparent group-hover:bg-transparent transition-colors"></div>
                 </div>
 
-                {/* RIGHT OVERLAY - ACTIONS BUTTONS */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-6">
-                    {/* Like Action */}
-                    <button
-                        className="flex flex-col items-center gap-1 group"
-                        onClick={handleLike}
-                    >
-                        <div
-                            className={`p-3 rounded-full backdrop-blur-md transition-all ${isLiked ? "bg-red-600/80 text-white" : "bg-black/40 text-white group-hover:bg-red-500/20"}`}
-                        >
-                            <Heart
-                                size={28}
-                                fill={isLiked ? "currentColor" : "none"}
+                {/* CONTENT BOX - The actual card (In front of the tab) */}
+                <div className="flex-1 w-full bg-[#1E2021] flex flex-col overflow-hidden relative z-50 rounded-b-none rounded-tr-3xl rounded-tl-3xl md:rounded-br-none shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-[#2A2D2E]">
+                    {/* CONTENT AREA: IMAGE (Flex-1 to take available space) */}
+                    <div className="flex-1 flex items-center justify-center bg-[#1E2021] overflow-hidden relative w-full min-h-0 max-h-[75vh]">
+                        {tweet.image ? (
+                            <img
+                                src={tweet.image}
+                                alt="Tweet content"
+                                className="max-w-full max-h-full object-contain"
                             />
-                        </div>
-                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
-                            {likesCount}
-                        </span>
-                    </button>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-start p-6 md:p-16">
+                                <div className="w-full max-w-3xl bg-transparent">
+                                    <p className="text-gray-100 text-lg md:text-2xl font-normal text-left leading-relaxed whitespace-pre-wrap tracking-wide">
+                                        {sanitizeTweetContent(tweet.content)}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        {/* Desktop/Tablet Action Overlay (Floating Right) - Only show if image exists */}
+                        <div
+                            className={`hidden ${
+                                tweet.image ? "md:flex" : "md:hidden"
+                            } absolute right-4 lg:right-6 top-1/2 -translate-y-1/2 flex-col gap-6 z-30`}
+                        >
+                            {/* Like */}
+                            <button
+                                onClick={handleLike}
+                                className="group flex flex-col items-center gap-1"
+                            >
+                                <div
+                                    className={`p-3 rounded-full backdrop-blur-md transition-all ${
+                                        isLiked
+                                            ? "bg-red-600/20 text-red-500"
+                                            : "bg-black/40 text-white hover:bg-white/20"
+                                    }`}
+                                >
+                                    <Heart
+                                        size={28}
+                                        className={
+                                            isLiked ? "fill-current" : ""
+                                        }
+                                    />
+                                </div>
+                                <span className="text-xs font-bold text-white drop-shadow-md">
+                                    {likesCount}
+                                </span>
+                            </button>
 
-                    {/* Comment Action */}
-                    <button
-                        className="flex flex-col items-center gap-1 group"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            setShowComments(true)
-                        }}
-                    >
-                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
-                            <MessageCircle size={28} />
-                        </div>
-                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
-                            Comment
-                        </span>
-                    </button>
+                            {/* Comment */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setShowComments(true)
+                                }}
+                                className="group flex flex-col items-center gap-1"
+                            >
+                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-white/20 transition-all">
+                                    <MessageCircle size={28} />
+                                </div>
+                                <span className="text-xs font-bold text-white drop-shadow-md">
+                                    Comment
+                                </span>
+                            </button>
 
-                    {/* Share Action */}
-                    <button
-                        className="flex flex-col items-center gap-1 group"
-                        onClick={handleShare}
-                    >
-                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white group-hover:bg-white/20 transition-all">
-                            <Share2 size={28} />
+                            {/* Share */}
+                            <button
+                                onClick={handleShare}
+                                className="group flex flex-col items-center gap-1"
+                            >
+                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-white/20 transition-all">
+                                    <Share2 size={28} />
+                                </div>
+                                <span className="text-xs font-bold text-white drop-shadow-md">
+                                    Share
+                                </span>
+                            </button>
                         </div>
-                        <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
-                            Share
-                        </span>
-                    </button>
+                    </div>
                 </div>
 
-                {/* BOTTOM OVERLAY - INFO (Hide if comments matching video player style preferred, but let's keep for now unless it conflicts) */}
-                <div
-                    className={`absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-24 pb-8 px-4 transition-opacity duration-300 ${showComments ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-                >
-                    <div className="flex items-center gap-3 mb-3">
-                        <img
-                            src={
-                                tweet.ownerDetails?.avatar ||
-                                "https://via.placeholder.com/40"
-                            }
-                            alt={tweet.ownerDetails?.username}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-white/20 cursor-pointer"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                navigate(
-                                    `/channel/${tweet.ownerDetails?.username}`
-                                )
-                            }}
-                        />
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                                <span
-                                    className="font-bold text-white text-base hover:underline cursor-pointer"
-                                    onClick={() =>
-                                        navigate(
-                                            `/channel/${tweet.ownerDetails?.username}`
-                                        )
-                                    }
-                                >
-                                    {tweet.ownerDetails?.fullName}
-                                </span>
+                {/* FOOTER: INFO & ACTIONS (Static block below image) */}
+                <div className="w-full bg-[#1E2021] border-t border-gray-800 p-4 transition-transform z-40 shrink-0">
+                    <div className="max-w-screen-xl mx-auto flex flex-col gap-4">
+                        {/* Top Row: User Info & Follow Button */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {tweet.ownerDetails?.avatar && !avatarError ? (
+                                    <img
+                                        src={tweet.ownerDetails.avatar}
+                                        alt={tweet.ownerDetails?.username}
+                                        onError={() => setAvatarError(true)}
+                                        className="w-10 h-10 rounded-full object-cover border border-white/10 cursor-pointer"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate(
+                                                `/channel/${tweet.ownerDetails?.username}`
+                                            )
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-10 h-10 rounded-full bg-gray-700 border border-white/10 cursor-pointer flex items-center justify-center"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate(
+                                                `/channel/${tweet.ownerDetails?.username}`
+                                            )
+                                        }}
+                                    >
+                                        <User
+                                            size={20}
+                                            className="text-gray-400"
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className="font-bold text-white text-base hover:underline cursor-pointer"
+                                            onClick={() =>
+                                                navigate(
+                                                    `/channel/${tweet.ownerDetails?.username}`
+                                                )
+                                            }
+                                        >
+                                            {sanitizeDisplayName(
+                                                tweet.ownerDetails?.fullName
+                                            )}
+                                        </span>
+                                        {user?._id !==
+                                            tweet.ownerDetails?._id && (
+                                            <button
+                                                onClick={handleSubscribe}
+                                                disabled={isFollowing}
+                                                className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                    isSubscribed
+                                                        ? "bg-transparent border border-gray-500 text-gray-300 hover:border-red-500 hover:text-red-500"
+                                                        : "bg-white text-black hover:bg-gray-200"
+                                                }`}
+                                            >
+                                                {isFollowing
+                                                    ? "..."
+                                                    : isSubscribed
+                                                      ? "Following"
+                                                      : "Follow"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <span className="text-xs text-gray-400">
+                                        @
+                                        {sanitizeUsername(
+                                            tweet.ownerDetails?.username
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content snippet (if image present, show caption below) */}
+                        {tweet.image && tweet.content && (
+                            <p className="text-gray-200 text-sm md:text-base leading-snug line-clamp-2">
+                                {sanitizeTweetContent(tweet.content)}
+                            </p>
+                        )}
+
+                        {/* Actions Row */}
+                        <div className="flex items-center justify-between border-t border-gray-800 pt-3 mt-1">
+                            <div
+                                className={`flex ${
+                                    tweet.image ? "md:hidden" : "md:flex"
+                                } items-center gap-4 sm:gap-6`}
+                            >
+                                {/* Like */}
                                 <button
-                                    onClick={handleSubscribe}
-                                    className={`px-3 py-0.5 text-xs font-bold rounded-full transition-colors ${isSubscribed ? "bg-white/20 text-gray-200" : "bg-white text-black hover:bg-gray-200"}`}
+                                    onClick={handleLike}
+                                    className="flex items-center gap-2 group"
                                 >
-                                    {isSubscribed ? "Following" : "Follow"}
+                                    <Heart
+                                        size={24}
+                                        className={`transition-colors ${isLiked ? "fill-red-600 text-red-600" : "text-gray-400 group-hover:text-red-500"}`}
+                                    />
+                                    <span
+                                        className={`text-sm font-medium ${isLiked ? "text-red-600" : "text-gray-400 group-hover:text-white"}`}
+                                    >
+                                        {likesCount}
+                                    </span>
+                                </button>
+
+                                {/* Comment */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setShowComments(true)
+                                    }}
+                                    className="flex items-center gap-2 group"
+                                >
+                                    <MessageCircle
+                                        size={24}
+                                        className="text-gray-400 group-hover:text-blue-500 transition-colors"
+                                    />
+                                    <span className="text-sm font-medium text-gray-400 group-hover:text-white hidden sm:block">
+                                        Comment
+                                    </span>
+                                </button>
+
+                                {/* Share */}
+                                <button
+                                    onClick={handleShare}
+                                    className="flex items-center gap-2 group"
+                                >
+                                    <Share2
+                                        size={24}
+                                        className="text-gray-400 group-hover:text-green-500 transition-colors"
+                                    />
+                                    <span className="text-sm font-medium text-gray-400 group-hover:text-white hidden sm:block">
+                                        Share
+                                    </span>
                                 </button>
                             </div>
-                            <span className="text-xs text-gray-300">
-                                @{tweet.ownerDetails?.username}
+
+                            <span className="text-xs text-gray-500 whitespace-nowrap shrink-0">
+                                {formatDistanceToNow(
+                                    new Date(tweet.createdAt),
+                                    {
+                                        addSuffix: true,
+                                    }
+                                )}
                             </span>
                         </div>
                     </div>
-
-                    {tweet.image && tweet.content && (
-                        <p className="text-white text-sm md:text-base leading-snug line-clamp-3 mb-1 w-[85%] shadow-black drop-shadow-sm">
-                            {tweet.content}
-                        </p>
-                    )}
-
-                    <p className="text-[10px] text-gray-400 mt-2">
-                        {formatDistanceToNow(new Date(tweet.createdAt), {
-                            addSuffix: true,
-                        })}
-                    </p>
                 </div>
 
-                {/* COMMENTS SIDEBAR - TRANSITION SLIDE IN */}
+                {/* COMMENTS SECTION - RESPONSIVE (Bottom Sheet on Mobile, Sidebar on Desktop) */}
                 <div
-                    className={`absolute top-0 right-0 h-full w-full md:w-[400px] bg-[#1E2021] z-50 transition-transform duration-300 ease-in-out border-l border-gray-800 ${showComments ? "translate-x-0" : "translate-x-full"}`}
-                    onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                    className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+                        showComments
+                            ? "opacity-100 pointer-events-auto"
+                            : "opacity-0 pointer-events-none"
+                    }`}
+                    onClick={() => setShowComments(false)}
                 >
-                    <div className="flex flex-col h-full">
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-                            <h2 className="text-lg font-bold text-white">
-                                Comments
-                            </h2>
-                            <button
-                                onClick={() => setShowComments(false)}
-                                className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                            >
-                                <X size={20} className="text-white" />
-                            </button>
+                    <div
+                        className={`fixed bg-[#1E2021] border-gray-700 shadow-2xl transition-transform duration-300 ease-out flex flex-col
+                            bottom-0 w-full h-[90vh] rounded-t-3xl border-t transform
+                            md:top-0 md:right-0 md:h-full md:w-[450px] md:bottom-auto md:rounded-none md:border-l md:border-t-0
+                            ${
+                                showComments
+                                    ? "translate-y-0 md:translate-x-0"
+                                    : "translate-y-full md:translate-x-full"
+                            }
+                        `}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Drag Indicator (Mobile only visual cue) */}
+                        <div className="w-full flex justify-center pt-3 pb-1 md:hidden">
+                            <div className="w-12 h-1.5 bg-gray-600 rounded-full"></div>
                         </div>
 
-                        {/* Comments List */}
-                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                            <CommentSection
-                                tweetId={tweet._id}
-                                hideHeader={true}
-                            />
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold text-white">
+                                    Comments
+                                </h2>
+                                <button
+                                    onClick={() => setShowComments(false)}
+                                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                <CommentSection
+                                    tweetId={tweet._id}
+                                    hideHeader={true}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Closing Content Box */}
             </div>
         )
     }
@@ -308,17 +588,30 @@ const TweetPage = ({ isModal = false }) => {
             >
                 {/* Header: Author */}
                 <div className="sticky top-0 z-20 bg-[#2A2D2E]/95 backdrop-blur-sm p-4 border-b border-[#2A2D2E] flex items-center gap-3">
-                    <img
-                        src={
-                            tweet.ownerDetails?.avatar ||
-                            "https://via.placeholder.com/40"
-                        }
-                        alt={tweet.ownerDetails?.username}
-                        className="w-10 h-10 rounded-full object-cover cursor-pointer"
-                        onClick={() =>
-                            navigate(`/channel/${tweet.ownerDetails?.username}`)
-                        }
-                    />
+                    {tweet.ownerDetails?.avatar && !avatarError ? (
+                        <img
+                            src={tweet.ownerDetails.avatar}
+                            alt={tweet.ownerDetails?.username}
+                            onError={() => setAvatarError(true)}
+                            className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                            onClick={() =>
+                                navigate(
+                                    `/channel/${tweet.ownerDetails?.username}`
+                                )
+                            }
+                        />
+                    ) : (
+                        <div
+                            className="w-10 h-10 rounded-full bg-gray-700 cursor-pointer flex items-center justify-center"
+                            onClick={() =>
+                                navigate(
+                                    `/channel/${tweet.ownerDetails?.username}`
+                                )
+                            }
+                        >
+                            <User size={20} className="text-gray-400" />
+                        </div>
+                    )}
                     <div className="flex-1">
                         <h3
                             className="font-semibold cursor-pointer hover:underline"
@@ -328,10 +621,10 @@ const TweetPage = ({ isModal = false }) => {
                                 )
                             }
                         >
-                            {tweet.ownerDetails?.fullName}
+                            {sanitizeDisplayName(tweet.ownerDetails?.fullName)}
                         </h3>
                         <p className="text-xs text-gray-400">
-                            @{tweet.ownerDetails?.username}
+                            @{sanitizeUsername(tweet.ownerDetails?.username)}
                         </p>
                     </div>
                 </div>
@@ -340,7 +633,7 @@ const TweetPage = ({ isModal = false }) => {
                 <div className="p-4">
                     {tweet.content && (
                         <p className="text-base mb-4 whitespace-pre-wrap leading-relaxed border-b border-[#2A2D2E] pb-4">
-                            {tweet.content}
+                            {sanitizeTweetContent(tweet.content)}
                         </p>
                     )}
 

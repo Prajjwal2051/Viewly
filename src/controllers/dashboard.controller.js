@@ -18,13 +18,13 @@ import { subscription } from "../models/subscription.model.js"
 /**
  * GET CHANNEL STATISTICS CONTROLLER
  * Retrieves comprehensive analytics and statistics for a channel
- * 
+ *
  * Purpose:
  * - Provide channel owners with detailed performance metrics
  * - Display total counts (videos, views, likes, subscribers, comments)
  * - Show growth trends over time (monthly views and subscribers)
  * - Calculate engagement metrics and performance indicators
- * 
+ *
  * Features:
  * - Total statistics (videos, views, likes, subscribers, comments)
  * - Growth metrics by month
@@ -32,66 +32,72 @@ import { subscription } from "../models/subscription.model.js"
  * - Average views per video
  * - Engagement rate calculation
  * - Most popular video identification
- * 
+ *
  * Process Flow:
  * 1. Validate channel ID and ownership
  * 2. Calculate total statistics
  * 3. Compute growth metrics
  * 4. Calculate additional performance indicators
  * 5. Return comprehensive dashboard data
- * 
+ *
  * @route GET /api/v1/dashboard/stats/:channelId
  * @access Private (only channel owner can view)
  * @param {string} channelId - MongoDB ObjectId of the channel
  * @returns {Object} ApiResponse with comprehensive channel statistics
  */
 const getChannelStats = asyncHandler(async (req, res) => {
-    console.log("\n" + "=".repeat(60));
-    console.log("📊 GET CHANNEL STATISTICS REQUEST");
-    console.log("=".repeat(60));
+    console.log("\n" + "=".repeat(60))
+    console.log(" GET CHANNEL STATISTICS REQUEST")
+    console.log("=".repeat(60))
 
-    // STEP 1: Extract channel ID and authenticated user ID
-    const { channelId } = req.params
+    // STEP 1: Extract channel ID from params or use current user's ID
+    const channelId = req.params.channelId || req.user._id
     const userId = req.user._id
 
-    console.log("\n[STEP 1] 📝 Extracting Request Data");
-    console.log("   ➜ Channel ID:", channelId);
-    console.log("   ➜ User ID:", userId);
-    console.log("   ➜ User:", req.user?.username);
+    console.log("\n[STEP 1]  Extracting Request Data")
+    console.log("   Channel ID:", channelId)
+    console.log("   User ID:", userId)
+    console.log("   User:", req.user?.username)
 
-    console.log("\n[STEP 2] ✅ Validating User ID");
+    console.log("\n[STEP 2] Validating User ID")
     // STEP 2: Validate user ID exists
     if (!userId) {
-        console.log("   ❌ User ID not provided");
+        console.log("   User ID not provided")
         throw new ApiError(400, "User ID not provided")
     }
-    console.log("   ✓ User ID exists");
+    console.log("   User ID exists")
 
     // STEP 3: Validate user ID format
     if (!mongoose.isValidObjectId(userId)) {
-        console.log("   ❌ Invalid MongoDB ObjectId format");
+        console.log("   Invalid MongoDB ObjectId format")
         throw new ApiError(400, "Invalid User ID provided")
     }
-    console.log("   ✓ User ID format is valid");
+    console.log("   User ID format is valid")
 
-    console.log("\n[STEP 3] 👤 Verifying Channel Exists");
+    console.log("\n[STEP 3]  Verifying Channel Exists")
     // STEP 4: Verify channel exists
     const channel = await User.findById(channelId)
     if (!channel) {
-        console.log("   ❌ Channel not found in database");
+        console.log("   Channel not found in database")
         throw new ApiError(404, "Channel does not exist")
     }
-    console.log("   ✓ Channel found:", channel.username);
+    console.log("   Channel found:", channel.username)
 
-    console.log("\n[STEP 4] 🔒 Verifying Authorization");
+    console.log("\n[STEP 4]  Verifying Authorization")
     // STEP 5: Check authorization - only channel owner can view stats
-    if (channelId !== userId.toString()) {
-        console.log("   ❌ User is not the channel owner");
-        throw new ApiError(403, "You are not authorized to view stats of this channel")
+    // Convert both to strings for proper comparison
+    if (channelId.toString() !== userId.toString()) {
+        console.log("   User is not the channel owner")
+        console.log("      Channel ID:", channelId.toString())
+        console.log("      User ID:", userId.toString())
+        throw new ApiError(
+            403,
+            "You are not authorized to view stats of this channel"
+        )
     }
-    console.log("   ✓ User authorized to view channel statistics");
+    console.log("   User authorized to view channel statistics")
 
-    console.log("\n[STEP 5] 📊 Calculating Channel Statistics...");
+    console.log("\n[STEP 5]  Calculating Channel Statistics...")
 
     // ============================================
     // BASIC STATISTICS
@@ -116,7 +122,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         // Group: Sum all views into a single total
         {
             $group: {
-                _id: null,                    // Group all documents together
+                _id: null, // Group all documents together
                 totalViews: { $sum: "$views" }, // Sum the views field
             },
         },
@@ -176,8 +182,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
         {
             $group: {
                 _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-                totalViews: { $sum: "$views" },     // Total views in that month
-                videoCount: { $sum: 1 },            // Count of videos in that month
+                totalViews: { $sum: "$views" }, // Total views in that month
+                videoCount: { $sum: 1 }, // Count of videos in that month
             },
         },
         // Sort: Order by month chronologically
@@ -236,7 +242,9 @@ const getChannelStats = asyncHandler(async (req, res) => {
     const previousPeriodViews = previous30DaysViews[0]?.totalViews || 0
     const viewsGrowthPercentage =
         previousPeriodViews > 0
-            ? ((currentPeriodViews - previousPeriodViews) / previousPeriodViews) * 100
+            ? ((currentPeriodViews - previousPeriodViews) /
+                  previousPeriodViews) *
+              100
             : 0
 
     // STEP 15: Calculate subscribers growth by month
@@ -252,7 +260,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         {
             $group: {
                 _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-                newSubscribers: { $sum: 1 },  // Count subscriptions in that month
+                newSubscribers: { $sum: 1 }, // Count subscriptions in that month
             },
         },
         // Sort: Order by month chronologically
@@ -277,7 +285,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
     const subscriberGrowthPercentage =
         newSubscribersPrevious30Days > 0
             ? ((newSubscribersLast30Days - newSubscribersPrevious30Days) /
-                newSubscribersPrevious30Days) * 100
+                  newSubscribersPrevious30Days) *
+              100
             : 0
 
     // ============================================
@@ -297,8 +306,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
         {
             $lookup: {
                 from: "videos",
-                localField: "video",          // Comment's video reference
-                foreignField: "_id",          // Video's ID
+                localField: "video", // Comment's video reference
+                foreignField: "_id", // Video's ID
                 as: "videoDetails",
             },
         },
@@ -319,14 +328,63 @@ const getChannelStats = asyncHandler(async (req, res) => {
     ])
     const totalComments = totalCommentsResult[0]?.totalComments || 0
 
-    // STEP 22: Find most popular video by view count
-    const mostPopularVideo = await Video.findOne({
-        owner: channelId,
-        isPublished: true,
-    })
-        .sort({ views: -1 })
-        .select("title thumbnail views createdAt")
-        .limit(1)
+    // STEP 22: Find most popular video by view count with engagement metrics
+    const mostPopularVideoResult = await Video.aggregate([
+        // Match: Only published videos by this channel
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(channelId),
+                isPublished: true,
+            },
+        },
+        // Sort: By views descending to get most popular first
+        {
+            $sort: { views: -1 },
+        },
+        // Limit: Get only the top video
+        {
+            $limit: 1,
+        },
+        // Lookup: Get likes count
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "video",
+                as: "videoLikes",
+            },
+        },
+        // Lookup: Get comments count
+        {
+            $lookup: {
+                from: "comments",
+                localField: "_id",
+                foreignField: "video",
+                as: "videoComments",
+            },
+        },
+        // Add fields: Calculate counts
+        {
+            $addFields: {
+                likesCount: { $size: "$videoLikes" },
+                commentsCount: { $size: "$videoComments" },
+            },
+        },
+        // Project: Select only needed fields
+        {
+            $project: {
+                title: 1,
+                description: 1,
+                thumbnail: 1,
+                views: 1,
+                createdAt: 1,
+                likesCount: 1,
+                commentsCount: 1,
+            },
+        },
+    ])
+
+    const mostPopularVideo = mostPopularVideoResult[0] || null
 
     // STEP 23: Send comprehensive statistics response
     return res.status(200).json(
@@ -347,7 +405,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
                         views: currentPeriodViews,
                         viewsGrowthPercentage: viewsGrowthPercentage.toFixed(2),
                         newSubscribers: newSubscribersLast30Days,
-                        subscriberGrowthPercentage: subscriberGrowthPercentage.toFixed(2),
+                        subscriberGrowthPercentage:
+                            subscriberGrowthPercentage.toFixed(2),
                     },
                 },
                 additionalMetrics: {
@@ -364,20 +423,20 @@ const getChannelStats = asyncHandler(async (req, res) => {
 /**
  * GET CHANNEL VIDEOS CONTROLLER
  * Retrieves paginated list of videos for a specific channel
- * 
+ *
  * Purpose:
  * - Display all videos from a channel
  * - Support pagination and sorting options
  * - Show published videos for public viewing
  * - Show all videos (including unpublished) for channel owner
- * 
+ *
  * Features:
  * - Pagination (default: 10 videos per page)
  * - Sorting by views, creation date, or likes
  * - Ascending/descending sort order
  * - Privacy filtering (only published videos for non-owners)
  * - Populated owner details
- * 
+ *
  * Process Flow:
  * 1. Validate channel ID
  * 2. Parse pagination and sorting parameters
@@ -385,7 +444,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
  * 4. Check ownership for privacy filtering
  * 5. Fetch paginated videos with sorting
  * 6. Return formatted video list
- * 
+ *
  * @route GET /api/v1/dashboard/videos/:channelId
  * @access Public (with privacy filtering)
  * @param {string} channelId - MongoDB ObjectId of the channel
@@ -405,8 +464,8 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     const skip = (page - 1) * limit
 
     // STEP 3: Extract sorting parameters
-    const sortBy = req.query.sortBy || 'createdAt'  // Field to sort by
-    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1  // Sort direction
+    const sortBy = req.query.sortBy || "createdAt" // Field to sort by
+    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1 // Sort direction
 
     // STEP 4: Validate channel ID is provided
     if (!channelId) {
@@ -444,11 +503,13 @@ const getChannelVideos = asyncHandler(async (req, res) => {
 
     // STEP 11: Fetch videos with pagination, sorting, and population
     const videos = await Video.find(filter)
-        .sort(sortOptions)                    // Apply sorting
-        .skip(skip)                            // Skip for pagination
-        .limit(limit)                          // Limit results per page
-        .select('title description thumbnail duration views createdAt isPublished')
-        .populate('owner', 'username fullName avatar')  // Populate owner details
+        .sort(sortOptions) // Apply sorting
+        .skip(skip) // Skip for pagination
+        .limit(limit) // Limit results per page
+        .select(
+            "title description thumbnail duration views createdAt isPublished"
+        )
+        .populate("owner", "username fullName avatar") // Populate owner details
 
     // STEP 12: Get total count for pagination metadata
     const totalVideos = await Video.countDocuments(filter)
@@ -456,25 +517,25 @@ const getChannelVideos = asyncHandler(async (req, res) => {
 
     // STEP 13: Send success response with videos and pagination
     return res.status(200).json(
-        new ApiResponse(200, {
-            videos,
-            pagination: {
-                currentPage: page,
-                totalPages,
-                totalVideos,
-                limit,
-                hasNextPage: page < totalPages,
-                hasPrevPage: page > 1
-            }
-        }, "Channel videos fetched successfully")
+        new ApiResponse(
+            200,
+            {
+                videos,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalVideos,
+                    limit,
+                    hasNextPage: page < totalPages,
+                    hasPrevPage: page > 1,
+                },
+            },
+            "Channel videos fetched successfully"
+        )
     )
 })
-
 
 // ============================================
 // EXPORT CONTROLLERS
 // ============================================
-export {
-    getChannelStats,
-    getChannelVideos
-}
+export { getChannelStats, getChannelVideos }

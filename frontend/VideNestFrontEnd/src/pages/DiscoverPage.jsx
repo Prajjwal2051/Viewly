@@ -4,11 +4,23 @@
 // Help users discover new content through trending videos and categories
 
 import { useState, useEffect } from "react"
-import { getAllVideos } from "../api/videoApi"
+import { getAllVideos, getMostUsedTags } from "../api/videoApi"
 import VideoCard from "../components/video/VideoCard"
 import VideoCardSkeleton from "../components/video/VideoCardSkeleton"
 import { TrendingUp, Sparkles, Loader2, Shuffle } from "lucide-react"
 import toast from "react-hot-toast"
+
+// Predefined tags that always show
+const PREDEFINED_TAGS = [
+    "trending",
+    "viral",
+    "tutorial",
+    "funny",
+    "music",
+    "gaming",
+    "educational",
+    "shorts",
+]
 
 const CATEGORIES = [
     "All",
@@ -24,12 +36,16 @@ const DiscoverPage = () => {
     const [activeCategory, setActiveCategory] = useState("All")
     const [trendingVideos, setTrendingVideos] = useState([])
     const [loading, setLoading] = useState(true)
+    const [popularTags, setPopularTags] = useState([])
+    const [activeTag, setActiveTag] = useState(null)
 
     useEffect(() => {
         const fetchTrendingVideos = async () => {
             try {
                 setLoading(true)
-                const response = await getAllVideos()
+                const response = await getAllVideos({
+                    tags: activeTag || undefined, // Filter by tag if selected
+                })
                 const allVideos = response.data?.videos || response.videos || []
 
                 // Sort by views to get trending (most viewed first)
@@ -47,6 +63,46 @@ const DiscoverPage = () => {
         }
 
         fetchTrendingVideos()
+    }, [activeTag])
+
+    useEffect(() => {
+        const fetchPopularTags = async () => {
+            try {
+                const { data: tagsData } = await getMostUsedTags(10)
+
+                // Create predefined tags with count 0
+                const predefinedTagsData = PREDEFINED_TAGS.map((tag) => ({
+                    tag,
+                    count: 0,
+                    isPredefined: true,
+                }))
+
+                // Merge predefined tags with popular tags from database
+                const dbTags = Array.isArray(tagsData) ? tagsData : []
+                const dbTagNames = new Set(
+                    dbTags.map((t) => t.tag.toLowerCase())
+                )
+
+                const uniquePredefined = predefinedTagsData.filter(
+                    (pt) => !dbTagNames.has(pt.tag.toLowerCase())
+                )
+
+                // Combine: database tags first (with counts), then predefined
+                const allTags = [...dbTags, ...uniquePredefined]
+                setPopularTags(allTags)
+            } catch (error) {
+                console.error("Failed to fetch popular tags:", error)
+                // Fallback to predefined tags only
+                setPopularTags(
+                    PREDEFINED_TAGS.map((tag) => ({
+                        tag,
+                        count: 0,
+                        isPredefined: true,
+                    }))
+                )
+            }
+        }
+        fetchPopularTags()
     }, [])
 
     const handleShuffle = () => {
@@ -108,6 +164,44 @@ const DiscoverPage = () => {
                         </button>
                     ))}
                 </div>
+
+                {/* POPULAR TAGS */}
+                {popularTags.length > 0 && (
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                Popular Tags
+                            </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {popularTags.map((tagData) => (
+                                <button
+                                    key={tagData.tag}
+                                    onClick={() => {
+                                        if (activeTag === tagData.tag) {
+                                            setActiveTag(null)
+                                        } else {
+                                            setActiveTag(tagData.tag)
+                                            setActiveCategory("All")
+                                        }
+                                    }}
+                                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                                        activeTag === tagData.tag
+                                            ? "bg-red-600 text-white shadow-lg shadow-red-500/30"
+                                            : "bg-[#2A2D2E] text-gray-400 hover:bg-[#2F3233] hover:text-white"
+                                    }`}
+                                >
+                                    #{tagData.tag}
+                                    {tagData.count > 0 && (
+                                        <span className="ml-1.5 text-xs opacity-70">
+                                            {tagData.count}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Trending Section */}
                 <div className="mb-12">

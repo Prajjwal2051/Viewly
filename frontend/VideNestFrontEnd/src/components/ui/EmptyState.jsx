@@ -1,6 +1,39 @@
+// ============================================
+// EMPTY STATE COMPONENT - NO CONTENT PLACEHOLDER
+// ============================================
+// Reusable component for displaying empty states with optional action button.
+// Shows when data is empty (no videos, no playlists, no search results, etc.)
+
 import React from "react"
 import { Film, Upload, Sparkles } from "lucide-react"
 
+/**
+ * EMPTY STATE COMPONENT
+ * 
+ * Purpose:
+ * - Show friendly message when there's no content to display
+ * - Provide action button to help user fix the empty state
+ * - Make empty pages feel intentional, not broken
+ * 
+ * Why empty states matter:
+ * - Blank pages confuse users ("Is it broken?")
+ * - Empty states explain WHY it's empty ("No videos yet")
+ * - Action buttons guide users on what to do next ("Upload Video")
+ * 
+ * Use Cases:
+ * - No videos in playlist → "Add videos to this playlist"
+ * - No search results → "Try different keywords"
+ * - New user with no uploads → "Upload your first video"
+ * - No liked videos → "Like videos to see them here"
+ * 
+ * Props:
+ * @param {Component} icon - Lucide icon to display (default: Film)
+ * @param {string} title - Main heading (default: "No content yet")
+ * @param {string} description - Explanation text
+ * @param {string} actionLabel - Button text (optional)
+ * @param {Function} onAction - Button click handler (optional)
+ * @param {boolean} animated - Enable bounce animation (default: true)
+ */
 const EmptyState = ({
     icon: Icon = Film,
     title = "No content yet",
