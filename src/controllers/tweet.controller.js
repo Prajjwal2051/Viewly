@@ -20,43 +20,43 @@ import { uploadOnCloudinary } from "../utils/cloudnary.js"
  */
 const createTweet = asyncHandler(async (req, res) => {
     console.log("\n" + "=".repeat(60))
-    console.log("📸 CREATE TWEET/PHOTO POST REQUEST")
+    console.log(" CREATE TWEET/PHOTO POST REQUEST")
     console.log("=".repeat(60))
 
     // STEP 1: Extract content from request body
     const { content } = req.body
-    console.log("\n[STEP 1] 📝 Extracting Data")
-    console.log("   ➜ Content:", content || "(no caption)")
+    console.log("\n[STEP 1]  Extracting Data")
+    console.log("   Content:", content || "(no caption)")
 
     // Validate: content is required
     if (!content || content.trim() === "") {
-        console.log("   ❌ Validation Failed: Content is required")
+        console.log("   Validation Failed: Content is required")
         throw new ApiError(400, "Tweet content is required")
     }
 
     // STEP 2: Check for image file (OPTIONAL for tweets)
     const imageLocalPath = req.file?.path
     console.log(
-        "   ➜ Image File:",
+        "   Image File:",
         imageLocalPath ? "Provided" : "Not provided (optional)"
     )
 
     let imageUrl = null
     if (imageLocalPath) {
-        console.log("\n[STEP 2] ☁️ Uploading Image to Cloudinary")
+        console.log("\n[STEP 2] Uploading Image to Cloudinary")
         const image = await uploadOnCloudinary(imageLocalPath)
 
         if (!image) {
-            console.log("   ❌ Cloudinary Upload Failed")
+            console.log("   Cloudinary Upload Failed")
             throw new ApiError(500, "Failed to upload image")
         }
         imageUrl = image.url
-        console.log("   ✓ Image Uploaded:", imageUrl)
+        console.log("   Image Uploaded:", imageUrl)
     } else {
-        console.log("\n[STEP 2] ⏭️ Skipping image upload (no image provided)")
+        console.log("\n[STEP 2] Skipping image upload (no image provided)")
     }
 
-    console.log("\n[STEP 3] 💾 Saving Tweet to Database")
+    console.log("\n[STEP 3]  Saving Tweet to Database")
     const tweet = await Tweet.create({
         content: content,
         image: imageUrl, // Will be null if no image
@@ -65,11 +65,11 @@ const createTweet = asyncHandler(async (req, res) => {
     })
 
     if (!tweet) {
-        console.log("   ❌ DB Creation Failed")
+        console.log("   DB Creation Failed")
         throw new ApiError(500, "Failed to create tweet")
     }
 
-    console.log("   ✓ Tweet Created ID:", tweet._id)
+    console.log("   Tweet Created ID:", tweet._id)
     console.log("=".repeat(60) + "\n")
 
     return res
@@ -90,17 +90,17 @@ const createTweet = asyncHandler(async (req, res) => {
  */
 const getUserTweets = asyncHandler(async (req, res) => {
     console.log("\n" + "=".repeat(60))
-    console.log("👤 GET USER TWEETS REQUEST")
+    console.log(" GET USER TWEETS REQUEST")
     console.log("=".repeat(60))
 
     const { userId } = req.params
-    console.log("   ➜ Target User ID:", userId)
+    console.log("   Target User ID:", userId)
 
     if (!isValidObjectId(userId)) {
         throw new ApiError(400, "Invalid user id")
     }
 
-    console.log("\n[STEP 1] 🔍 Aggregating Tweets")
+    console.log("\n[STEP 1]  Aggregating Tweets")
     const tweets = await Tweet.aggregate([
         {
             $match: {
@@ -134,7 +134,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
         },
     ])
 
-    console.log(`   ✓ Found ${tweets.length} tweets`)
+    console.log(`   Found ${tweets.length} tweets`)
     console.log("=".repeat(60) + "\n")
 
     return res
@@ -155,7 +155,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
  */
 const getAllTweets = asyncHandler(async (req, res) => {
     console.log("\n" + "=".repeat(60))
-    console.log("🌍 GET ALL TWEETS (FEED) REQUEST")
+    console.log(" GET ALL TWEETS (FEED) REQUEST")
     console.log("=".repeat(60))
 
     const tweets = await Tweet.aggregate([
@@ -186,7 +186,7 @@ const getAllTweets = asyncHandler(async (req, res) => {
         },
     ])
 
-    console.log(`   ✓ Fetched ${tweets.length} community posts`)
+    console.log(`   Fetched ${tweets.length} community posts`)
 
     return res
         .status(200)

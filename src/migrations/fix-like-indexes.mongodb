@@ -1,0 +1,37 @@
+// ============================================
+// MONGODB SHELL COMMANDS TO FIX LIKE INDEXES
+// ============================================
+// Copy and paste these commands into MongoDB Compass or mongosh
+// to fix the duplicate key error issue.
+
+// 1. Switch to your database
+use VidNest
+
+// 2. Check current indexes
+db.likes.getIndexes()
+
+// 3. Drop the problematic indexes
+db.likes.dropIndex("comment_1_likedBy_1")
+db.likes.dropIndex("video_1_likedBy_1")  
+db.likes.dropIndex("tweet_1_likedBy_1")
+
+// 4. Create new sparse indexes
+db.likes.createIndex(
+    { video: 1, likedBy: 1 },
+    { unique: true, sparse: true, name: "video_1_likedBy_1" }
+)
+
+db.likes.createIndex(
+    { comment: 1, likedBy: 1 },
+    { unique: true, sparse: true, name: "comment_1_likedBy_1" }
+)
+
+db.likes.createIndex(
+    { tweet: 1, likedBy: 1 },
+    { unique: true, sparse: true, name: "tweet_1_likedBy_1" }
+)
+
+// 5. Verify new indexes
+db.likes.getIndexes()
+
+// You should see all three indexes with "sparse: true"

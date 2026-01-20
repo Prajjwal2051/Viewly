@@ -1,6 +1,45 @@
+// ============================================
+// PLAYLIST CARD COMPONENT - PLAYLIST PREVIEW ITEM
+// ============================================
+// Displays a playlist preview with thumbnail, video count, and privacy status.
+// Used on the Playlists page to show all user playlists.
+
 import React from "react"
 import { useNavigate } from "react-router-dom"
 import { ListVideo, Lock, Globe } from "lucide-react"
+
+/**
+ * PLAYLIST CARD COMPONENT
+ * 
+ * Purpose:
+ * - Display playlist preview in grid layout
+ * - Show key playlist information at a glance
+ * - Provide clickable access to playlist details
+ * 
+ * Card Information Displayed:
+ * - Thumbnail: First video's thumbnail or placeholder icon
+ * - Video Count: Number of videos in playlist
+ * - Privacy Status: Public (anyone can view) or Private (owner only)
+ * - Name & Description: Playlist title and description
+ * 
+ * Design Features:
+ * - Hover effects: scale up and glow border
+ * - Overlays: video count badge, privacy indicator
+ * - Placeholder: Shows icon when no videos yet
+ * - Responsive: adapts to different screen sizes
+ * 
+ * Privacy Indicators:
+ * - Green "Public" badge with globe icon
+ * - Gray "Private" badge with lock icon
+ * 
+ * @param {Object} playlist - Playlist data object
+ * @param {string} playlist._id - Playlist ID for navigation
+ * @param {string} playlist.name - Playlist title
+ * @param {string} playlist.description - Playlist description
+ * @param {boolean} playlist.isPublic - Privacy setting
+ * @param {Array} playlist.videos - Array of video objects
+ * @param {number} playlist.videoCount - Total videos (if provided)
+ */
 
 const PlaylistCard = ({ playlist }) => {
     const navigate = useNavigate()

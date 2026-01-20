@@ -1,3 +1,9 @@
+// ============================================
+// VIDEO CONTROLS COMPONENT - LIKE & SUBSCRIBE ACTIONS
+// ============================================
+// Provides interactive buttons for liking videos and subscribing to channels.
+// Used on video player page below the video.
+
 import { useState, useEffect } from "react"
 import { ThumbsUp, Share2, Bell } from "lucide-react"
 import { toggleVideoLike, getIsVideoLiked } from "../../api/likeApi"
@@ -7,6 +13,40 @@ import {
 } from "../../api/subscriptionApi"
 import { useSelector } from "react-redux"
 import toast from "react-hot-toast"
+
+/**
+ * VIDEO CONTROLS COMPONENT
+ * 
+ * Purpose:
+ * - Provide like button for videos
+ * - Provide subscribe button for channels
+ * - Show real-time like counts
+ * - Handle user authentication checks
+ * 
+ * Key Features:
+ * - Optimistic UI updates (instant visual feedback)
+ * - Automatic state reversion on API errors
+ * - Authentication guards (prompts login if needed)
+ * - Real-time like count updates
+ * - Subscribe/Unsubscribe toggle
+ * 
+ * Optimistic UI Explained:
+ * 1. User clicks like button
+ * 2. UI updates IMMEDIATELY (heart fills red)
+ * 3. API call happens in background
+ * 4. If API fails, UI reverts to previous state
+ * 
+ * Why optimistic UI?
+ * - Feels instant and responsive
+ * - No waiting for server response
+ * - Better user experience
+ * - Only reverts if something goes wrong
+ * 
+ * @param {string} videoId - Video being interacted with
+ * @param {string} ownerId - Channel owner ID
+ * @param {Object} video - Video data object
+ * @param {Function} onSubscribeToggle - Callback when subscribe status changes
+ */
 
 const VideoControls = ({ videoId, ownerId, video, onSubscribeToggle }) => {
     const { user } = useSelector((state) => state.auth)
@@ -97,11 +137,10 @@ const VideoControls = ({ videoId, ownerId, video, onSubscribeToggle }) => {
                 {/* LIKE BUTTON */}
                 <button
                     onClick={handleLike}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                        liked
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${liked
                             ? "bg-red-600/20 text-red-500"
                             : "bg-[#2A2D2E] hover:bg-gray-700 text-white"
-                    }`}
+                        }`}
                 >
                     <ThumbsUp
                         size={20}

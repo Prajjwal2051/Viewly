@@ -1,3 +1,9 @@
+// ============================================
+// UPLOAD PAGE - VIDEO & PHOTO POST CREATION
+// ============================================
+// Unified upload interface for both videos and photo posts (tweets).
+// Features: File validation, previews, progress tracking, and drag-and-drop.
+
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import {
@@ -8,13 +14,48 @@ import {
     Loader2,
     Type,
     ChevronDown,
+    FileWarning,
+    CheckCircle2,
 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 import { uploadVideo } from "../api/videoApi"
 import { createTweet } from "../api/tweetApi"
 import Input from "../components/layout/ui/Input"
+import {
+    validateVideoFile,
+    validateImageFile,
+    validateTweetImage,
+    formatFileSize,
+    getFileSizeColor,
+    MAX_VIDEO_SIZE,
+    MAX_IMAGE_SIZE,
+    MAX_TWEET_IMAGE_SIZE,
+} from "../utils/fileValidation"
 
+/**
+ * UPLOAD PAGE COMPONENT
+ * 
+ * Purpose:
+ * - Single page for uploading both videos and photo posts
+ * - Tab-based UI to switch between video and tweet upload
+ * - Real-time file validation and preview
+ * 
+ * Key Features:
+ * - File size validation (50MB videos, 10MB images)
+ * - Format validation (mp4/webm for videos, jpg/png for images)
+ * - Live preview before upload
+ * - Progress feedback during upload
+ * - Form validation using react-hook-form
+ * 
+ * User Flow:
+ * 1. Choose post type (Video or Tweet)
+ * 2. Select file from device
+ * 3. See preview and file size
+ * 4. Fill in title/description
+ * 5. Click upload
+ * 6. Redirect to uploaded content
+ */
 const UploadPage = () => {
     const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(false)
@@ -25,6 +66,11 @@ const UploadPage = () => {
     const [thumbnailPreview, setThumbnailPreview] = useState(null)
     const [imagePreview, setImagePreview] = useState(null)
 
+    // File metadata for display
+    const [videoFile, setVideoFile] = useState(null)
+    const [thumbnailFile, setThumbnailFile] = useState(null)
+    const [tweetImageFile, setTweetImageFile] = useState(null)
+
     const {
         register,
         handleSubmit,
@@ -34,17 +80,53 @@ const UploadPage = () => {
         reset,
     } = useForm()
 
-    // Handle file selection
+    // Handle file selection with validation
     const handleFileChange = (e, field) => {
         const file = e.target.files[0]
-        if (file) {
-            setValue(field, file)
+        if (!file) return
 
-            // Create preview URL
-            const url = URL.createObjectURL(file)
-            if (field === "videoFile") setVideoPreview(url)
-            if (field === "thumbnail") setThumbnailPreview(url)
-            if (field === "image") setImagePreview(url)
+        // Validate based on file type
+        let validation
+        if (field === "videoFile") {
+            validation = validateVideoFile(file)
+        } else if (field === "thumbnail") {
+            validation = validateImageFile(file)
+        } else if (field === "image") {
+            validation = validateTweetImage(file)
+        }
+
+        // Show errors if validation fails
+        if (!validation.valid) {
+            validation.errors.forEach((err) => toast.error(err))
+            e.target.value = "" // Clear the input
+            return
+        }
+
+        // Set the file in form
+        setValue(field, file)
+
+        // Store file metadata for display
+        if (field === "videoFile") {
+            setVideoFile(file)
+        } else if (field === "thumbnail") {
+            setThumbnailFile(file)
+        } else if (field === "image") {
+            setTweetImageFile(file)
+        }
+
+        // Create preview URL
+        const url = URL.createObjectURL(file)
+        if (field === "videoFile") {
+            setVideoPreview(url)
+            toast.success(`Video selected: ${formatFileSize(file.size)}`)
+        }
+        if (field === "thumbnail") {
+            setThumbnailPreview(url)
+            toast.success(`Thumbnail selected: ${formatFileSize(file.size)}`)
+        }
+        if (field === "image") {
+            setImagePreview(url)
+            toast.success(`Image selected: ${formatFileSize(file.size)}`)
         }
     }
 
@@ -92,6 +174,9 @@ const UploadPage = () => {
         setVideoPreview(null)
         setThumbnailPreview(null)
         setImagePreview(null)
+        setVideoFile(null)
+        setThumbnailFile(null)
+        setTweetImageFile(null)
     }
 
     return (
@@ -102,21 +187,19 @@ const UploadPage = () => {
             <div className="relative flex bg-[#1E2021] rounded-xl p-1 mb-8">
                 {/* Animated Background Slider */}
                 <div
-                    className={`absolute top-1 bottom-1 w-[calc(50%-0.25rem)] bg-red-600 rounded-lg shadow-lg shadow-red-500/30 transition-transform duration-300 ease-out ${
-                        postType === "tweet"
+                    className={`absolute top-1 bottom-1 w-[calc(50%-0.25rem)] bg-red-600 rounded-lg shadow-lg shadow-red-500/30 transition-transform duration-300 ease-out ${postType === "tweet"
                             ? "translate-x-[calc(100%+0.5rem)]"
                             : "translate-x-0"
-                    }`}
+                        }`}
                 />
 
                 {/* Upload Video Button */}
                 <button
                     onClick={() => togglePostType("video")}
-                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${
-                        postType === "video"
+                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${postType === "video"
                             ? "text-white"
                             : "text-gray-400 hover:text-gray-300"
-                    }`}
+                        }`}
                 >
                     <Film size={20} />
                     <span className="font-semibold">Upload Video</span>
@@ -125,11 +208,10 @@ const UploadPage = () => {
                 {/* Create Tweet Button */}
                 <button
                     onClick={() => togglePostType("tweet")}
-                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${
-                        postType === "tweet"
+                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${postType === "tweet"
                             ? "text-white"
                             : "text-gray-400 hover:text-gray-300"
-                    }`}
+                        }`}
                 >
                     <Type size={20} />
                     <span className="font-semibold">Create Tweet</span>
@@ -143,11 +225,10 @@ const UploadPage = () => {
                         <div className="space-y-6">
                             {/* Video Upload Area */}
                             <div
-                                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                                    errors.videoFile
+                                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${errors.videoFile
                                         ? "border-red-500 bg-red-50"
                                         : "border-gray-300 hover:border-red-500"
-                                }`}
+                                    }`}
                             >
                                 <input
                                     type="file"
@@ -169,24 +250,54 @@ const UploadPage = () => {
                                         <span className="font-semibold text-gray-500">
                                             Click to upload video
                                         </span>
+                                        <span className="text-xs text-gray-400 mt-2">
+                                            Max{" "}
+                                            {Math.round(
+                                                MAX_VIDEO_SIZE / (1024 * 1024)
+                                            )}{" "}
+                                            MB · MP4, WebM, OGG
+                                        </span>
                                     </label>
                                 ) : (
-                                    <div className="relative rounded-lg overflow-hidden bg-[#1E2021]">
-                                        <video
-                                            src={videoPreview}
-                                            className="w-full h-48 object-contain"
-                                            controls
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setVideoPreview(null)
-                                                setValue("videoFile", null)
-                                            }}
-                                            className="absolute top-2 right-2 p-1 bg-[#1E2021]/50 text-white rounded-full hover:bg-red-500"
-                                        >
-                                            <X size={16} />
-                                        </button>
+                                    <div className="space-y-3">
+                                        <div className="relative rounded-lg overflow-hidden bg-[#1E2021]">
+                                            <video
+                                                src={videoPreview}
+                                                className="w-full h-48 object-contain"
+                                                controls
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setVideoPreview(null)
+                                                    setVideoFile(null)
+                                                    setValue("videoFile", null)
+                                                }}
+                                                className="absolute top-2 right-2 p-1 bg-[#1E2021]/50 text-white rounded-full hover:bg-red-500"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                        {videoFile && (
+                                            <div className="flex items-center justify-between text-sm bg-[#2A2D2E] rounded-lg p-3">
+                                                <div className="flex items-center gap-2">
+                                                    <CheckCircle2
+                                                        size={16}
+                                                        className="text-green-500"
+                                                    />
+                                                    <span className="text-gray-300">
+                                                        {videoFile.name}
+                                                    </span>
+                                                </div>
+                                                <span
+                                                    className={`font-medium ${getFileSizeColor(videoFile.size, MAX_VIDEO_SIZE)}`}
+                                                >
+                                                    {formatFileSize(
+                                                        videoFile.size
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                                 {errors.videoFile && (
@@ -198,11 +309,10 @@ const UploadPage = () => {
 
                             {/* Thumbnail Upload Area */}
                             <div
-                                className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
-                                    errors.thumbnail
+                                className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${errors.thumbnail
                                         ? "border-red-500"
                                         : "border-gray-300 hover:border-red-500"
-                                }`}
+                                    }`}
                             >
                                 <input
                                     type="file"
@@ -224,24 +334,41 @@ const UploadPage = () => {
                                         <span className="font-medium text-gray-500">
                                             Upload Thumbnail
                                         </span>
+                                        <span className="text-xs text-gray-400 mt-1">
+                                            Max{" "}
+                                            {Math.round(
+                                                MAX_IMAGE_SIZE / (1024 * 1024)
+                                            )}{" "}
+                                            MB
+                                        </span>
                                     </label>
                                 ) : (
-                                    <div className="relative rounded-lg overflow-hidden">
-                                        <img
-                                            src={thumbnailPreview}
-                                            alt="Thumbnail preview"
-                                            className="w-full h-40 object-cover"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setThumbnailPreview(null)
-                                                setValue("thumbnail", null)
-                                            }}
-                                            className="absolute top-2 right-2 p-1 bg-[#1E2021]/50 text-white rounded-full hover:bg-red-500"
-                                        >
-                                            <X size={16} />
-                                        </button>
+                                    <div className="space-y-2">
+                                        <div className="relative rounded-lg overflow-hidden">
+                                            <img
+                                                src={thumbnailPreview}
+                                                alt="Thumbnail preview"
+                                                className="w-full h-40 object-cover"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setThumbnailPreview(null)
+                                                    setThumbnailFile(null)
+                                                    setValue("thumbnail", null)
+                                                }}
+                                                className="absolute top-2 right-2 p-1 bg-[#1E2021]/50 text-white rounded-full hover:bg-red-500"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                        {thumbnailFile && (
+                                            <div className="text-xs text-gray-400 text-center">
+                                                {formatFileSize(
+                                                    thumbnailFile.size
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                                 {errors.thumbnail && (
@@ -297,17 +424,46 @@ const UploadPage = () => {
                                     <div className="relative">
                                         <select
                                             {...register("category")}
-                                            className="w-full bg-[#2A2D2E] border-transparent rounded-2xl p-3 pr-10 text-white outline-none appearance-none cursor-pointer"
+                                            className="w-full bg-[#2A2D2E] border-transparent rounded-2xl p-3 pr-10 text-white outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-red-600"
                                         >
                                             <option value="General">
                                                 General
                                             </option>
-                                            <option value="Music">Music</option>
                                             <option value="Gaming">
                                                 Gaming
                                             </option>
+                                            <option value="Music">Music</option>
+                                            <option value="Coding">
+                                                Coding
+                                            </option>
+                                            <option value="Cooking">
+                                                Cooking
+                                            </option>
+                                            <option value="Education">
+                                                Education
+                                            </option>
+                                            <option value="Fitness">
+                                                Fitness
+                                            </option>
+                                            <option value="Travel">
+                                                Travel
+                                            </option>
+                                            <option value="Entertainment">
+                                                Entertainment
+                                            </option>
                                             <option value="Technology">
                                                 Technology
+                                            </option>
+                                            <option value="Sports">
+                                                Sports
+                                            </option>
+                                            <option value="Art">Art</option>
+                                            <option value="Fashion">
+                                                Fashion
+                                            </option>
+                                            <option value="News">News</option>
+                                            <option value="Comedy">
+                                                Comedy
                                             </option>
                                         </select>
                                         <ChevronDown
@@ -354,15 +510,14 @@ const UploadPage = () => {
                                 />
                                 <div className="flex justify-between items-center mt-2">
                                     <span
-                                        className={`text-sm font-medium ${
-                                            (watch("content")?.length || 0) >
-                                            280
+                                        className={`text-sm font-medium ${(watch("content")?.length || 0) >
+                                                280
                                                 ? "text-red-500"
                                                 : (watch("content")?.length ||
-                                                        0) > 250
-                                                  ? "text-yellow-500"
-                                                  : "text-gray-500"
-                                        }`}
+                                                    0) > 250
+                                                    ? "text-yellow-500"
+                                                    : "text-gray-500"
+                                            }`}
                                     >
                                         {watch("content")?.length || 0} / 280
                                     </span>
@@ -401,26 +556,41 @@ const UploadPage = () => {
                                                 Click to add image
                                             </span>
                                             <span className="text-xs text-gray-500 mt-1">
-                                                JPG, PNG, GIF (Optional)
+                                                Max{" "}
+                                                {Math.round(
+                                                    MAX_TWEET_IMAGE_SIZE /
+                                                    (1024 * 1024)
+                                                )}{" "}
+                                                MB · JPG, PNG, GIF
                                             </span>
                                         </label>
                                     ) : (
-                                        <div className="relative rounded-lg overflow-hidden">
-                                            <img
-                                                src={imagePreview}
-                                                alt="Tweet preview"
-                                                className="w-full max-h-80 object-contain rounded-lg"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setImagePreview(null)
-                                                    setValue("image", null)
-                                                }}
-                                                className="absolute top-2 right-2 p-2 bg-[#1E2021]/70 text-white rounded-full hover:bg-red-500 transition-colors"
-                                            >
-                                                <X size={18} />
-                                            </button>
+                                        <div className="space-y-2">
+                                            <div className="relative rounded-lg overflow-hidden">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Tweet preview"
+                                                    className="w-full max-h-80 object-contain rounded-lg"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setImagePreview(null)
+                                                        setTweetImageFile(null)
+                                                        setValue("image", null)
+                                                    }}
+                                                    className="absolute top-2 right-2 p-2 bg-[#1E2021]/70 text-white rounded-full hover:bg-red-500 transition-colors"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
+                                            {tweetImageFile && (
+                                                <div className="text-xs text-gray-400 text-center">
+                                                    {formatFileSize(
+                                                        tweetImageFile.size
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

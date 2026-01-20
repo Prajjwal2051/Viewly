@@ -1,9 +1,9 @@
 // ============================================
-// SIDEBAR COMPONENT - RESPONSIVE NAVIGATION
+// SIDEBAR COMPONENT - RESPONSIVE NAVIGATION MENU
 // ============================================
-// Mobile: Bottom navigation bar (horizontal)
-// Desktop: Left sidebar navigation (vertical)
-// Pinterest Theme: White background, Pinterest red accents
+// Adaptive navigation that changes layout based on screen size.
+// Mobile: Bottom horizontal navigation bar with icons
+// Desktop: Left vertical sidebar with icons and labels
 
 import { useNavigate, useLocation } from "react-router-dom"
 import {
@@ -19,6 +19,39 @@ import { useDispatch } from "react-redux"
 import { logout } from "../../../../store/slices/authSlice.js"
 import { logoutUser } from "../../../../api/authApi"
 import toast from "react-hot-toast"
+import logo from "../../../../assets/logo.png"
+
+/**
+ * SIDEBAR COMPONENT
+ *
+ * Purpose:
+ * - Provide consistent navigation across all pages
+ * - Adapt layout based on screen size (mobile vs desktop)
+ * - Highlight current page with visual indicators
+ *
+ * Responsive Behavior:
+ * - Mobile (<768px): Bottom bar, icons only, 5 items
+ * - Tablet (768-1280px): Left sidebar, icons only, compact
+ * - Desktop (>1280px): Left sidebar, icons + labels, expanded
+ *
+ * Navigation Items:
+ * - Home: Video feed and discover
+ * - Discover: Trending and categories
+ * - Playlists: Organized video collections
+ * - Create: Upload videos or tweets
+ * - Activity: Notifications and subscriptions
+ * - Profile: User account and settings
+ *
+ * Active State Indicators:
+ * - Mobile: Red pulse line at top of icon
+ * - Desktop: Red background, bouncing icon
+ *
+ * Design Pattern:
+ * - Bottom bar on mobile (easier thumb reach)
+ * - Left sidebar on desktop (standard convention)
+ * - Smooth transitions and hover effects
+ * - Fixed positioning (always visible)
+ */
 
 const Sidebar = () => {
     const navigate = useNavigate()
@@ -44,7 +77,7 @@ const Sidebar = () => {
     const handleLogout = async () => {
         try {
             await logoutUser()
-            localStorage.removeItem("accessToken")
+            // localStorage.removeItem("accessToken") removing cuz we will use the cookies only
             dispatch(logout())
             toast.success("Logged out successfully")
             navigate("/login")
@@ -94,14 +127,28 @@ const Sidebar = () => {
                 {/* LOGO */}
                 <div
                     onClick={() => navigate("/")}
-                    className="mb-8 px-4 cursor-pointer group"
+                    className="mb-8 pl-0 xl:pl-6 pr-0 xl:pr-4 cursor-pointer group w-full flex justify-center xl:justify-start"
                 >
-                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-600 text-white font-bold text-xl xl:hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
-                        V
+                    {/* Mobile/Tablet Logo (Icon Only) */}
+                    <div className="xl:hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12 rounded-full overflow-hidden">
+                        <img
+                            src={logo}
+                            alt="Viewly"
+                            className="h-10 w-10 object-cover rounded-full"
+                        />
                     </div>
-                    <h1 className="hidden xl:block text-2xl font-bold text-red-600 tracking-tight transition-all duration-300 group-hover:scale-105">
-                        VidNest
-                    </h1>
+
+                    {/* Desktop Logo (Icon + Text) */}
+                    <div className="hidden xl:flex items-center gap-2 transition-all duration-300 group-hover:scale-105">
+                        <img
+                            src={logo}
+                            alt="Viewly"
+                            className="h-8 w-8 object-cover rounded-full"
+                        />
+                        <h1 className="text-2xl font-bold text-red-600 tracking-tight">
+                            Viewly
+                        </h1>
+                    </div>
                 </div>
 
                 {/* NAVIGATION LINKS */}

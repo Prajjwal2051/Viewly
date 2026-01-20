@@ -68,7 +68,7 @@ const addComment = asyncHandler(async (req, res) => {
 
     const createdComment = await Comment.findById(newComment._id).populate(
         "owner",
-        "username fullname avatar"
+        "username fullName avatar"
     )
 
     return res
@@ -116,6 +116,7 @@ const getAllComment = asyncHandler(async (req, res) => {
                 likes: 1,
                 createdAt: 1,
                 "ownerDetails.username": 1,
+                "ownerDetails._id": 1,
                 "ownerDetails.fullName": 1,
                 "ownerDetails.avatar": 1,
             },
@@ -128,8 +129,10 @@ const getAllComment = asyncHandler(async (req, res) => {
     const options = {
         page: parseInt(page),
         limit: parseInt(limit),
-        docs: "comments",
-        totalDocs: "totalComments",
+        customLabels: {
+            docs: "comments",
+            totalDocs: "totalComments",
+        },
     }
 
     const comments = await Comment.aggregatePaginate(aggregate, options)
@@ -171,6 +174,7 @@ const getTweetComments = asyncHandler(async (req, res) => {
         {
             $project: {
                 content: 1,
+                "ownerDetails._id": 1,
                 likes: 1,
                 createdAt: 1,
                 "ownerDetails.username": 1,
@@ -186,8 +190,10 @@ const getTweetComments = asyncHandler(async (req, res) => {
     const options = {
         page: parseInt(page),
         limit: parseInt(limit),
-        docs: "comments",
-        totalDocs: "totalComments",
+        customLabels: {
+            docs: "comments",
+            totalDocs: "totalComments",
+        },
     }
 
     const comments = await Comment.aggregatePaginate(aggregate, options)
@@ -235,7 +241,7 @@ const updateComment = asyncHandler(async (req, res) => {
 
     const commentWithOwner = await Comment.findById(
         updatedComment._id
-    ).populate("owner", "username fullname avatar")
+    ).populate("owner", "username fullName avatar")
 
     return res
         .status(200)
@@ -271,10 +277,118 @@ const deleteComment = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, commentId, "Comment sucessfully deleted"))
 })
 
+/**
+ * GET USER COMMENTS CONTROLLER
+ * Fetches all comments made by the authenticated user
+ *
+ * Features:
+ * - Returns user's comments across all videos and tweets
+ * - Includes context (video/tweet details) for each comment
+ * - Paginated results for performance
+ * - Sorted by most recent first
+ *
+ * @route GET /api/v1/comments/user/me
+ * @access Private (requires authentication)
+ */
+const getUserComments = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 20 } = req.query
+    const userId = req.user._id
+
+    const aggregate = Comment.aggregate([
+        // Step 1: Match comments by user
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(userId),
+            },
+        },
+
+        // Step 2: Lookup video details (if commented on video)
+        {
+            $lookup: {
+                from: "videos",
+                localField: "video",
+                foreignField: "_id",
+                as: "videoDetails",
+            },
+        },
+
+        // Step 3: Lookup tweet details (if commented on tweet)
+        {
+            $lookup: {
+                from: "tweets",
+                localField: "tweet",
+                foreignField: "_id",
+                as: "tweetDetails",
+            },
+        },
+
+        // Step 4: Unwind arrays (handle optional fields)
+        {
+            $unwind: {
+                path: "$videoDetails",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $unwind: {
+                path: "$tweetDetails",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+
+        // Step 5: Project only needed fields
+        {
+            $project: {
+                content: 1,
+                likes: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                // Video context (if exists)
+                "videoDetails._id": 1,
+                "videoDetails.title": 1,
+                "videoDetails.thumbnail": 1,
+                // Tweet context (if exists)
+                "tweetDetails._id": 1,
+                "tweetDetails.content": 1,
+                "tweetDetails.image": 1,
+                // Determine type
+                commentType: {
+                    $cond: [{ $ifNull: ["$video", false] }, "video", "tweet"],
+                },
+            },
+        },
+
+        // Step 6: Sort by most recent first
+        {
+            $sort: { createdAt: -1 },
+        },
+    ])
+
+    const options = {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        customLabels: {
+            docs: "comments",
+            totalDocs: "totalComments",
+            page: "currentPage",
+            totalPages: "totalPages",
+        },
+    }
+
+    const result = await Comment.aggregatePaginate(aggregate, options)
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, result, "User comments fetched successfully")
+        )
+})
+
 export {
     addComment,
     getAllComment,
-    getTweetComments, // Export this new function
+    getTweetComments,
     updateComment,
     deleteComment,
+    getUserComments,
 }

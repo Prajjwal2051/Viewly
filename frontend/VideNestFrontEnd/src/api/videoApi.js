@@ -48,6 +48,33 @@ const getVideoById = async (videoId) => {
 }
 
 /**
+ * GET VIDEO CATEGORIES
+ * Fetches list of all unique categories from published videos
+ *
+ * Returns: { data: ["Category1", "Category2", ...], message: "..." }
+ */
+const getVideoCategories = async () => {
+    const response = await apiClient.get("/videos/categories")
+    return response.data
+}
+
+/**
+ * GET MOST USED TAGS
+ * Fetches most frequently used tags from published videos
+ *
+ * Params:
+ * - limit: Number of tags to return (default: 15)
+ *
+ * Returns: { data: [{tag: "gaming", count: 42}, ...], message: "..." }
+ */
+const getMostUsedTags = async (limit = 15) => {
+    const response = await apiClient.get("/videos/tags/popular", {
+        params: { limit },
+    })
+    return response.data
+}
+
+/**
  * UPLOAD VIDEO
  * Uploads new video with file and metadata
  *
@@ -97,4 +124,30 @@ const deleteVideo = async (videoId) => {
     return response.data
 }
 
-export { deleteVideo, updateVideo, uploadVideo, getAllVideos, getVideoById }
+/**
+ * SEARCH VIDEOS
+ * Advanced search with multiple filters
+ *
+ * Params object keys:
+ * - query: Search text
+ * - category: Filter category
+ * - minDuration, maxDuration: Duration range in seconds
+ * - sortBy: Sort order (relevance, views, date, likes)
+ * - startDate, endDate: Date range
+ * - page, limit: Pagination
+ */
+const searchVideos = async (params) => {
+    const response = await apiClient.get("/search", { params })
+    return response.data
+}
+
+export {
+    deleteVideo,
+    updateVideo,
+    uploadVideo,
+    getAllVideos,
+    getVideoById,
+    getVideoCategories,
+    getMostUsedTags,
+    searchVideos,
+}

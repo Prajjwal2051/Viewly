@@ -1,8 +1,8 @@
 // ============================================
-// HEADER COMPONENT - NAVIGATION BAR
+// HEADER COMPONENT - TOP NAVIGATION BAR
 // ============================================
-// Sticky top navigation with search, notifications, and user menu.
-// Pinterest Theme: White background, Pinterest red accents
+// Sticky top navigation with search, notifications, user menu, and quick actions.
+// Appears on all pages for consistent navigation experience.
 
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
@@ -14,6 +14,47 @@ import { logout } from "../../../../store/slices/authSlice.js"
 import { logoutUser } from "../../../../api/authApi"
 import { getUserPlaylists } from "../../../../api/playlistApi"
 import toast from "react-hot-toast"
+import NotificationBell from "../../../notifications/NotificationBell"
+
+/**
+ * HEADER COMPONENT
+ * 
+ * Purpose:
+ * - Provide consistent navigation across all pages
+ * - Search functionality for finding videos
+ * - Quick access to notifications
+ * - User account menu
+ * - Upload and playlist shortcuts
+ * 
+ * Header Sections (Left to Right):
+ * 1. Logo - Click to go home
+ * 2. Search Bar - Visible on relevant pages (Home, Discover, Search, Video)
+ * 3. Upload Button - Quick access to create content
+ * 4. Playlist Menu - Dropdown showing recent playlists
+ * 5. Notification Bell - With unread count badge
+ * 6. User Avatar - Opens account menu
+ * 
+ * Smart Search Bar:
+ * - Only shows on pages where search makes sense
+ * - Hidden on Settings, Profile, Dashboard
+ * - Enter key triggers search navigation
+ * - Remembers last search query
+ * 
+ * User Menu Options:
+ * - Profile
+ * - Dashboard
+ * - Settings
+ * - Logout
+ * 
+ * Playlist Menu:
+ * - Shows 5 most recent playlists
+ * - "View All Playlists" link
+ * - Quick navigation to playlist details
+ * 
+ * Responsive Design:
+ * - Full header on desktop
+ * - Simplified on mobile (bottom nav handles some functions)
+ */
 
 const Header = () => {
     const [showUserMenu, setShowUserMenu] = useState(false)
@@ -70,7 +111,7 @@ const Header = () => {
     const handleLogout = async () => {
         try {
             await logoutUser()
-            localStorage.removeItem("accessToken")
+            // localStorage.removeItem("accessToken") remving cuz we will handle it by cookies
             dispatch(logout())
             toast.success("Logged out successfully")
             navigate("/login")
@@ -107,16 +148,8 @@ const Header = () => {
 
                     {/* HEADER ACTIONS */}
                     <div className="flex items-center gap-3">
-                        {/* Notification bell */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate("/activity")}
-                            className="relative hover:bg-[#2A2D2E] rounded-full h-12 w-12 group transition-all duration-300 hover:scale-110 active:scale-95"
-                        >
-                            <Bell className="h-6 w-6 text-gray-500 group-hover:text-red-600 transition-all duration-300 group-hover:animate-pulse" />
-                            <span className="absolute top-3 right-3 h-2 w-2 bg-red-600 rounded-full border-2 border-[#1E2021] animate-pulse"></span>
-                        </Button>
+                        {/* Notification Bell */}
+                        <NotificationBell />
 
                         {/* PLAYLISTS DROPDOWN - Mobile Only */}
                         <div

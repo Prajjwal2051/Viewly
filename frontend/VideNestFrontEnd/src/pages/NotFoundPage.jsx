@@ -1,7 +1,31 @@
+// ============================================
+// 404 NOT FOUND PAGE
+// ============================================
+// Displayed when user navigates to a non-existent route.
+// Provides clear error message and navigation back to home.
+
 import { useNavigate } from "react-router-dom"
 import { Home } from "lucide-react"
 import authBgBright from "../assets/auth_bg_bright.png" // Consistent with Auth pages
 
+/**
+ * NOT FOUND PAGE COMPONENT
+ * 
+ * Purpose:
+ * - Show friendly error message when page doesn't exist
+ * - Provide easy way to navigate back to home
+ * 
+ * When this page appears:
+ * - User types wrong URL (e.g., /videosss instead of /videos)
+ * - Clicks broken link
+ * - Tries to access deleted content
+ * 
+ * Design:
+ * - Large "404" text for immediate recognition
+ * - Explanation message
+ * - "Go Back Home" button
+ * - Same background as login/register pages for consistency
+ */
 const NotFoundPage = () => {
     const navigate = useNavigate()
 
