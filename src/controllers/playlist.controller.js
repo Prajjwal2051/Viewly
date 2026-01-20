@@ -53,7 +53,7 @@ import mongoose, { mongo } from "mongoose"
  */
 const createPlayList = asyncHandler(async (req, res) => {
     console.log("\n" + "=".repeat(60))
-    console.log("📜 CREATE PLAYLIST REQUEST")
+    console.log(" CREATE PLAYLIST REQUEST")
     console.log("=".repeat(60))
 
     // STEP 1: Extract playlist data from request body
@@ -66,54 +66,54 @@ const createPlayList = asyncHandler(async (req, res) => {
     // Populated by auth middleware after JWT verification
     const userId = req.user._id
 
-    console.log("\n[STEP 1] 📝 Extracting Playlist Data")
-    console.log("   ➜ Name:", name || "(not provided)")
+    console.log("\n[STEP 1]  Extracting Playlist Data")
+    console.log("   Name:", name || "(not provided)")
     console.log(
-        "   ➜ Description:",
+        "   Description:",
         description
             ? `"${description.substring(0, 50)}${description.length > 50 ? "..." : ""}"`
             : "(not provided)"
     )
-    console.log("   ➜ Visibility:", isPublic ? "Public" : "Private")
-    console.log("   ➜ User:", req.user?.username)
+    console.log("   Visibility:", isPublic ? "Public" : "Private")
+    console.log("   User:", req.user?.username)
 
-    console.log("\n[STEP 2] ✅ Validating Playlist Name")
+    console.log("\n[STEP 2] Validating Playlist Name")
     // STEP 3: Validate playlist name is provided and not empty
     // Trim whitespace to prevent names with only spaces
     if (!name || name.trim() === "") {
-        console.log("   ❌ Playlist name is required")
+        console.log("   Playlist name is required")
         throw new ApiError(400, "Playlist name is required")
     }
-    console.log("   ✓ Name is provided")
+    console.log("   Name is provided")
 
     // STEP 4: Validate playlist name length
     // Prevents excessively long names that could break UI
     // Note: .length is a property, not a method (removed parentheses)
     if (name.trim().length > 100) {
         console.log(
-            "   ❌ Name exceeds 100 character limit (",
+            "   Name exceeds 100 character limit (",
             name.trim().length,
             "characters)"
         )
         throw new ApiError(400, "Name cannot be more than 100 characters")
     }
     console.log(
-        "   ✓ Name length is valid (",
+        "   Name length is valid (",
         name.trim().length,
         "characters)"
     )
 
-    console.log("\n[STEP 3] ✅ Validating Description")
+    console.log("\n[STEP 3] Validating Description")
     // STEP 5: Validate description length (if provided)
     // Description is optional, but if provided must be under 500 chars
     if (description && description.trim().length > 500) {
-        console.log("   ❌ Description exceeds 500 character limit")
+        console.log("   Description exceeds 500 character limit")
         throw new ApiError(400, "Description cannot exceed 500 characters")
     }
     if (description) {
-        console.log("   ✓ Description length is valid")
+        console.log("   Description length is valid")
     } else {
-        console.log("   ➜ No description provided")
+        console.log("   No description provided")
     }
 
     // STEP 6: Create new playlist document in database

@@ -1,3 +1,9 @@
+// ============================================
+// PLAYLISTS PAGE - PLAYLIST MANAGEMENT
+// ============================================
+// Displays user's playlists with filtering and creation options.
+// Allows organizing videos into collections for easy access.
+
 import React, { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
@@ -8,6 +14,29 @@ import EmptyState from "../components/ui/EmptyState"
 import { ListVideo, Plus, Loader2, Globe, Lock } from "lucide-react"
 import toast from "react-hot-toast"
 
+/**
+ * PLAYLISTS PAGE COMPONENT
+ * 
+ * Purpose:
+ * - Display all playlists created by the user
+ * - Filter playlists by visibility (all, public, private)
+ * - Create new playlists
+ * 
+ * Key Features:
+ * - Grid layout for playlist cards
+ * - "Create Playlist" button
+ * - Filter tabs (All, Public, Private)
+ * - Click to view playlist details
+ * 
+ * Use Cases:
+ * - Organize favorite videos into themed collections
+ * - Create watch-later lists
+ * - Share curated video collections with others
+ * 
+ * Privacy Settings:
+ * - Public: Anyone can view (shows in search, shareable)
+ * - Private: Only owner can view (hidden from others)
+ */
 const PlaylistsPage = () => {
     const { user } = useSelector((state) => state.auth)
     const navigate = useNavigate()
@@ -78,21 +107,19 @@ const PlaylistsPage = () => {
                     <div className="flex gap-2 border-b border-gray-700 overflow-x-auto scrollbar-hide">
                         <button
                             onClick={() => setFilter("all")}
-                            className={`px-3 md:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm md:text-base ${
-                                filter === "all"
+                            className={`px-3 md:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm md:text-base ${filter === "all"
                                     ? "text-red-600 border-b-2 border-red-600"
                                     : "text-gray-400 hover:text-white"
-                            }`}
+                                }`}
                         >
                             All ({playlists.length})
                         </button>
                         <button
                             onClick={() => setFilter("public")}
-                            className={`px-3 md:px-4 py-2 font-medium transition-colors flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${
-                                filter === "public"
+                            className={`px-3 md:px-4 py-2 font-medium transition-colors flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${filter === "public"
                                     ? "text-red-600 border-b-2 border-red-600"
                                     : "text-gray-400 hover:text-white"
-                            }`}
+                                }`}
                         >
                             <Globe size={14} className="md:w-4 md:h-4" />
                             Public ({playlists.filter((p) => p.isPublic).length}
@@ -100,11 +127,10 @@ const PlaylistsPage = () => {
                         </button>
                         <button
                             onClick={() => setFilter("private")}
-                            className={`px-3 md:px-4 py-2 font-medium transition-colors flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${
-                                filter === "private"
+                            className={`px-3 md:px-4 py-2 font-medium transition-colors flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${filter === "private"
                                     ? "text-red-600 border-b-2 border-red-600"
                                     : "text-gray-400 hover:text-white"
-                            }`}
+                                }`}
                         >
                             <Lock size={14} className="md:w-4 md:h-4" />
                             Private (
@@ -135,15 +161,15 @@ const PlaylistsPage = () => {
                             filter === "all"
                                 ? "No playlists yet"
                                 : filter === "public"
-                                  ? "No public playlists"
-                                  : "No private playlists"
+                                    ? "No public playlists"
+                                    : "No private playlists"
                         }
                         description={
                             filter === "all"
                                 ? "Create your first playlist to organize your favorite videos"
                                 : filter === "public"
-                                  ? "Create a public playlist to share with others"
-                                  : "Create a private playlist for personal use"
+                                    ? "Create a public playlist to share with others"
+                                    : "Create a private playlist for personal use"
                         }
                         actionLabel="Create Playlist"
                         onAction={() => setShowCreateModal(true)}

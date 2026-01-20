@@ -4,7 +4,7 @@
 // Central routing hub that controls which pages users can see.
 // Protects routes requiring login and manages navigation flow.
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, lazy, Suspense } from "react"
 import {
     Routes,
     Route,
@@ -13,27 +13,41 @@ import {
     useNavigate,
 } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
-import { Toaster } from "react-hot-toast"
-import { loginSuccess, logout } from "./store/slices/authSlice"
+import toast, { Toaster } from "react-hot-toast"
+import { loginFailure, loginSuccess, logout } from "./store/slices/authSlice"
 import { getCurrentUser } from "./api/authApi"
 import { Loader2 } from "lucide-react"
 
-// Page Components
-import HomePage from "./pages/HomePage"
-import LoginPage from "./pages/LoginPage"
-import RegisterPage from "./pages/RegisterPage"
-import SettingsPage from "./pages/SettingsPage"
-import UploadPage from "./pages/UploadPage"
-import ProfilePage from "./pages/ProfilePage"
-import VideoPlayerPage from "./pages/VideoPlayerPage"
-import DashboardPage from "./pages/DashboardPage"
-import SearchPage from "./pages/SearchPage"
-import DiscoverPage from "./pages/DiscoverPage"
-import ActivityPage from "./pages/ActivityPage"
-import NotFoundPage from "./pages/NotFoundPage"
-import TweetPage from "./pages/TweetPage"
-import PlaylistsPage from "./pages/PlaylistsPage"
-import PlaylistDetailPage from "./pages/PlaylistDetailPage"
+// Lazy load all page components for code splitting
+const HomePage = lazy(() => import("./pages/HomePage"))
+const LandingPage = lazy(() => import("./pages/LandingPage"))
+const LoginPage = lazy(() => import("./pages/LoginPage"))
+const RegisterPage = lazy(() => import("./pages/RegisterPage"))
+const SettingsPage = lazy(() => import("./pages/SettingsPage"))
+const UploadPage = lazy(() => import("./pages/UploadPage"))
+const ProfilePage = lazy(() => import("./pages/ProfilePage"))
+const VideoPlayerPage = lazy(() => import("./pages/VideoPlayerPage"))
+const DashboardPage = lazy(() => import("./pages/DashboardPage"))
+const SearchPage = lazy(() => import("./pages/SearchPage"))
+const DiscoverPage = lazy(() => import("./pages/DiscoverPage"))
+const ActivityPage = lazy(() => import("./pages/ActivityPage"))
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"))
+const TweetPage = lazy(() => import("./pages/TweetPage"))
+const PlaylistsPage = lazy(() => import("./pages/PlaylistsPage"))
+const PlaylistDetailPage = lazy(() => import("./pages/PlaylistDetailPage"))
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"))
+const SubscriptionsPage = lazy(() => import("./pages/SubscriptionsPage"))
+const SubscribersPage = lazy(() => import("./pages/SubscribersPage"))
+const LikedCommentsPage = lazy(() => import("./pages/LikedCommentsPage"))
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"))
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"))
+
+// Loading component for Suspense fallback
+const LoadingSpinner = () => (
+    <div className="flex items-center justify-center h-screen bg-[#1E2021]">
+        <Loader2 className="w-12 h-12 animate-spin text-red-600" />
+    </div>
+)
 
 // Context
 import { ThemeProvider } from "./context/ThemeContext"
@@ -77,33 +91,90 @@ function App() {
     const location = useLocation()
     const navigate = useNavigate()
     const dispatch = useDispatch()
+    const { isAuthenticated } = useSelector((state) => state.auth)
     const background = location.state && location.state.background
     const [loading, setLoading] = useState(true)
 
+    /**
+     * CHECK AUTHENTICATION ON APP LOAD
+     *
+     * How it works:
+     * 1. App loads
+     * 2. Call /current-user endpoint
+     * 3. Browser automatically sends accessToken cookie
+     * 4. If valid → Get user data → Update Redux
+     * 5. If invalid (401) → Interceptor tries refresh → Redirects if needed
+     *
+     * No need to check localStorage - cookies handle everything!
+     */
     useEffect(() => {
         const checkAuth = async () => {
-            const token = localStorage.getItem("accessToken")
-            if (token) {
-                try {
-                    const response = await getCurrentUser()
-                    const user = response.data || response // Adjust based on API response structure
-                    if (user) {
-                        dispatch(loginSuccess(user))
-                    } else {
-                        dispatch(logout())
-                    }
-                } catch (error) {
-                    console.error("Auth check failed:", error)
-                    dispatch(logout())
+            try {
+                // Browser automatically sends cookies with this request
+                const response = await getCurrentUser()
+                if (response.data?.user) {
+                    dispatch(loginSuccess(response.data.user))
+                    console.log("User authenticated from cookie")
                 }
-            } else {
-                dispatch(logout())
+            } catch (error) {
+                // 401 error will be handled by interceptor (auto-refresh or redirect)
+                // Other errors just mean user is not logged in
+                console.log("No Active Session")
+                dispatch(loginFailure(null))
+            } finally {
+                // Always set loading to false after auth check completes
+                setLoading(false)
             }
-            setLoading(false)
+
+            // const token = localStorage.getItem("accessToken")
+            // if (token) {
+            //     try {
+            //         const response = await getCurrentUser()
+            //         const user = response.data || response // Adjust based on API response structure
+            //         if (user) {
+            //             dispatch(loginSuccess(user))
+            //         } else {
+            //             dispatch(logout())
+            //         }
+            //     } catch (error) {
+            //         console.error("Auth check failed:", error)
+            //         dispatch(logout())
+            //     }
+            // } else {
+            //     dispatch(logout())
+            // }
+            // setLoading(false)
         }
 
         checkAuth()
     }, [dispatch])
+
+    /**
+     * Optional: Clean up old localStorage tokens on app load
+     * Run this once to migrate existing users
+     */
+
+    useEffect(() => {
+        const migrateAuth = () => {
+            const hasOldToken =
+                localStorage.getItem("accessToken") ||
+                localStorage.getItem("refreshToken")
+
+            if (hasOldToken) {
+                console.log("Cleaning up old localStorage Tokens...")
+
+                localStorage.removeItem("accessToken")
+                localStorage.removeItem("refreshToken")
+
+                console.log("Migration is completed - using secure cookies now")
+                toast.success("Security upgrade applied! ", {
+                    duration: 3000,
+                    icon: "🔒",
+                })
+            }
+        }
+        migrateAuth()
+    }, [])
 
     if (loading) {
         return (
@@ -118,203 +189,266 @@ function App() {
             {/* Toast notifications - displays success/error messages globally */}
             <Toaster position="top-right" />
 
-            <Routes location={background || location}>
-                {/* PUBLIC ROUTES - No login required */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-
-                {/* PROTECTED ROUTES - All require authentication
-                Each route wraps its page in ProtectedRoute → MainLayout → Page */}
-                <Route
-                    path="/"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <HomePage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/settings"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <SettingsPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/upload"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <UploadPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/video/:videoId"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <VideoPlayerPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* DISCOVER PAGE - Content Discovery */}
-                <Route
-                    path="/discover"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <DiscoverPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* ACTIVITY PAGE - Notifications & Activity */}
-                <Route
-                    path="/activity"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <ActivityPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* PLAYLISTS PAGE - User's playlists */}
-                <Route
-                    path="/playlists"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <PlaylistsPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* PLAYLIST DETAIL PAGE - Single playlist view */}
-                <Route
-                    path="/playlists/:playlistId"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <PlaylistDetailPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* TWEET PAGE - Detail view for tweets */}
-                <Route
-                    path="/tweet/:tweetId"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <TweetPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* USER PROFILE PAGE */}
-                <Route
-                    path="/profile"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <ProfilePage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* DASHBOARD PAGE - Creator Stats & Video Management */}
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <DashboardPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* SEARCH PAGE - Video Search Results */}
-                <Route
-                    path="/search"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <SearchPage />
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* CHANNEL PAGE (Public Profile) */}
-                <Route
-                    path="/channel/:username"
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <ProfilePage />{" "}
-                                {/* Reusing ProfilePage for now, ideally ChannelPage */}
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
-                <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-
-            {/* MODAL ROUTES - Rendered on top of everything when background exists */}
-            {background && (
-                <Routes>
+            {/* Suspense wrapper for lazy-loaded routes */}
+            <Suspense fallback={<LoadingSpinner />}>
+                <Routes location={background || location}>
+                    {/* PUBLIC ROUTES - No login required */}
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
                     <Route
-                        path="/tweet/:tweetId"
+                        path="/forgot-password"
+                        element={<ForgotPasswordPage />}
+                    />
+                    <Route
+                        path="/reset-password/:token"
+                        element={<ResetPasswordPage />}
+                    />
+
+                    {/* PROTECTED ROUTES - All require authentication
+                Each route wraps its page in ProtectedRoute → MainLayout → Page */}
+                    <Route
+                        path="/"
                         element={
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                                <div
-                                    className="absolute inset-0"
-                                    onClick={() => navigate(-1)}
-                                />
-                                <div className="relative z-10 w-full max-w-7xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
-                                    <TweetPage isModal={true} />
-                                </div>
-                            </div>
+                            isAuthenticated ? (
+                                <MainLayout>
+                                    <HomePage />
+                                </MainLayout>
+                            ) : (
+                                <LandingPage />
+                            )
+                        }
+                    />
+
+                    <Route
+                        path="/settings"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SettingsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/upload"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <UploadPage />
+                                </MainLayout>
+                            </ProtectedRoute>
                         }
                     />
 
                     <Route
                         path="/video/:videoId"
                         element={
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                                <div
-                                    className="absolute inset-0"
-                                    onClick={() => navigate(-1)}
-                                />
-                                <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl bg-[#1E2021]">
-                                    <VideoPlayerPage isModal={true} />
-                                </div>
-                            </div>
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <VideoPlayerPage />
+                                </MainLayout>
+                            </ProtectedRoute>
                         }
                     />
+
+                    {/* DISCOVER PAGE - Content Discovery */}
+                    <Route
+                        path="/discover"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <DiscoverPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* ACTIVITY PAGE - Notifications & Activity */}
+                    <Route
+                        path="/activity"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ActivityPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* PLAYLISTS PAGE - User's playlists */}
+                    <Route
+                        path="/playlists"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <PlaylistsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* PLAYLIST DETAIL PAGE - Single playlist view */}
+                    <Route
+                        path="/playlists/:playlistId"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <PlaylistDetailPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* NOTIFICATIONS PAGE - User notifications */}
+                    <Route
+                        path="/notifications"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <NotificationsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* SUBSCRIPTIONS PAGE - Following/Subscribed channels */}
+                    <Route
+                        path="/subscriptions"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SubscriptionsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* SUBSCRIBERS PAGE - Channel followers */}
+                    <Route
+                        path="/channel/:username/subscribers"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SubscribersPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* LIKED COMMENTS PAGE - User's liked comments */}
+                    <Route
+                        path="/liked/comments"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <LikedCommentsPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* TWEET PAGE - Detail view for tweets */}
+                    <Route
+                        path="/tweet/:tweetId"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <TweetPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* USER PROFILE PAGE */}
+                    <Route
+                        path="/profile"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ProfilePage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* DASHBOARD PAGE - Creator Stats & Video Management */}
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <DashboardPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* SEARCH PAGE - Video Search Results */}
+                    <Route
+                        path="/search"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <SearchPage />
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* CHANNEL PAGE (Public Profile) */}
+                    <Route
+                        path="/channel/:username"
+                        element={
+                            <ProtectedRoute>
+                                <MainLayout>
+                                    <ProfilePage />{" "}
+                                    {/* Reusing ProfilePage for now, ideally ChannelPage */}
+                                </MainLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* CATCH-ALL ROUTE - Handles invalid URLs (404 errors) */}
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
+            </Suspense>
+
+            {/* MODAL ROUTES - Rendered on top of everything when background exists */}
+            {background && (
+                <Suspense fallback={null}>
+                    <Routes>
+                        <Route
+                            path="/tweet/:tweetId"
+                            element={
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                    <div
+                                        className="absolute inset-0"
+                                        onClick={() => navigate(-1)}
+                                    />
+                                    <div className="relative z-10 w-full max-w-7xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
+                                        <TweetPage isModal={true} />
+                                    </div>
+                                </div>
+                            }
+                        />
+
+                        <Route
+                            path="/video/:videoId"
+                            element={
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                    <div
+                                        className="absolute inset-0"
+                                        onClick={() => navigate(-1)}
+                                    />
+                                    <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl bg-[#1E2021]">
+                                        <VideoPlayerPage isModal={true} />
+                                    </div>
+                                </div>
+                            }
+                        />
+                    </Routes>
+                </Suspense>
             )}
         </ThemeProvider>
     )

@@ -6,8 +6,16 @@
 
 import { useNavigate, useLocation } from "react-router-dom"
 import { formatDistanceToNow } from "date-fns" // Time formatting library
-import { Play, Share2, MessageCircle, User } from "lucide-react"
+import { Play, Share2, User, Heart } from "lucide-react"
 import toast from "react-hot-toast"
+import { useState, useEffect } from "react"
+import { toggleVideoLike, getIsVideoLiked } from "../../api/likeApi"
+import { useSelector } from "react-redux"
+import {
+    sanitizeVideoTitle,
+    sanitizeDisplayName,
+    sanitizeUsername,
+} from "../../utils/sanitize"
 
 /**
  * Props:
@@ -16,6 +24,26 @@ import toast from "react-hot-toast"
 const VideoCard = ({ video }) => {
     const navigate = useNavigate()
     const location = useLocation()
+    const { user } = useSelector((state) => state.auth)
+    const [isLiked, setIsLiked] = useState(false)
+    const [likesCount, setLikesCount] = useState(video.likes || 0)
+    const [avatarError, setAvatarError] = useState(false)
+
+    // Fetch initial like status when component mounts
+    useEffect(() => {
+        const fetchLikeStatus = async () => {
+            if (user && video._id) {
+                try {
+                    const data = await getIsVideoLiked(video._id)
+                    setIsLiked(data.isLiked)
+                } catch (error) {
+                    // Silent fail - like status will default to false
+                    console.error("Failed to fetch video like status:", error)
+                }
+            }
+        }
+        fetchLikeStatus()
+    }, [video._id, user])
 
     /**
      * FORMAT VIEWS HELPER
@@ -62,13 +90,36 @@ const VideoCard = ({ video }) => {
         e.stopPropagation()
         const link = `${window.location.origin}/video/${video._id}`
         navigator.clipboard.writeText(link)
-        // Show toast notification
-        const toast = document.createElement("div")
-        toast.textContent = "Link copied!"
-        toast.className =
-            "fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-2"
-        document.body.appendChild(toast)
-        setTimeout(() => toast.remove(), 2000)
+        toast.success("Link copied to clipboard!")
+    }
+
+    const handleLike = async (e) => {
+        e.stopPropagation()
+
+        if (!user) {
+            toast.error("Please login to like videos")
+            return
+        }
+
+        // Optimistic update
+        const wasLiked = isLiked
+        const newLikedState = !isLiked
+        setIsLiked(newLikedState)
+        setLikesCount((prev) => {
+            const newCount = newLikedState ? prev + 1 : prev - 1
+            return Math.max(0, newCount) // Prevent negative counts
+        })
+
+        try {
+            await toggleVideoLike(video._id)
+            // Show success toast with context
+            toast.success(newLikedState ? "Liked" : "Unliked")
+        } catch (error) {
+            // Revert on error
+            setIsLiked(wasLiked)
+            setLikesCount((prev) => (newLikedState ? prev - 1 : prev + 1))
+            toast.error("Failed to like video")
+        }
     }
 
     return (
@@ -81,13 +132,13 @@ const VideoCard = ({ video }) => {
             className="group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer shadow-lg bg-[#2A2D2E] hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] transition-all duration-300 border border-transparent hover:border-white/10 flex flex-col"
         >
             {/* TOP SECTION: VIDEO THUMBNAIL & OVERLAY */}
-            <div className="relative w-full isolate overflow-hidden bg-[#1E2021]">
+            <div className="relative w-full h-[250px] isolate overflow-hidden bg-[#1E2021]">
                 <img
                     src={
                         video.thumbNail || "https://via.placeholder.com/640x360"
                     }
                     alt={video.title}
-                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {/* DURATION BADGE */}
@@ -97,23 +148,23 @@ const VideoCard = ({ video }) => {
 
                 {/* HOVER OVERLAY - PLAY & ACTIONS */}
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-6 z-10">
-                    {/* Comment Action */}
+                    {/* Like Action */}
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            // Pass openComments: true in state
-                            navigate(`/video/${video._id}`, {
-                                state: {
-                                    background: location,
-                                    openComments: true,
-                                },
-                            })
-                        }}
+                        onClick={handleLike}
                         className="flex flex-col items-center gap-1 group/btn transition-all duration-300 hover:scale-110 active:scale-95"
-                        title="Comment"
+                        title="Like"
                     >
-                        <div className="p-3 rounded-full bg-white/20 text-white hover:bg-white/40 transition-all duration-300">
-                            <MessageCircle size={20} />
+                        <div
+                            className={`p-3 rounded-full transition-all duration-300 ${
+                                isLiked
+                                    ? "bg-red-600 text-white shadow-lg shadow-red-600/40"
+                                    : "bg-white/20 text-white hover:bg-white/40"
+                            }`}
+                        >
+                            <Heart
+                                size={22}
+                                fill={isLiked ? "currentColor" : "none"}
+                            />
                         </div>
                     </button>
 
@@ -151,13 +202,14 @@ const VideoCard = ({ video }) => {
             </div>
 
             {/* BOTTOM SECTION: INFO */}
-            <div className="p-3 flex gap-3">
+            <div className="p-3 flex gap-3 bg-[#2A2D2E]">
                 {/* Avatar with Fallback */}
-                {video.owner?.avatar ? (
+                {video.owner?.avatar && !avatarError ? (
                     <img
                         src={video.owner.avatar}
                         alt={video.owner?.username}
-                        className="h-9 w-9 rounded-full object-cover border border-white/10 shrink-0 mt-1"
+                        onError={() => setAvatarError(true)}
+                        className="h-9 w-9 rounded-full object-cover border border-white/10 shrink-0 mt-1 cursor-pointer hover:border-red-500 transition-colors"
                         onClick={(e) => {
                             e.stopPropagation()
                             navigate(`/channel/${video.owner?.username}`)
@@ -165,7 +217,7 @@ const VideoCard = ({ video }) => {
                     />
                 ) : (
                     <div
-                        className="h-9 w-9 rounded-full bg-gray-700 border border-white/10 shrink-0 mt-1 flex items-center justify-center"
+                        className="h-9 w-9 rounded-full bg-gray-700 border border-white/10 shrink-0 mt-1 flex items-center justify-center cursor-pointer hover:border-red-500 transition-colors"
                         onClick={(e) => {
                             e.stopPropagation()
                             navigate(`/channel/${video.owner?.username}`)
@@ -178,7 +230,7 @@ const VideoCard = ({ video }) => {
                 <div className="flex flex-col min-w-0">
                     {/* Title - Increased Font Size */}
                     <h3 className="text-white font-semibold text-base line-clamp-2 leading-tight mb-1 group-hover:text-red-400 transition-colors">
-                        {video.title}
+                        {sanitizeVideoTitle(video.title)}
                     </h3>
 
                     {/* Channel Name */}
@@ -189,14 +241,20 @@ const VideoCard = ({ video }) => {
                             navigate(`/channel/${video.owner?.username}`)
                         }}
                     >
-                        {video.owner?.fullName || video.owner?.username}
+                        {sanitizeDisplayName(
+                            video.owner?.fullName || video.owner?.username
+                        )}
                     </p>
 
                     {/* Stats - Adjusted */}
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap overflow-hidden">
                         <span>{formatViews(video.views)} views</span>
                         <span>•</span>
-                        <span>{formatDate(video.createdAt)}</span>
+                        <span>{formatViews(likesCount)} likes</span>
+                        <span>•</span>
+                        <span className="truncate">
+                            {formatDate(video.createdAt)}
+                        </span>
                     </div>
                 </div>
             </div>

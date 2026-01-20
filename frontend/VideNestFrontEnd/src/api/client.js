@@ -41,7 +41,7 @@ const apiClient = axios.create({
  *
  * Flow:
  * 1. User calls API (e.g., apiClient.get('/videos'))
- * 2. Interceptor runs → checks localStorage for token
+ * 2. Interceptor runs → checks localStorage for token ( with Credientals:true this is not needed as browser automatically handles it from)
  * 3. If token exists → adds to Authorization header
  * 4. Request sent to backend with token
  * 5. Backend verifies token and responds
@@ -49,13 +49,19 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
     (config) => {
         // Retrieve accessToken from localStorage (stored during login)
-        const token = localStorage.getItem("accessToken") // Note: Fix typo → "accessToken" later
 
-        // If token exists, attach it to request headers
-        if (token) {
-            // Backend expects: "Authorization: Bearer <token>"
-            config.headers.Authorization = `Bearer ${token}`
-        }
+        // this is commented out because browser automatically includes cookies with withCredentials:true
+        // const token = localStorage.getItem("accessToken") // Note: Fix typo → "accessToken" later
+
+        // // If token exists, attach it to request headers
+        // if (token) {
+        //     // Backend expects: "Authorization: Bearer <token>"
+        //     config.headers.Authorization = `Bearer ${token}`
+        // }
+
+        // just adding a request Id for debugging
+        config.headers["X-Request-Id"] =
+            `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
         // Return modified config (request proceeds with token)
         return config
@@ -75,13 +81,18 @@ apiClient.interceptors.request.use(
  *
  * Purpose:
  * - Unwrap backend response (return just .data instead of full Axios response)
- * - Handle errors globally (401 → auto logout, network errors → friendly message)
+ * - Handle errors globally (401 → auto logout, 429 → rate limit toast, network errors → friendly message)
  *
  * Flow:
  * 1. Backend responds: { statusCode: 200, data: {...}, message: "Success", success: true }
  * 2. Interceptor unwraps → returns just {...} to your component
  * 3. Components get clean data without manual extraction
  */
+
+// Import toast for notifications
+import toast from "react-hot-toast"
+import { Thermometer } from "lucide-react"
+
 apiClient.interceptors.response.use(
     (response) => {
         // SUCCESS: Return only the data object
@@ -89,27 +100,157 @@ apiClient.interceptors.response.use(
         // With this: response.data.videos ✅
         return response.data // ApiResponse { statusCode, data, message, success }
     },
-    (error) => {
+    async (error) => {
+        const originalRequest = error.config
+        const currentPath = window.location.pathname
+        const isPublicPage = [
+            "/login",
+            "/register",
+            "/forgot-password",
+            "/",
+        ].includes(currentPath)
+        const isAuthCheckRequest = originalRequest.url?.includes(
+            "/users/current-user"
+        )
+
+        // Only log errors that aren't expected (not 401 on public pages or auth check)
+        if (
+            !(
+                error.response?.status === 401 &&
+                (isPublicPage || isAuthCheckRequest)
+            )
+        ) {
+            console.error("[API Client] Request error:", {
+                url: error.config?.url,
+                status: error.response?.status,
+                message: error.response?.data?.message,
+            })
+        }
+
+        // Handle 401 Unauthorized - Token expired and it is also XSS attack free
+
+        if (error.response?.status === 401) {
+            //if the user is already in auth pages then we should not redirect them
+            if (
+                currentPath !== "/login" &&
+                currentPath !== "/register" &&
+                currentPath !== "/forgot-password"
+            ) {
+                if (originalRequest.url?.includes("/users/refresh-token")) {
+                    // token refresh failed - session truly expired
+                    toast.error("Session expired. Please login again", {
+                        id: "session-expired",
+                        duration: 4000,
+                    })
+                    // now i have to redirect it to the login page
+                    setTimeout(() => {
+                        window.location.href = "/login?sessionExpired=true"
+                    }, 1000)
+                } else {
+                    try {
+                        // again we will attempt the refresing token automtically
+                        await axios.post(
+                            `${API_BASE_URL}/users/refresh-token`,
+                            {},
+                            {
+                                withCredentials: true,
+                            }
+                        )
+                        return apiClient(originalRequest)
+                    } catch (refreshError) {
+                        toast.error("Session expired. Please login again", {
+                            id: "session-expired",
+                            duration: 4000,
+                        })
+                        // now i have to redirect it to the login page
+                        setTimeout(() => {
+                            window.location.href = "/login?sessionExpired=true"
+                        }, 1000)
+                    }
+                }
+            }
+        }
+        // if (error.response?.status === 401) {
+        //     const currentPath = window.location.pathname
+        //     // Only redirect if not already on login/register page
+        //     if (currentPath !== "/login" && currentPath !== "/register") {
+        //         // Clear tokens
+        //         localStorage.removeItem("accessToken")
+        //         localStorage.removeItem("refreshToken")
+
+        //         // Show error message
+        //         toast.error("Session expired. Please login again.")
+
+        //         // Redirect to login
+        //         window.location.href = "/login"
+        //     }
+        // }
+
+        // Handle 403 Forbidden - Access denied
+        if (error.response?.status === 403) {
+            const message =
+                error.response?.data?.message ||
+                "You don't have permission to access this resource."
+
+            toast.error(message, {
+                duration: 4000,
+                icon: "🚫",
+            })
+        }
+
+        // Handle 429 Too Many Requests - Rate limit exceeded
+        if (error.response?.status === 429) {
+            const message =
+                error.response?.data?.message ||
+                "Too many requests. Please try again later."
+
+            // Show user-friendly toast notification
+            toast.error(message, {
+                duration: 5000,
+                icon: "⏱️",
+            })
+
+            // Log rate limit headers for debugging
+            const retryAfter = error.response?.headers["retry-after"]
+            const rateLimit = error.response?.headers["ratelimit-limit"]
+            const rateLimitRemaining =
+                error.response?.headers["ratelimit-remaining"]
+
+            console.warn("[Rate Limit] Exceeded:", {
+                message,
+                retryAfter,
+                limit: rateLimit,
+                remaining: rateLimitRemaining,
+            })
+        }
+
         // ERROR HANDLING
         if (error.response) {
             // Backend responded with error (4xx, 5xx status codes)
-            const { status, data } = error.response
-
-            // 401 Unauthorized: Token expired or invalid
-            if (status === 401) {
-                console.log("Token expired, redirecting to login...")
-                // Clear invalid token and force re-login
-                localStorage.removeItem("accessToken")
-                window.location.href = "/login"
-            }
+            const { data } = error.response
 
             // Return backend error (ApiError { statusCode, message, success: false })
             return Promise.reject(data)
         }
 
         // NETWORK ERROR: Backend unreachable (server down, no internet)
+
+        if (error.request) {
+            console.log("[API Client] Network error - no response received")
+            return Promise.reject({
+                message: "Network error. Please check your connection",
+                type: "NETWORK_ERROR",
+            })
+        }
+
+        // Handle request setup errors
+        console.error(
+            "[API Client] Request configuration error:",
+            error.message
+        )
         return Promise.reject({
-            message: "Network error. Please check your connection.",
+            message: "Request failed. Please try again.",
+            type: "REQUEST_ERROR",
         })
     }
 )

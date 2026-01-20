@@ -64,6 +64,19 @@ body {
     animation-delay: 600ms;
 }
 
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+}
+
 /* CUSTOM SCROLLBAR - Dark theme */
 ::-webkit-scrollbar {
     width: 10px;

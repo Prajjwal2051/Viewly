@@ -1,4 +1,42 @@
+// ============================================
+// TWEET CARD SKELETON - LOADING PLACEHOLDER FOR TWEETS
+// ============================================
+// Animated placeholder shown while photo posts are loading.
+// Matches TweetCard layout for smooth transition when real data loads.
+
 import React from "react"
+
+/**
+ * TWEET CARD SKELETON COMPONENT
+ * 
+ * Purpose:
+ * - Show loading placeholder for tweet cards
+ * - Improve perceived performance
+ * - Prevent layout shift when content loads
+ * 
+ * Why use skeletons instead of spinners?
+ * - Gives users preview of upcoming layout
+ * - Makes loading feel faster
+ * - Less jarring than empty space
+ * - Better UX than blocking spinner
+ * 
+ * Animation Details:
+ * - animate-pulse: Tailwind class for breathing effect
+ * - animate-shimmer: Custom gradient sweep animation
+ * - Gray placeholders match content positions
+ * 
+ * Layout Structure:
+ * - Image placeholder (matches tweet image area)
+ * - Text lines (matches tweet content)
+ * - Avatar circle (matches user profile pic)
+ * - Username placeholder
+ * - Like count placeholder
+ * 
+ * Performance:
+ * - Pure CSS animations (no JavaScript)
+ * - GPU-accelerated transforms
+ * - Lightweight and performant
+ */
 
 const TweetCardSkeleton = () => {
     return (

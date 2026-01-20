@@ -4,23 +4,58 @@
 // Displays tweet content, image, and owner info.
 // Used in profile page and tweet feed.
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Heart, MessageCircle, Share2, User } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { toggleTweetLike } from "../../api/tweetApi"
+import { getIsTweetLiked } from "../../api/likeApi"
 import { toast } from "react-hot-toast"
 import { useNavigate, useLocation } from "react-router-dom"
+import { getOptimizedUrl } from "../../utils/imageUrlHelper"
+import { useSelector } from "react-redux"
+import {
+    sanitizeTweetContent,
+    sanitizeDisplayName,
+    sanitizeUsername,
+} from "../../utils/sanitize"
 
 const TweetCard = ({ tweet }) => {
     const navigate = useNavigate()
     const location = useLocation()
+    const { user } = useSelector((state) => state.auth)
     const [isLiked, setIsLiked] = useState(false)
     const [likesCount, setLikesCount] = useState(tweet.likes || 0)
+    const [avatarError, setAvatarError] = useState(false)
 
     console.log(`TweetCard: ${tweet._id}`, {
         image: tweet.image,
         content: tweet.content,
     })
+
+    // Fetch initial like status when component mounts
+    useEffect(() => {
+        const fetchLikeStatus = async () => {
+            if (user && tweet._id) {
+                try {
+                    console.log(
+                        `[TweetCard] Fetching like status for tweet: ${tweet._id}`
+                    )
+                    const data = await getIsTweetLiked(tweet._id)
+                    console.log(`[TweetCard] Like status response:`, data)
+                    // Backend returns 'isLiked' (capital L) from getIsTweetLiked
+                    setIsLiked(data.isLiked || false)
+                    console.log(
+                        `[TweetCard] Set isLiked to:`,
+                        data.isLiked || false
+                    )
+                } catch (error) {
+                    // Silent fail - like status will default to false
+                    console.error("Failed to fetch tweet like status:", error)
+                }
+            }
+        }
+        fetchLikeStatus()
+    }, [tweet._id, user])
 
     const handleShare = (e) => {
         e.stopPropagation()
@@ -36,14 +71,32 @@ const TweetCard = ({ tweet }) => {
 
     const handleLike = async (e) => {
         e.stopPropagation()
+
+        if (!user) {
+            toast.error("Please login to like tweets")
+            return
+        }
+
+        // Optimistic update
+        const wasLiked = isLiked
+        const newLikedState = !isLiked
+        setIsLiked(newLikedState)
+        setLikesCount((prev) => {
+            const newCount = newLikedState ? prev + 1 : prev - 1
+            return Math.max(0, newCount) // Prevent negative counts
+        })
+
         try {
-            const response = await toggleTweetLike(tweet._id)
-            setIsLiked(response.data.isliked)
-            setLikesCount((prev) =>
-                response.data.isliked ? prev + 1 : prev - 1
-            )
+            await toggleTweetLike(tweet._id)
+            // Show success toast with context
+            toast.success(newLikedState ? "Liked" : "Unliked")
         } catch (error) {
-            toast.error("Failed to like post")
+            // Log the error for debugging
+            console.error("Error liking tweet:", error)
+            // Revert on error
+            setIsLiked(wasLiked)
+            setLikesCount((prev) => (newLikedState ? prev - 1 : prev + 1))
+            toast.error("Failed to like tweet")
         }
     }
 
@@ -60,23 +113,20 @@ const TweetCard = ({ tweet }) => {
     return (
         <div
             onClick={() =>
-                hasImage &&
                 navigate(`/tweet/${tweet._id}`, {
                     state: { background: location },
                 })
             }
-            className={`group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E] transition-all duration-300 border border-transparent flex flex-col hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] hover:border-white/10 ${
-                !hasImage ? "min-h-[300px]" : "cursor-pointer"
-            }`}
+            className={`group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden shadow-lg bg-[#2A2D2E] transition-all duration-300 border border-transparent flex flex-col hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] hover:border-white/10 cursor-pointer`}
         >
             {/* TOP SECTION: IMAGE & ACTIONS OVERLAY - Only show if image exists */}
             {hasImage && (
-                <div className="relative w-full isolate overflow-hidden bg-[#1E2021]">
+                <div className="relative w-full h-[400px] isolate overflow-hidden bg-[#1E2021]">
                     {/* Image */}
                     <img
                         src={getOptimizedUrl(tweet.image, { width: 600 })} // Resize to ~600px width (enough for card)
-                        alt={tweet.content}
-                        className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                        alt={sanitizeTweetContent(tweet.content)}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
 
                     {/* HOVER OVERLAY - ACTION ICONS */}
@@ -138,7 +188,7 @@ const TweetCard = ({ tweet }) => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation()
-                            handleLike()
+                            handleLike(e)
                         }}
                         className="flex flex-col items-center gap-1 group/btn transition-transform hover:scale-110"
                         title="Like"
@@ -184,23 +234,30 @@ const TweetCard = ({ tweet }) => {
 
             {/* BOTTOM SECTION: TEXT & INFO */}
             <div
-                className={`p-5 flex flex-col gap-4 ${!hasImage ? "flex-1 justify-between h-full relative" : ""}`}
+                onClick={() =>
+                    !hasImage &&
+                    navigate(`/tweet/${tweet._id}`, {
+                        state: { background: location },
+                    })
+                }
+                className={`p-5 flex flex-col gap-4 ${!hasImage ? "flex-1 justify-between h-full relative cursor-pointer" : ""}`}
             >
                 {/* Content */}
                 <p
                     className={`text-white font-medium leading-relaxed ${!hasImage ? "text-xl line-clamp-6" : "text-lg line-clamp-2 mb-2"}`}
                 >
-                    {tweet.content}
+                    {sanitizeTweetContent(tweet.content)}
                 </p>
 
                 {/* Owner Info & Likes */}
                 <div className="flex items-center justify-between mt-auto pt-2 relative z-20">
                     <div className="flex items-center gap-3">
                         {/* Avatar */}
-                        {tweet.ownerDetails?.avatar ? (
+                        {tweet.ownerDetails?.avatar && !avatarError ? (
                             <img
                                 src={tweet.ownerDetails.avatar}
                                 alt={tweet.ownerDetails?.username}
+                                onError={() => setAvatarError(true)}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     navigate(

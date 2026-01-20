@@ -52,7 +52,8 @@ const registerUser = async (formData) => {
  * 5. refreshToken sent in HTTP-only cookie (automatically stored by browser)
  *
  * Why two tokens?
- * - accessToken: Short-lived (1 day), stored in localStorage, sent with every request
+ * ( from now we will be using cookies and not storing tokens in the local storage:) )
+ * - accessToken: Short-lived (1 day), stored in localStorage ( from now we will be using cookies and not storing in the local storage:) ), sent with every request
  * - refreshToken: Long-lived (10 days), in cookie, used to get new accessToken when it expires
  *
  * @param {Object} credentials - { username/email, password }
@@ -71,7 +72,7 @@ const loginUser = async (credentials) => {
  * What happens?
  * 1. Backend clears refreshToken from cookie
  * 2. Backend removes refreshToken from user document in DB
- * 3. Frontend must clear accessToken from localStorage (done in component)
+ * 3. Frontend must clear accessToken from localStorage (done in component) // update it as we are using cookies
  *
  * Security note:
  * - Must send request to backend (can't just clear localStorage)
@@ -134,6 +135,49 @@ const refreshAccessToken = async () => {
     return response.data // Contains new accessToken
 }
 
+/**
+ * REQUEST PASSWORD RESET
+ * Sends email with reset link to user
+ *
+ * Backend: POST /api/v1/users/forgot-password
+ *
+ * What happens?
+ * 1. User provides email address
+ * 2. Backend generates reset token and sends email
+ * 3. User receives email with reset link (15 min expiry)
+ *
+ * @param {string} email - User's email address
+ * @returns {Promise<Object>} Success message
+ */
+const forgotPassword = async (email) => {
+    const response = await apiClient.post("/users/forgot-password", { email })
+    return response.data
+}
+
+/**
+ * RESET PASSWORD
+ * Updates password using reset token from email
+ *
+ * Backend: POST /api/v1/users/reset-password/:token
+ *
+ * What happens?
+ * 1. User submits new password with token from URL
+ * 2. Backend validates token and expiry
+ * 3. Backend updates password and clears token
+ * 4. User can login with new password
+ *
+ * @param {string} token - Reset token from URL
+ * @param {Object} data - { password, confirmPassword }
+ * @returns {Promise<Object>} Success message
+ */
+const resetPassword = async (token, data) => {
+    const response = await apiClient.post(
+        `/users/reset-password/${token}`,
+        data
+    )
+    return response.data
+}
+
 // ============================================
 // EXPORTS
 // ============================================
@@ -144,4 +188,6 @@ export {
     logoutUser, // End user session
     getCurrentUser, // Fetch logged-in user data
     refreshAccessToken, // Renew expired accessToken
+    forgotPassword, // Request password reset
+    resetPassword, // Reset password with token
 }

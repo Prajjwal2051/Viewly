@@ -1,3 +1,9 @@
+// ============================================
+// PLAYLIST DETAIL PAGE - PLAYLIST VIDEO VIEW
+// ============================================
+// Shows all videos in a playlist with playback and management options.
+// Allows playlist owner to edit, delete, and reorder videos.
+
 import React, { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
@@ -21,6 +27,29 @@ import {
 } from "lucide-react"
 import toast from "react-hot-toast"
 
+/**
+ * PLAYLIST DETAIL PAGE COMPONENT
+ * 
+ * Purpose:
+ * - Display all videos in a specific playlist
+ * - Show playlist metadata (name, description, video count)
+ * - Allow playlist owner to manage content
+ * 
+ * Key Features:
+ * - Grid layout of videos in playlist
+ * - Edit playlist name/description
+ * - Delete entire playlist
+ * - Remove individual videos from playlist
+ * - Play all videos sequentially
+ * 
+ * Access Control:
+ * - Public playlists: Anyone can view
+ * - Private playlists: Only owner can view
+ * - Edit/Delete: Only owner can perform these actions
+ * 
+ * URL Pattern:
+ * - /playlists/:playlistId → View specific playlist
+ */
 const PlaylistDetailPage = () => {
     const { playlistId } = useParams()
     const navigate = useNavigate()

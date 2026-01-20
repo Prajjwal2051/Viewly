@@ -37,54 +37,54 @@ import { subscription } from "../models/subscription.model.js";
  */
 const toggleSubscription = asyncHandler(async (req, res) => {
     console.log("\n" + "=".repeat(60));
-    console.log("🔔 TOGGLE SUBSCRIPTION REQUEST");
+    console.log(" TOGGLE SUBSCRIPTION REQUEST");
     console.log("=".repeat(60));
 
     // STEP 1: Extract user and channel identifiers
     const userId = req.user._id
     const { channelId } = req.params
 
-    console.log("\n[STEP 1] 📝 Extracting Request Data");
-    console.log("   ➜ User ID:", userId);
-    console.log("   ➜ Channel ID:", channelId);
-    console.log("   ➜ User:", req.user?.username);
+    console.log("\n[STEP 1]  Extracting Request Data");
+    console.log("   User ID:", userId);
+    console.log("   Channel ID:", channelId);
+    console.log("   User:", req.user?.username);
 
-    console.log("\n[STEP 2] ✅ Validating Channel ID");
+    console.log("\n[STEP 2] Validating Channel ID");
     // STEP 2: Validate channel ID is provided
     // (userId check not needed - auth middleware guarantees it exists)
     if (!channelId) {
-        console.log("   ❌ Channel ID not provided");
+        console.log("   Channel ID not provided");
         throw new ApiError(400, "Channel ID not provided")
     }
-    console.log("   ✓ Channel ID provided");
+    console.log("   Channel ID provided");
 
     // STEP 3: Validate channel ID format
     if (!mongoose.isValidObjectId(channelId)) {
-        console.log("   ❌ Invalid MongoDB ObjectId format");
+        console.log("   Invalid MongoDB ObjectId format");
         throw new ApiError(400, "Invalid channel ID format")
     }
-    console.log("   ✓ Channel ID format is valid");
+    console.log("   Channel ID format is valid");
 
-    console.log("\n[STEP 3] 🔒 Checking Self-Subscription");
+    console.log("\n[STEP 3]  Checking Self-Subscription");
     // STEP 4: Prevent self-subscription CRITICAL CHECK
     // Users cannot subscribe to themselves
     if (userId.toString() === channelId.toString()) {
-        console.log("   ❌ User attempting to subscribe to themselves");
+        console.log("   User attempting to subscribe to themselves");
         throw new ApiError(400, "You cannot subscribe to yourself")
     }
-    console.log("   ✓ Not a self-subscription attempt");
+    console.log("   Not a self-subscription attempt");
 
-    console.log("\n[STEP 4] 👤 Verifying Channel Exists");
+    console.log("\n[STEP 4]  Verifying Channel Exists");
     // STEP 5: Verify the channel exists
     const channelExists = await User.findById(channelId)
     if (!channelExists) {
-        console.log("   ❌ Channel not found in database");
+        console.log("   Channel not found in database");
         throw new ApiError(404, "Channel does not exist")
     }
-    console.log("   ✓ Channel found:", channelExists.username);
-    console.log("   ➜ Current Subscriber Count:", channelExists.subscriberCount || 0);
+    console.log("   Channel found:", channelExists.username);
+    console.log("   Current Subscriber Count:", channelExists.subscriberCount || 0);
 
-    console.log("\n[STEP 5] 🔍 Checking Existing Subscription");
+    console.log("\n[STEP 5]  Checking Existing Subscription");
     // STEP 6: Check if subscription relationship already exists
     // This query searches for a matching subscriber-channel pair in the database
     // Result determines whether we subscribe (create) or unsubscribe (delete)
@@ -94,12 +94,12 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     })
 
     if (existingSubscription) {
-        console.log("   ➜ Status: Already subscribed - will UNSUBSCRIBE");
+        console.log("   Status: Already subscribed - will UNSUBSCRIBE");
     } else {
-        console.log("   ➜ Status: Not subscribed - will SUBSCRIBE");
+        console.log("   Status: Not subscribed - will SUBSCRIBE");
     }
 
-    console.log("\n[STEP 6] 🔄 Starting Database Transaction");
+    console.log("\n[STEP 6]  Starting Database Transaction");
     // STEP 7: Initialize MongoDB Transaction Session
     // WHY USE TRANSACTIONS?
     // We need to perform TWO database operations atomically:
@@ -111,26 +111,26 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     // This maintains data integrity (subscriber count always matches actual subscriptions)
     const session = await mongoose.startSession()
     session.startTransaction()
-    console.log("   ✓ Transaction session started");
+    console.log("   Transaction session started");
 
     try {
         // STEP 8: Toggle subscription based on current state
         if (existingSubscription) {
-            console.log("\n[STEP 7] 🔻 Processing UNSUBSCRIBE");
-            // ═══════════════════════════════════════════
+            console.log("\n[STEP 7]  Processing UNSUBSCRIBE");
+            // 
             // CASE A: UNSUBSCRIBE (Subscription exists)
-            // ═══════════════════════════════════════════
+            // 
 
-            console.log("   ➜ Deleting subscription document...");
+            console.log("   Deleting subscription document...");
             // Operation 1: Delete the subscription document from database
             // {session} ensures this is part of the transaction
             await subscription.deleteOne(
                 { _id: existingSubscription._id },
                 { session }
             )
-            console.log("   ✓ Subscription document deleted");
+            console.log("   Subscription document deleted");
 
-            console.log("   ➜ Decrementing subscriber count...");
+            console.log("   Decrementing subscriber count...");
             // Operation 2: Decrement channel's subscriber count by 1
             // $inc operator performs atomic increment/decrement operations
             // Using -1 decreases the count (unsubscribe = one less subscriber)
@@ -141,18 +141,18 @@ const toggleSubscription = asyncHandler(async (req, res) => {
                 },
                 { session }   // Part of same transaction
             )
-            console.log("   ✓ Subscriber count decremented");
+            console.log("   Subscriber count decremented");
 
             // Commit transaction: Both operations successful, make changes permanent
             await session.commitTransaction()
-            console.log("   ✓ Transaction committed successfully");
+            console.log("   Transaction committed successfully");
 
             console.log("\n" + "=".repeat(60));
-            console.log("✅ UNSUBSCRIBED SUCCESSFULLY");
+            console.log("UNSUBSCRIBED SUCCESSFULLY");
             console.log("=".repeat(60));
-            console.log("   👤 User:", req.user.username);
-            console.log("   📺 Channel:", channelExists.username);
-            console.log("   📊 New Subscriber Count:", (channelExists.subscriberCount || 1) - 1);
+            console.log("    User:", req.user.username);
+            console.log("    Channel:", channelExists.username);
+            console.log("    New Subscriber Count:", (channelExists.subscriberCount || 1) - 1);
             console.log("=".repeat(60) + "\n");
 
             // Return success response with unsubscribed state
@@ -166,12 +166,12 @@ const toggleSubscription = asyncHandler(async (req, res) => {
                     )
                 )
         } else {
-            console.log("\n[STEP 7] 🔺 Processing SUBSCRIBE");
-            // ═══════════════════════════════════════════
+            console.log("\n[STEP 7]  Processing SUBSCRIBE");
+            // 
             // CASE B: SUBSCRIBE (Subscription doesn't exist)
-            // ═══════════════════════════════════════════
+            // 
 
-            console.log("   ➜ Creating subscription document...");
+            console.log("   Creating subscription document...");
             // Operation 1: Create new subscription document
             // Links the subscriber (user) to the channel they want to follow
             await subscription.create(
@@ -181,9 +181,9 @@ const toggleSubscription = asyncHandler(async (req, res) => {
                 }],
                 { session }   // Must pass session in array format for create()
             )
-            console.log("   ✓ Subscription document created");
+            console.log("   Subscription document created");
 
-            console.log("   ➜ Incrementing subscriber count...");
+            console.log("   Incrementing subscriber count...");
             // Operation 2: Increment channel's subscriber count by 1
             // $inc with positive value increases the count
             // (new subscription = one more subscriber)
@@ -194,18 +194,18 @@ const toggleSubscription = asyncHandler(async (req, res) => {
                 },
                 { session }   // Part of same transaction
             )
-            console.log("   ✓ Subscriber count incremented");
+            console.log("   Subscriber count incremented");
 
             // Commit transaction: Both operations successful, make changes permanent
             await session.commitTransaction()
-            console.log("   ✓ Transaction committed successfully");
+            console.log("   Transaction committed successfully");
 
             console.log("\n" + "=".repeat(60));
-            console.log("✅ SUBSCRIBED SUCCESSFULLY");
+            console.log("SUBSCRIBED SUCCESSFULLY");
             console.log("=".repeat(60));
-            console.log("   👤 User:", req.user.username);
-            console.log("   📺 Channel:", channelExists.username);
-            console.log("   📊 New Subscriber Count:", (channelExists.subscriberCount || 0) + 1);
+            console.log("    User:", req.user.username);
+            console.log("    Channel:", channelExists.username);
+            console.log("    New Subscriber Count:", (channelExists.subscriberCount || 0) + 1);
             console.log("=".repeat(60) + "\n");
 
             // Return success response with subscribed state
@@ -220,16 +220,16 @@ const toggleSubscription = asyncHandler(async (req, res) => {
                 )
         }
     } catch (error) {
-        console.log("\n❌ TRANSACTION FAILED");
-        console.log("   ➜ Error:", error.message);
-        console.log("   ➜ Rolling back all changes...");
+        console.log("\nTRANSACTION FAILED");
+        console.log("   Error:", error.message);
+        console.log("   Rolling back all changes...");
 
         // ERROR HANDLING: If ANY operation in the transaction fails
         // Roll back ALL changes to maintain database consistency
         // Example: If subscription is created but count update fails,
         // the subscription creation will also be undone
         await session.abortTransaction()
-        console.log("   ✓ Transaction rolled back successfully\n");
+        console.log("   Transaction rolled back successfully\n");
 
         // Throw descriptive error for debugging
         throw new ApiError(500, "Subscription operation failed: " + error.message)
