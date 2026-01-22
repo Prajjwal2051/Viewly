@@ -118,9 +118,7 @@ const registerUser = asyncHandler(async (req, res) => {
     )
     console.log(
         "   - Cover Image:",
-        coverImgLocalPath
-            ? "" + coverImgLocalPath
-            : " Optional (not provided)"
+        coverImgLocalPath ? "" + coverImgLocalPath : " Optional (not provided)"
     )
 
     // STEP 5: Validate avatar is provided (mandatory field)
@@ -141,17 +139,12 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     const coverImg = await uploadOnCloudinary(coverImgLocalPath)
     if (coverImgLocalPath) {
-        console.log(
-            "   - Cover image upload:",
-            coverImg ? "Success" : "Failed"
-        )
+        console.log("   - Cover image upload:", coverImg ? "Success" : "Failed")
     }
 
     // STEP 7: Verify avatar upload was successful
     if (!avatar) {
-        console.log(
-            "REGISTRATION FAILED: Avatar upload to Cloudinary failed"
-        )
+        console.log("REGISTRATION FAILED: Avatar upload to Cloudinary failed")
         throw new ApiError(400, "avatar upload failed")
     }
     console.log("All files uploaded successfully to Cloudinary")
@@ -174,9 +167,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // STEP 9: Retrieve created user from database, excluding sensitive fields
     // The select() method with "-" prefix removes specified fields from the response
-    console.log(
-        " [STEP 9] Fetching created user (excluding sensitive data)..."
-    )
+    console.log(" [STEP 9] Fetching created user (excluding sensitive data)...")
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
@@ -281,7 +272,9 @@ const loginUser = asyncHandler(async (req, res) => {
     // STEP 8: Configure cookie options for security
     const options = {
         httpOnly: true, // Prevents client-side JavaScript from accessing cookies (XSS protection)
-        secure: true, // Ensures cookies are only sent over HTTPS in production
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production, allows HTTP in development
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-site cookie policy
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours (access token lifetime)
     }
 
     console.log(" [STEP 8] Setting secure cookies...")
@@ -348,7 +341,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     // STEP 2: Configure cookie options for clearing
     const options = {
         httpOnly: true, // Prevent client-side JS access
-        secure: true, // Only send over HTTPS
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Match login cookie settings
     }
 
     console.log(" [STEP 2] Clearing cookies from client...")
@@ -404,9 +398,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             )
         }
 
-        console.log(
-            " [STEP 3] Verifying refresh token signature and expiry..."
-        )
+        console.log(" [STEP 3] Verifying refresh token signature and expiry...")
 
         // STEP 3: Verify and decode the refresh token
         // This checks signature, expiry, and decodes the payload
@@ -445,7 +437,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         // STEP 7: Configure secure cookie options
         const options = {
             httpOnly: true, // Prevent XSS attacks
-            secure: true, // Only send over HTTPS
+            secure: process.env.NODE_ENV === "production", // HTTPS only in production
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-site cookie policy
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours (access token lifetime)
         }
 
         // STEP 8: Generate new access and refresh tokens
@@ -753,9 +747,7 @@ const updateUserCoverImg = asyncHandler(async (req, res) => {
         { new: true }
     ).select("-password")
 
-    console.log(
-        `Cover image updated successfully for @${req.user?.username}`
-    )
+    console.log(`Cover image updated successfully for @${req.user?.username}`)
 
     return res
         .status(200)
