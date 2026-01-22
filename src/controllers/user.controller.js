@@ -275,6 +275,7 @@ const loginUser = asyncHandler(async (req, res) => {
         secure: process.env.NODE_ENV === "production", // HTTPS only in production
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-domain (prod), 'lax' for same-domain (dev)
         maxAge: 24 * 60 * 60 * 1000, // 24 hours (access token lifetime)
+        path: "/", // Cookie available to all routes
     }
 
     console.log(" [STEP 8] Setting secure cookies...")
@@ -343,6 +344,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         httpOnly: true, // Prevent client-side JS access
         secure: process.env.NODE_ENV === "production", // HTTPS only in production
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Match login cookie settings
+        path: "/", // Must match the path used when setting the cookie
     }
 
     console.log(" [STEP 2] Clearing cookies from client...")
@@ -451,6 +453,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             secure: process.env.NODE_ENV === "production", // HTTPS only in production
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-domain (prod), 'lax' for same-domain (dev)
             maxAge: 24 * 60 * 60 * 1000, // 24 hours (access token lifetime)
+            path: "/", // Cookie available to all routes
         }
 
         // STEP 8: Generate new access and refresh tokens
