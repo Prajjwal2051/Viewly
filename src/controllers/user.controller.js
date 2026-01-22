@@ -272,8 +272,8 @@ const loginUser = asyncHandler(async (req, res) => {
     // STEP 8: Configure cookie options for security
     const options = {
         httpOnly: true, // Prevents client-side JavaScript from accessing cookies (XSS protection)
-        secure: process.env.NODE_ENV === "production", // HTTPS only in production, allows HTTP in development
-        sameSite: "lax", // Prevents CSRF attacks, works with both HTTP and HTTPS
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-domain (prod), 'lax' for same-domain (dev)
         maxAge: 24 * 60 * 60 * 1000, // 24 hours (access token lifetime)
     }
 
@@ -342,7 +342,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true, // Prevent client-side JS access
         secure: process.env.NODE_ENV === "production", // HTTPS only in production
-        sameSite: "lax", // Match login cookie settings
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Match login cookie settings
     }
 
     console.log(" [STEP 2] Clearing cookies from client...")
@@ -449,7 +449,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         const options = {
             httpOnly: true, // Prevent XSS attacks
             secure: process.env.NODE_ENV === "production", // HTTPS only in production
-            sameSite: "lax", // Prevents CSRF, works with both HTTP and HTTPS
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-domain (prod), 'lax' for same-domain (dev)
             maxAge: 24 * 60 * 60 * 1000, // 24 hours (access token lifetime)
         }
 
