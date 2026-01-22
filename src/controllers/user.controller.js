@@ -273,7 +273,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true, // Prevents client-side JavaScript from accessing cookies (XSS protection)
         secure: process.env.NODE_ENV === "production", // HTTPS only in production, allows HTTP in development
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-site cookie policy
+        sameSite: "lax", // Prevents CSRF attacks, works with both HTTP and HTTPS
         maxAge: 24 * 60 * 60 * 1000, // 24 hours (access token lifetime)
     }
 
@@ -342,7 +342,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true, // Prevent client-side JS access
         secure: process.env.NODE_ENV === "production", // HTTPS only in production
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Match login cookie settings
+        sameSite: "lax", // Match login cookie settings
     }
 
     console.log(" [STEP 2] Clearing cookies from client...")
@@ -384,6 +384,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         console.log("\n========================================")
         console.log(" [TOKEN REFRESH] Request received")
         console.log("========================================")
+        console.log(" [DEBUG] Cookies received:", req.cookies)
+        console.log(
+            " [DEBUG] refreshToken cookie:",
+            req.cookies?.refreshToken ? "EXISTS" : "MISSING"
+        )
+        console.log(" [DEBUG] Request origin:", req.headers.origin)
+        console.log(" [DEBUG] Cookie header:", req.headers.cookie)
 
         // STEP 1: Extract refresh token from cookies (web) or body (mobile)
         const incomingRefreshToken =
@@ -392,6 +399,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         // STEP 2: Validate refresh token is provided
         if (!incomingRefreshToken) {
             console.log("REFRESH FAILED: No refresh token provided")
+            console.log(
+                " [DEBUG] Available cookies:",
+                Object.keys(req.cookies || {})
+            )
             throw new ApiError(
                 401,
                 "Unauthorized request - Refresh token required"
@@ -438,7 +449,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         const options = {
             httpOnly: true, // Prevent XSS attacks
             secure: process.env.NODE_ENV === "production", // HTTPS only in production
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-site cookie policy
+            sameSite: "lax", // Prevents CSRF, works with both HTTP and HTTPS
             maxAge: 24 * 60 * 60 * 1000, // 24 hours (access token lifetime)
         }
 
