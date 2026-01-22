@@ -136,6 +136,12 @@ apiClient.interceptors.response.use(
                 currentPath !== "/register" &&
                 currentPath !== "/forgot-password"
             ) {
+                // If this is the initial auth check (current-user), don't show error
+                // Just silently fail - user hasn't logged in yet
+                if (isAuthCheckRequest) {
+                    return Promise.reject(error)
+                }
+
                 if (originalRequest.url?.includes("/users/refresh-token")) {
                     // token refresh failed - session truly expired
                     toast.error("Session expired. Please login again", {
