@@ -84,7 +84,7 @@ const LoginPage = () => {
             dispatch(loginStart())
             const response = await loginUser(formData)
 
-            console.log("Login response:", response) // Debug log
+            // console.log("Login response:", response) // Debug log
 
             // Backend returns: ApiResponse { statusCode, data: { user, accessToken, refreshToken }, message }
             // Interceptor returns: response.data = the whole ApiResponse object
