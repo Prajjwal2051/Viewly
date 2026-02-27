@@ -101,8 +101,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // STEP 4: Extract local file paths for uploaded images
     // Multer middleware stores uploaded files temporarily on the server
-    const avatarLocalPath = req.files?.avatar[0]?.path
-    // const coverImgLocalPath = req.files?.coverimage[0]?.path
+    const avatarLocalPath = req.files?.avatar?.[0]?.path
     let coverImgLocalPath
     if (
         req.files &&
@@ -114,54 +113,49 @@ const registerUser = asyncHandler(async (req, res) => {
     console.log(" [STEP 4] Files received:")
     console.log(
         "   - Avatar:",
-        avatarLocalPath ? "" + avatarLocalPath : "Missing"
+        avatarLocalPath ? "" + avatarLocalPath : "Not provided — using default"
     )
     console.log(
         "   - Cover Image:",
         coverImgLocalPath ? "" + coverImgLocalPath : " Optional (not provided)"
     )
 
-    // STEP 5: Validate avatar is provided (mandatory field)
-    if (!avatarLocalPath) {
-        console.log("REGISTRATION FAILED: Avatar is required")
-        throw new ApiError(400, "avatar is required")
+    // STEP 5: Generate default avatar URL if no avatar was uploaded
+    // Uses ui-avatars.com to create an initial-based avatar using the user's name
+    let avatarUrl
+    if (avatarLocalPath) {
+        const uploadedAvatar = await uploadOnCloudinary(avatarLocalPath)
+        if (!uploadedAvatar) {
+            throw new ApiError(400, "avatar upload failed")
+        }
+        avatarUrl = uploadedAvatar.url
+        console.log("   - Avatar uploaded to Cloudinary:", avatarUrl)
+    } else {
+        // Generate a stylized letter-based avatar from the user's name
+        const encodedName = encodeURIComponent(fullName.trim())
+        avatarUrl = `https://ui-avatars.com/api/?name=${encodedName}&size=200&background=c0392b&color=ffffff&bold=true&format=png`
+        console.log("   - Using auto-generated default avatar:", avatarUrl)
     }
 
-    // STEP 6: Upload images to Cloudinary cloud storage
-    // Avatar is mandatory, cover image is optional
-    console.log(" [STEP 6] Uploading files to Cloudinary...")
-    console.log("   - Uploading avatar...")
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
-    console.log("   - Avatar upload:", avatar ? "Success" : "Failed")
-
-    if (coverImgLocalPath) {
-        console.log("   - Uploading cover image...")
-    }
+    // STEP 6: Upload cover image to Cloudinary if provided
     const coverImg = await uploadOnCloudinary(coverImgLocalPath)
     if (coverImgLocalPath) {
         console.log("   - Cover image upload:", coverImg ? "Success" : "Failed")
     }
+    console.log("All files processed successfully")
 
-    // STEP 7: Verify avatar upload was successful
-    if (!avatar) {
-        console.log("REGISTRATION FAILED: Avatar upload to Cloudinary failed")
-        throw new ApiError(400, "avatar upload failed")
-    }
-    console.log("All files uploaded successfully to Cloudinary")
-
-    // STEP 8: Create user entry in database with all validated data
-    // Password will be automatically hashed by the pre-save middleware in user model
-    console.log(" [STEP 8] Creating user in database...")
+    // STEP 7: Create user entry in database
+    console.log(" [STEP 7] Creating user in database...")
     console.log("   - Username:", username.toLowerCase())
     console.log("   - Email:", email)
-    console.log("   - Avatar URL:", avatar.url)
+    console.log("   - Avatar URL:", avatarUrl)
     const user = await User.create({
         fullName,
-        avatar: avatar.url,
-        coverImg: coverImg?.url || "", // Optional field, empty string if not provided
+        avatar: avatarUrl,
+        coverImg: coverImg?.url || "",
         email,
-        password, // Will be hashed before saving
-        username: username.toLowerCase(), // Ensure consistency with lowercase usernames
+        password,
+        username: username.toLowerCase(),
     })
     console.log("User created with ID:", user._id)
 
