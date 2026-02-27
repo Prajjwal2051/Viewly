@@ -14,6 +14,7 @@ import authBgBright from "../assets/auth_bg_bright.png"
 import { Eye, EyeOff, Info, Github, Mail } from "lucide-react"
 import developerProfile from "../assets/developer_profile.jpg"
 import logo from "../assets/logo.png"
+import { Card } from "@/components/ui/card"
 
 // console.log("Login Background Path:", authBgBright)
 
@@ -146,7 +147,7 @@ const LoginPage = () => {
                 {/* Left Side: Slogan (Removed) */}
 
                 {/* Right Side: Form Card */}
-                <div className="w-full md:w-[480px] bg-white/95 backdrop-blur-xl rounded-[32px] shadow-2xl p-8 relative group/card border border-white/40">
+                <Card className="w-full md:w-[480px] bg-white/95 backdrop-blur-xl rounded-[32px] shadow-2xl p-8 relative group/card border border-white/40">
                     {/* Developer Info Icon */}
                     <div className="absolute top-6 right-6 z-20">
                         <div className="relative group/info">
@@ -316,7 +317,7 @@ const LoginPage = () => {
                             </Link>
                         </p>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     )

@@ -26,6 +26,8 @@ import {
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import toast from "react-hot-toast"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card } from "@/components/ui/card"
 
 const ActivityPage = () => {
     const { user } = useSelector((state) => state.auth)
@@ -269,124 +271,126 @@ const ActivityPage = () => {
                     </div>
 
                     {notifications.length > 0 ? (
-                        <div className="space-y-4">
-                            {notifications.map((notification) => {
-                                let Icon = Bell
-                                let iconColor = "text-gray-400"
-                                let content = notification.message
+                        <ScrollArea className="max-h-[600px] pr-2">
+                            <div className="space-y-4">
+                                {notifications.map((notification) => {
+                                    let Icon = Bell
+                                    let iconColor = "text-gray-400"
+                                    let content = notification.message
 
-                                switch (notification.type) {
-                                    case "LIKE":
-                                        Icon = Heart
-                                        iconColor = "text-red-500"
-                                        break
-                                    case "COMMENT":
-                                        Icon = MessageSquare
-                                        iconColor = "text-blue-500"
-                                        break
-                                    case "SUBSCRIPTION":
-                                        Icon = Users
-                                        iconColor = "text-green-500"
-                                        break
-                                    case "VIDEO_UPLOAD":
-                                        Icon = VideoIcon
-                                        iconColor = "text-purple-500"
-                                        break
-                                }
+                                    switch (notification.type) {
+                                        case "LIKE":
+                                            Icon = Heart
+                                            iconColor = "text-red-500"
+                                            break
+                                        case "COMMENT":
+                                            Icon = MessageSquare
+                                            iconColor = "text-blue-500"
+                                            break
+                                        case "SUBSCRIPTION":
+                                            Icon = Users
+                                            iconColor = "text-green-500"
+                                            break
+                                        case "VIDEO_UPLOAD":
+                                            Icon = VideoIcon
+                                            iconColor = "text-purple-500"
+                                            break
+                                    }
 
-                                return (
-                                    <div
-                                        key={notification._id}
-                                        className={`flex gap-4 p-4 rounded-xl border transition-colors ${
-                                            notification.isRead
-                                                ? "bg-[#1E2021] border-[#2A2D2E]"
-                                                : "bg-[#2A2D2E]/50 border-red-500/20"
-                                        }`}
-                                    >
+                                    return (
                                         <div
-                                            className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-[#2A2D2E] ${iconColor}`}
+                                            key={notification._id}
+                                            className={`flex gap-4 p-4 rounded-xl border transition-colors ${
+                                                notification.isRead
+                                                    ? "bg-[#1E2021] border-[#2A2D2E]"
+                                                    : "bg-[#2A2D2E]/50 border-red-500/20"
+                                            }`}
                                         >
-                                            <Icon size={20} />
-                                        </div>
+                                            <div
+                                                className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-[#2A2D2E] ${iconColor}`}
+                                            >
+                                                <Icon size={20} />
+                                            </div>
 
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start gap-2">
-                                                <p className="text-gray-200 text-sm sm:text-base">
-                                                    <span className="font-semibold text-white">
-                                                        {notification.sender
-                                                            ?.username ||
-                                                            "Someone"}
-                                                    </span>{" "}
-                                                    {content}
-                                                </p>
-                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                    {!notification.isRead && (
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-start gap-2">
+                                                    <p className="text-gray-200 text-sm sm:text-base">
+                                                        <span className="font-semibold text-white">
+                                                            {notification.sender
+                                                                ?.username ||
+                                                                "Someone"}
+                                                        </span>{" "}
+                                                        {content}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        {!notification.isRead && (
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleMarkAsRead(
+                                                                        notification._id
+                                                                    )
+                                                                }
+                                                                className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2A2D2E] rounded-lg transition-colors"
+                                                                title="Mark as read"
+                                                            >
+                                                                <span className="text-xs">
+                                                                    Read
+                                                                </span>
+                                                            </button>
+                                                        )}
                                                         <button
                                                             onClick={() =>
-                                                                handleMarkAsRead(
+                                                                handleDeleteNotification(
                                                                     notification._id
                                                                 )
                                                             }
-                                                            className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2A2D2E] rounded-lg transition-colors"
-                                                            title="Mark as read"
+                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-[#2A2D2E] rounded-lg transition-colors"
+                                                            title="Delete"
                                                         >
                                                             <span className="text-xs">
-                                                                Read
+                                                                Delete
                                                             </span>
                                                         </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() =>
-                                                            handleDeleteNotification(
-                                                                notification._id
-                                                            )
-                                                        }
-                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-[#2A2D2E] rounded-lg transition-colors"
-                                                        title="Delete"
-                                                    >
-                                                        <span className="text-xs">
-                                                            Delete
+                                                    </div>
+                                                </div>
+
+                                                {/* Optional related content preview */}
+                                                {notification.video && (
+                                                    <div className="mt-2 text-sm text-gray-400 bg-[#1E2021] p-2 rounded-lg flex items-center gap-2">
+                                                        <VideoIcon size={14} />
+                                                        <span className="truncate">
+                                                            {
+                                                                notification
+                                                                    .video.title
+                                                            }
                                                         </span>
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {/* Optional related content preview */}
-                                            {notification.video && (
-                                                <div className="mt-2 text-sm text-gray-400 bg-[#1E2021] p-2 rounded-lg flex items-center gap-2">
-                                                    <VideoIcon size={14} />
-                                                    <span className="truncate">
-                                                        {
-                                                            notification.video
-                                                                .title
-                                                        }
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {notification.comment && (
-                                                <div className="mt-2 text-sm text-gray-400 italic border-l-2 border-gray-600 pl-2">
-                                                    "
-                                                    {
-                                                        notification.comment
-                                                            .content
-                                                    }
-                                                    "
-                                                </div>
-                                            )}
-
-                                            <p className="text-xs text-gray-500 mt-2">
-                                                {formatDistanceToNow(
-                                                    new Date(
-                                                        notification.createdAt
-                                                    ),
-                                                    { addSuffix: true }
+                                                    </div>
                                                 )}
-                                            </p>
+                                                {notification.comment && (
+                                                    <div className="mt-2 text-sm text-gray-400 italic border-l-2 border-gray-600 pl-2">
+                                                        "
+                                                        {
+                                                            notification.comment
+                                                                .content
+                                                        }
+                                                        "
+                                                    </div>
+                                                )}
+
+                                                <p className="text-xs text-gray-500 mt-2">
+                                                    {formatDistanceToNow(
+                                                        new Date(
+                                                            notification.createdAt
+                                                        ),
+                                                        { addSuffix: true }
+                                                    )}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
+                                    )
+                                })}
+                            </div>
+                        </ScrollArea>
                     ) : (
                         <div className="text-center py-12 bg-[#2A2D2E]/30 rounded-xl">
                             <Bell

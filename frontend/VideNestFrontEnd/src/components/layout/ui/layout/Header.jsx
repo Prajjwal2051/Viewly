@@ -7,25 +7,41 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
-import { Search, Bell, ListVideo, Plus, User } from "lucide-react"
+import {
+    Search,
+    ListVideo,
+    Plus,
+    User,
+    LayoutDashboard,
+    LogOut,
+    Tv2,
+} from "lucide-react"
 import Button from "../Button"
-import Input from "../Input"
 import { logout } from "../../../../store/slices/authSlice.js"
 import { logoutUser } from "../../../../api/authApi"
 import { getUserPlaylists } from "../../../../api/playlistApi"
 import toast from "react-hot-toast"
 import NotificationBell from "../../../notifications/NotificationBell"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 /**
  * HEADER COMPONENT
- * 
+ *
  * Purpose:
  * - Provide consistent navigation across all pages
  * - Search functionality for finding videos
  * - Quick access to notifications
  * - User account menu
  * - Upload and playlist shortcuts
- * 
+ *
  * Header Sections (Left to Right):
  * 1. Logo - Click to go home
  * 2. Search Bar - Visible on relevant pages (Home, Discover, Search, Video)
@@ -33,24 +49,24 @@ import NotificationBell from "../../../notifications/NotificationBell"
  * 4. Playlist Menu - Dropdown showing recent playlists
  * 5. Notification Bell - With unread count badge
  * 6. User Avatar - Opens account menu
- * 
+ *
  * Smart Search Bar:
  * - Only shows on pages where search makes sense
  * - Hidden on Settings, Profile, Dashboard
  * - Enter key triggers search navigation
  * - Remembers last search query
- * 
+ *
  * User Menu Options:
  * - Profile
  * - Dashboard
  * - Settings
  * - Logout
- * 
+ *
  * Playlist Menu:
  * - Shows 5 most recent playlists
  * - "View All Playlists" link
  * - Quick navigation to playlist details
- * 
+ *
  * Responsive Design:
  * - Full header on desktop
  * - Simplified on mobile (bottom nav handles some functions)
@@ -267,80 +283,62 @@ const Header = () => {
                             )}
                         </div>
 
-                        {/* USER MENU */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2 p-1 rounded-full hover:bg-[#2A2D2E] focus:outline-none transition-all duration-300 group"
-                            >
-                                {user?.avatar ? (
-                                    <img
-                                        src={user.avatar}
-                                        alt={user?.username}
-                                        className="h-10 w-10 rounded-full object-cover border-2 border-[#2A2D2E] transition-all duration-300 group-hover:scale-110 group-hover:border-red-600 group-hover:rotate-6"
-                                    />
-                                ) : (
-                                    <div className="h-10 w-10 rounded-full bg-gray-700 border-2 border-[#2A2D2E] flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-red-600 group-hover:rotate-6">
-                                        <User
-                                            size={20}
-                                            className="text-gray-400 group-hover:text-white"
+                        {/* USER MENU - shadcn DropdownMenu + Avatar */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-2 p-1 rounded-full hover:bg-[#2A2D2E] focus:outline-none transition-all duration-300 group">
+                                    <Avatar className="h-10 w-10 border-2 border-[#2A2D2E] transition-all duration-300 group-hover:border-red-600 group-hover:scale-110">
+                                        <AvatarImage
+                                            src={user?.avatar}
+                                            alt={user?.username}
                                         />
-                                    </div>
-                                )}
-                            </button>
-
-                            {showUserMenu && (
-                                <>
-                                    <div
-                                        className="fixed inset-0 z-10"
-                                        onClick={() => setShowUserMenu(false)}
-                                    ></div>
-
-                                    <div className="absolute right-0 mt-2 w-64 bg-[#1E2021] rounded-2xl shadow-xl border border-[#2A2D2E] py-2 z-20 animate-in slide-in-from-top-2 duration-300">
-                                        <div className="px-4 py-4 border-b border-[#2A2D2E]">
-                                            <p className="font-bold text-white truncate text-lg">
-                                                {user?.fullName}
-                                            </p>
-                                            <p className="text-sm text-gray-400 truncate">
-                                                @{user?.username}
-                                            </p>
-                                        </div>
-
-                                        <div className="p-2">
-                                            <button
-                                                onClick={() => {
-                                                    navigate(
-                                                        `/channel/${user?.username}`
-                                                    )
-                                                    setShowUserMenu(false)
-                                                }}
-                                                className="w-full text-left px-4 py-3 hover:bg-[#2A2D2E] rounded-xl font-medium text-gray-500 hover:text-white transition-all duration-300 transform hover:scale-105 hover:translate-x-1"
-                                            >
-                                                Your Channel
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    navigate("/dashboard")
-                                                    setShowUserMenu(false)
-                                                }}
-                                                className="w-full text-left px-4 py-3 hover:bg-[#2A2D2E] rounded-xl font-medium text-gray-500 hover:text-white transition-all duration-300 transform hover:scale-105 hover:translate-x-1"
-                                            >
-                                                Studio Dashboard
-                                            </button>
-                                        </div>
-
-                                        <div className="border-t border-[#2A2D2E] p-2">
-                                            <button
-                                                onClick={handleLogout}
-                                                className="w-full text-left px-4 py-3 hover:bg-red-600/10 rounded-xl font-medium text-red-600 hover:text-red-500 transition-all duration-300 transform hover:scale-105 hover:translate-x-1"
-                                            >
-                                                Log out
-                                            </button>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                                        <AvatarFallback className="bg-gray-700 text-white">
+                                            {user?.fullName?.[0]?.toUpperCase() || (
+                                                <User size={18} />
+                                            )}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="w-64 mt-2"
+                            >
+                                <DropdownMenuLabel className="px-4 py-3">
+                                    <p className="font-bold text-foreground truncate">
+                                        {user?.fullName}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                        @{user?.username}
+                                    </p>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        navigate(`/channel/${user?.username}`)
+                                    }
+                                    className="px-4 py-2.5 cursor-pointer"
+                                >
+                                    <Tv2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                                    Your Channel
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => navigate("/dashboard")}
+                                    className="px-4 py-2.5 cursor-pointer"
+                                >
+                                    <LayoutDashboard className="mr-2 h-4 w-4 text-muted-foreground" />
+                                    Studio Dashboard
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={handleLogout}
+                                    className="px-4 py-2.5 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Log out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </div>

@@ -38,6 +38,18 @@ import {
     Upload,
 } from "lucide-react"
 import toast from "react-hot-toast"
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogFooter,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogAction,
+    AlertDialogCancel,
+} from "@/components/ui/alert-dialog"
 
 const DashboardPage = () => {
     const navigate = useNavigate()
@@ -58,8 +70,9 @@ const DashboardPage = () => {
     const [analyticsData, setAnalyticsData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [deleting, setDeleting] = useState(null)
-    const [editingItem, setEditingItem] = useState(null) // { type: 'video'|'tweet', data: ... }
-    const [activeTab, setActiveTab] = useState("myVideos") // 'myVideos', 'myTweets', 'myComments', 'likedVideos', 'likedTweets', 'subscribers', 'subscribedTo'
+    const [editingItem, setEditingItem] = useState(null)
+    const [pendingDelete, setPendingDelete] = useState(null) // { type: 'video'|'tweet', id: string }
+    const [activeTab, setActiveTab] = useState("myVideos")
 
     useEffect(() => {
         if (!user) {
@@ -187,42 +200,38 @@ const DashboardPage = () => {
     }
 
     const handleDelete = async (videoId) => {
-        if (!window.confirm("Are you sure you want to delete this video?")) {
-            return
-        }
-
-        setDeleting(videoId)
-        try {
-            await deleteVideo(videoId)
-            setVideos((prev) => prev.filter((v) => v._id !== videoId))
-            setStats((prev) => ({
-                ...prev,
-                totalVideos: prev.totalVideos - 1,
-            }))
-            toast.success("Video deleted successfully")
-        } catch (error) {
-            toast.error("Failed to delete video")
-        } finally {
-            setDeleting(null)
-        }
+        setPendingDelete({ type: "video", id: videoId })
     }
 
     const handleDeleteTweet = async (tweetId) => {
-        if (!window.confirm("Are you sure you want to delete this tweet?")) {
-            return
-        }
+        setPendingDelete({ type: "tweet", id: tweetId })
+    }
 
-        setDeleting(tweetId)
+    const confirmDelete = async () => {
+        if (!pendingDelete) return
+        const { type, id } = pendingDelete
+        setDeleting(id)
+        setPendingDelete(null)
         try {
-            await deleteTweet(tweetId)
-            setTweets((prev) => prev.filter((t) => t._id !== tweetId))
-            setStats((prev) => ({
-                ...prev,
-                totalTweets: prev.totalTweets - 1,
-            }))
-            toast.success("Tweet deleted successfully")
+            if (type === "video") {
+                await deleteVideo(id)
+                setVideos((prev) => prev.filter((v) => v._id !== id))
+                setStats((prev) => ({
+                    ...prev,
+                    totalVideos: prev.totalVideos - 1,
+                }))
+                toast.success("Video deleted successfully")
+            } else {
+                await deleteTweet(id)
+                setTweets((prev) => prev.filter((t) => t._id !== id))
+                setStats((prev) => ({
+                    ...prev,
+                    totalTweets: prev.totalTweets - 1,
+                }))
+                toast.success("Tweet deleted successfully")
+            }
         } catch (error) {
-            toast.error("Failed to delete tweet")
+            toast.error(`Failed to delete ${type}`)
         } finally {
             setDeleting(null)
         }
@@ -262,63 +271,52 @@ const DashboardPage = () => {
                     </p>
                 </div>
 
-                {/* Stats Cards */}
+                {/* Stats Cards — shadcn Card */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {/* Total Videos */}
-                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20 animate-fadeIn">
-                        <div className="flex items-center justify-between mb-4">
-                            <VideoIcon className="text-red-500" size={32} />
-                            <BarChart3 className="text-red-400/30" size={48} />
-                        </div>
-                        <p className="text-gray-400 text-sm mb-1">
-                            Total Videos
-                        </p>
-                        <h3 className="text-3xl font-bold text-white">
-                            <CountUp end={stats.totalVideos} />
-                        </h3>
-                    </div>
-
-                    {/* Total Views */}
-                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20 animate-fadeIn [animation-delay:100ms]">
-                        <div className="flex items-center justify-between mb-4">
-                            <Eye className="text-red-500" size={32} />
-                            <BarChart3 className="text-red-400/30" size={48} />
-                        </div>
-                        <p className="text-gray-400 text-sm mb-1">
-                            Total Views
-                        </p>
-                        <h3 className="text-3xl font-bold text-white">
-                            <CountUp end={stats.totalViews} />
-                        </h3>
-                    </div>
-
-                    {/* Total Subscribers */}
-                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20 animate-fadeIn [animation-delay:200ms]">
-                        <div className="flex items-center justify-between mb-4">
-                            <Users className="text-red-500" size={32} />
-                            <BarChart3 className="text-red-400/30" size={48} />
-                        </div>
-                        <p className="text-gray-400 text-sm mb-1">
-                            Subscribers
-                        </p>
-                        <h3 className="text-3xl font-bold text-white">
-                            <CountUp end={stats.totalSubscribers} />
-                        </h3>
-                    </div>
-
-                    {/* Total Tweets */}
-                    <div className="bg-gradient-to-br from-red-900/20 to-red-600/10 border border-red-800/30 rounded-xl p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20 animate-fadeIn [animation-delay:300ms]">
-                        <div className="flex items-center justify-between mb-4">
-                            <MessageSquare className="text-red-500" size={32} />
-                            <BarChart3 className="text-red-400/30" size={48} />
-                        </div>
-                        <p className="text-gray-400 text-sm mb-1">
-                            Total Tweets
-                        </p>
-                        <h3 className="text-3xl font-bold text-white">
-                            <CountUp end={stats.totalTweets} />
-                        </h3>
-                    </div>
+                    {[
+                        {
+                            icon: VideoIcon,
+                            label: "Total Videos",
+                            value: stats.totalVideos,
+                        },
+                        {
+                            icon: Eye,
+                            label: "Total Views",
+                            value: stats.totalViews,
+                        },
+                        {
+                            icon: Users,
+                            label: "Subscribers",
+                            value: stats.totalSubscribers,
+                        },
+                        {
+                            icon: MessageSquare,
+                            label: "Total Tweets",
+                            value: stats.totalTweets,
+                        },
+                    ].map(({ icon: Icon, label, value }, i) => (
+                        <Card
+                            key={label}
+                            className="bg-gradient-to-br from-red-900/20 to-red-600/10 border-red-800/30 hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/20"
+                            style={{ animationDelay: `${i * 100}ms` }}
+                        >
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <Icon className="text-red-500" size={32} />
+                                    <BarChart3
+                                        className="text-red-400/30"
+                                        size={48}
+                                    />
+                                </div>
+                                <p className="text-muted-foreground text-sm mb-1">
+                                    {label}
+                                </p>
+                                <h3 className="text-3xl font-bold text-foreground">
+                                    <CountUp end={value} />
+                                </h3>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
 
                 {/* Analytics Section */}
@@ -348,580 +346,615 @@ const DashboardPage = () => {
                     </div>
                 )}
 
-                {/* Tab Navigation */}
-                <div className="flex gap-2 mb-6 border-b border-gray-700 overflow-x-auto pb-1 scrollbar-hide">
-                    <button
-                        onClick={() => setActiveTab("myVideos")}
-                        className={`px-4 py-2 md:px-6 md:py-3 font-medium transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
-                            activeTab === "myVideos"
-                                ? "text-white border-red-600"
-                                : "text-gray-400 border-transparent hover:text-white"
-                        }`}
-                    >
-                        My Videos ({stats.totalVideos})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("myTweets")}
-                        className={`px-4 py-2 md:px-6 md:py-3 font-medium transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
-                            activeTab === "myTweets"
-                                ? "text-white border-red-600"
-                                : "text-gray-400 border-transparent hover:text-white"
-                        }`}
-                    >
-                        My Tweets ({stats.totalTweets})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("likedVideos")}
-                        className={`px-4 py-2 md:px-6 md:py-3 font-medium transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
-                            activeTab === "likedVideos"
-                                ? "text-white border-red-600"
-                                : "text-gray-400 border-transparent hover:text-white"
-                        }`}
-                    >
-                        <Heart size={16} className="inline mr-1" />
-                        Liked Videos ({likedVideos.length})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("likedTweets")}
-                        className={`px-4 py-2 md:px-6 md:py-3 font-medium transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
-                            activeTab === "likedTweets"
-                                ? "text-white border-red-600"
-                                : "text-gray-400 border-transparent hover:text-white"
-                        }`}
-                    >
-                        <Heart size={16} className="inline mr-1" />
-                        Liked Tweets ({likedTweets.length})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("myComments")}
-                        className={`px-4 py-2 md:px-6 md:py-3 font-medium transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
-                            activeTab === "myComments"
-                                ? "text-white border-red-600"
-                                : "text-gray-400 border-transparent hover:text-white"
-                        }`}
-                    >
-                        <MessageSquare size={16} className="inline mr-1" />
-                        My Comments
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("subscribers")}
-                        className={`px-4 py-2 md:px-6 md:py-3 font-medium transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
-                            activeTab === "subscribers"
-                                ? "text-white border-red-600"
-                                : "text-gray-400 border-transparent hover:text-white"
-                        }`}
-                    >
-                        <Users size={16} className="inline mr-1" />
-                        Subscribers ({subscribers.length})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("subscribedTo")}
-                        className={`px-4 py-2 md:px-6 md:py-3 font-medium transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
-                            activeTab === "subscribedTo"
-                                ? "text-white border-red-600"
-                                : "text-gray-400 border-transparent hover:text-white"
-                        }`}
-                    >
-                        <Users size={16} className="inline mr-1" />
-                        Subscribed To ({subscribedTo.length})
-                    </button>
-                </div>
+                {/* Tab Navigation — shadcn Tabs */}
+                <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="mb-6"
+                >
+                    <TabsList className="flex h-auto gap-1 bg-transparent border-b border-border w-full justify-start rounded-none pb-0 overflow-x-auto">
+                        <TabsTrigger
+                            value="myVideos"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground whitespace-nowrap"
+                        >
+                            My Videos ({stats.totalVideos})
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="myTweets"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground whitespace-nowrap"
+                        >
+                            My Tweets ({stats.totalTweets})
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="likedVideos"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground whitespace-nowrap"
+                        >
+                            <Heart size={14} className="mr-1 inline" /> Liked
+                            Videos ({likedVideos.length})
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="likedTweets"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground whitespace-nowrap"
+                        >
+                            <Heart size={14} className="mr-1 inline" /> Liked
+                            Tweets ({likedTweets.length})
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="myComments"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground whitespace-nowrap"
+                        >
+                            <MessageSquare size={14} className="mr-1 inline" />{" "}
+                            My Comments
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="subscribers"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground whitespace-nowrap"
+                        >
+                            <Users size={14} className="mr-1 inline" />{" "}
+                            Subscribers ({subscribers.length})
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="subscribedTo"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground whitespace-nowrap"
+                        >
+                            <Users size={14} className="mr-1 inline" />{" "}
+                            Subscribed To ({subscribedTo.length})
+                        </TabsTrigger>
+                    </TabsList>
 
-                {/* My Videos Section */}
-                {activeTab === "myVideos" && (
-                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
-                        <div className="p-6 border-b border-[#2A2D2E]">
-                            <h2 className="text-2xl font-bold">Your Videos</h2>
-                        </div>
-
-                        {videos.length === 0 ? (
-                            <div className="p-6 md:p-12 text-center">
-                                <VideoIcon
-                                    className="mx-auto mb-4 text-gray-400"
-                                    size={48}
-                                />
-                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
-                                    No videos yet
-                                </h3>
-                                <p className="text-gray-500 mb-4">
-                                    Upload your first video to get started
-                                </p>
-                                <button
-                                    onClick={() => navigate("/upload")}
-                                    className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
-                                >
-                                    Upload Video
-                                </button>
+                    {/* My Videos Section */}
+                    {activeTab === "myVideos" && (
+                        <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                            <div className="p-6 border-b border-[#2A2D2E]">
+                                <h2 className="text-2xl font-bold">
+                                    Your Videos
+                                </h2>
                             </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-[#2A2D2E]/50">
-                                        <tr>
-                                            <th className="text-left p-4 font-semibold text-gray-300">
-                                                Video
-                                            </th>
-                                            <th className="text-center p-4 font-semibold text-gray-300">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <Eye size={16} />
-                                                    Views
-                                                </div>
-                                            </th>
-                                            <th className="text-center p-4 font-semibold text-gray-300">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <Heart size={16} />
-                                                    Likes
-                                                </div>
-                                            </th>
-                                            <th className="text-center p-4 font-semibold text-gray-300">
-                                                Date
-                                            </th>
-                                            <th className="text-right p-4 font-semibold text-gray-300">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {videos.map((video) => (
-                                            <tr
-                                                key={video._id}
-                                                className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E] transition-colors"
-                                            >
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-32 h-20 bg-red-600/10 rounded-lg flex items-center justify-center">
-                                                            <VideoIcon
-                                                                className="text-red-600"
-                                                                size={32}
-                                                            />
+
+                            {videos.length === 0 ? (
+                                <div className="p-6 md:p-12 text-center">
+                                    <VideoIcon
+                                        className="mx-auto mb-4 text-gray-400"
+                                        size={48}
+                                    />
+                                    <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                        No videos yet
+                                    </h3>
+                                    <p className="text-gray-500 mb-4">
+                                        Upload your first video to get started
+                                    </p>
+                                    <button
+                                        onClick={() => navigate("/upload")}
+                                        className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
+                                    >
+                                        Upload Video
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-[#2A2D2E]/50">
+                                            <tr>
+                                                <th className="text-left p-4 font-semibold text-gray-300">
+                                                    Video
+                                                </th>
+                                                <th className="text-center p-4 font-semibold text-gray-300">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Eye size={16} />
+                                                        Views
+                                                    </div>
+                                                </th>
+                                                <th className="text-center p-4 font-semibold text-gray-300">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Heart size={16} />
+                                                        Likes
+                                                    </div>
+                                                </th>
+                                                <th className="text-center p-4 font-semibold text-gray-300">
+                                                    Date
+                                                </th>
+                                                <th className="text-right p-4 font-semibold text-gray-300">
+                                                    Actions
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {videos.map((video) => (
+                                                <tr
+                                                    key={video._id}
+                                                    className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E] transition-colors"
+                                                >
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-32 h-20 bg-red-600/10 rounded-lg flex items-center justify-center">
+                                                                <VideoIcon
+                                                                    className="text-red-600"
+                                                                    size={32}
+                                                                />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-semibold text-white line-clamp-2">
+                                                                    {
+                                                                        video.title
+                                                                    }
+                                                                </h4>
+                                                                <p className="text-sm text-gray-400 line-clamp-1 mt-1">
+                                                                    {
+                                                                        video.description
+                                                                    }
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <h4 className="font-semibold text-white line-clamp-2">
-                                                                {video.title}
-                                                            </h4>
-                                                            <p className="text-sm text-gray-400 line-clamp-1 mt-1">
-                                                                {
-                                                                    video.description
+                                                    </td>
+                                                    <td className="p-4 text-center text-gray-300">
+                                                        {video.views?.toLocaleString() ||
+                                                            0}
+                                                    </td>
+                                                    <td className="p-4 text-center text-gray-300">
+                                                        {video.likes || 0}
+                                                    </td>
+                                                    <td className="p-4 text-center text-gray-400 text-sm">
+                                                        {new Date(
+                                                            video.createdAt
+                                                        ).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleEdit(
+                                                                        video
+                                                                    )
                                                                 }
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-center text-gray-300">
-                                                    {video.views?.toLocaleString() ||
-                                                        0}
-                                                </td>
-                                                <td className="p-4 text-center text-gray-300">
-                                                    {video.likes || 0}
-                                                </td>
-                                                <td className="p-4 text-center text-gray-400 text-sm">
-                                                    {new Date(
-                                                        video.createdAt
-                                                    ).toLocaleDateString()}
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button
-                                                            onClick={() =>
-                                                                handleEdit(
-                                                                    video
-                                                                )
-                                                            }
-                                                            className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit size={18} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() =>
-                                                                handleDelete(
+                                                                className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit
+                                                                    size={18}
+                                                                />
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        video._id
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    deleting ===
                                                                     video._id
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                deleting ===
-                                                                video._id
-                                                            }
-                                                            className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
-                                                            title="Delete"
-                                                        >
-                                                            {deleting ===
-                                                            video._id ? (
-                                                                <Loader2
-                                                                    size={18}
-                                                                    className="animate-spin"
-                                                                />
-                                                            ) : (
-                                                                <Trash2
-                                                                    size={18}
-                                                                />
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* My Tweets Section */}
-                {activeTab === "myTweets" && (
-                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden mt-8">
-                        <div className="p-6 border-b border-[#2A2D2E]">
-                            <h2 className="text-2xl font-bold">Your Tweets</h2>
+                                                                }
+                                                                className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
+                                                                title="Delete"
+                                                            >
+                                                                {deleting ===
+                                                                video._id ? (
+                                                                    <Loader2
+                                                                        size={
+                                                                            18
+                                                                        }
+                                                                        className="animate-spin"
+                                                                    />
+                                                                ) : (
+                                                                    <Trash2
+                                                                        size={
+                                                                            18
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
+                    )}
 
-                        {tweets.length === 0 ? (
-                            <div className="p-6 md:p-12 text-center">
-                                <MessageSquare
-                                    className="mx-auto mb-4 text-gray-400"
-                                    size={48}
-                                />
-                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
-                                    No tweets yet
-                                </h3>
-                                <p className="text-gray-500 mb-4">
-                                    Post your first tweet to get started
-                                </p>
-                                <button
-                                    onClick={() => navigate("/upload")}
-                                    className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
-                                >
-                                    Post Tweet
-                                </button>
+                    {/* My Tweets Section */}
+                    {activeTab === "myTweets" && (
+                        <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden mt-8">
+                            <div className="p-6 border-b border-[#2A2D2E]">
+                                <h2 className="text-2xl font-bold">
+                                    Your Tweets
+                                </h2>
                             </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-[#2A2D2E]/50">
-                                        <tr>
-                                            <th className="text-left p-4 font-semibold text-gray-300">
-                                                Tweet Content
-                                            </th>
-                                            <th className="text-center p-4 font-semibold text-gray-300">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <Heart size={16} />
-                                                    Likes
-                                                </div>
-                                            </th>
-                                            <th className="text-center p-4 font-semibold text-gray-300">
-                                                Date
-                                            </th>
-                                            <th className="text-right p-4 font-semibold text-gray-300">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {tweets.map((tweet) => (
-                                            <tr
-                                                key={tweet._id}
-                                                className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E] transition-colors"
-                                            >
-                                                <td className="p-4">
-                                                    <h4 className="font-semibold text-white line-clamp-2">
-                                                        {tweet.content}
-                                                    </h4>
-                                                </td>
-                                                <td className="p-4 text-center text-gray-300">
-                                                    {tweet.likes || 0}
-                                                </td>
-                                                <td className="p-4 text-center text-gray-400 text-sm">
-                                                    {new Date(
-                                                        tweet.createdAt
-                                                    ).toLocaleDateString()}
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button
-                                                            onClick={() =>
-                                                                handleEditTweet(
-                                                                    tweet
-                                                                )
-                                                            }
-                                                            className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit size={18} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() =>
-                                                                handleDeleteTweet(
+
+                            {tweets.length === 0 ? (
+                                <div className="p-6 md:p-12 text-center">
+                                    <MessageSquare
+                                        className="mx-auto mb-4 text-gray-400"
+                                        size={48}
+                                    />
+                                    <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                        No tweets yet
+                                    </h3>
+                                    <p className="text-gray-500 mb-4">
+                                        Post your first tweet to get started
+                                    </p>
+                                    <button
+                                        onClick={() => navigate("/upload")}
+                                        className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors"
+                                    >
+                                        Post Tweet
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-[#2A2D2E]/50">
+                                            <tr>
+                                                <th className="text-left p-4 font-semibold text-gray-300">
+                                                    Tweet Content
+                                                </th>
+                                                <th className="text-center p-4 font-semibold text-gray-300">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Heart size={16} />
+                                                        Likes
+                                                    </div>
+                                                </th>
+                                                <th className="text-center p-4 font-semibold text-gray-300">
+                                                    Date
+                                                </th>
+                                                <th className="text-right p-4 font-semibold text-gray-300">
+                                                    Actions
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {tweets.map((tweet) => (
+                                                <tr
+                                                    key={tweet._id}
+                                                    className="border-b border-[#2A2D2E] hover:bg-[#2A2D2E] transition-colors"
+                                                >
+                                                    <td className="p-4">
+                                                        <h4 className="font-semibold text-white line-clamp-2">
+                                                            {tweet.content}
+                                                        </h4>
+                                                    </td>
+                                                    <td className="p-4 text-center text-gray-300">
+                                                        {tweet.likes || 0}
+                                                    </td>
+                                                    <td className="p-4 text-center text-gray-400 text-sm">
+                                                        {new Date(
+                                                            tweet.createdAt
+                                                        ).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleEditTweet(
+                                                                        tweet
+                                                                    )
+                                                                }
+                                                                className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit
+                                                                    size={18}
+                                                                />
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDeleteTweet(
+                                                                        tweet._id
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    deleting ===
                                                                     tweet._id
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                deleting ===
-                                                                tweet._id
-                                                            }
-                                                            className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
-                                                            title="Delete"
-                                                        >
-                                                            {deleting ===
-                                                            tweet._id ? (
-                                                                <Loader2
-                                                                    size={18}
-                                                                    className="animate-spin"
-                                                                />
-                                                            ) : (
-                                                                <Trash2
-                                                                    size={18}
-                                                                />
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Liked Videos Section */}
-                {activeTab === "likedVideos" && (
-                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
-                        <div className="p-6 border-b border-[#2A2D2E]">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <Heart size={28} className="text-red-500" />
-                                Liked Videos
-                            </h2>
+                                                                }
+                                                                className="p-2 hover:bg-red-900/30 rounded-lg transition-colors text-gray-400 hover:text-red-600 disabled:opacity-50"
+                                                                title="Delete"
+                                                            >
+                                                                {deleting ===
+                                                                tweet._id ? (
+                                                                    <Loader2
+                                                                        size={
+                                                                            18
+                                                                        }
+                                                                        className="animate-spin"
+                                                                    />
+                                                                ) : (
+                                                                    <Trash2
+                                                                        size={
+                                                                            18
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
+                    )}
 
-                        {likedVideos.length === 0 ? (
-                            <div className="p-6 md:p-12 text-center">
-                                <Heart
-                                    className="mx-auto mb-4 text-gray-400"
-                                    size={48}
-                                />
-                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
-                                    No liked videos yet
-                                </h3>
-                                <p className="text-gray-500">
-                                    Videos you like will appear here
-                                </p>
+                    {/* Liked Videos Section */}
+                    {activeTab === "likedVideos" && (
+                        <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                            <div className="p-6 border-b border-[#2A2D2E]">
+                                <h2 className="text-2xl font-bold flex items-center gap-2">
+                                    <Heart size={28} className="text-red-500" />
+                                    Liked Videos
+                                </h2>
                             </div>
-                        ) : (
-                            <div className="flex flex-col gap-4 p-6">
-                                {likedVideos.map((item) => {
-                                    // Handle structure: backend returns video details inside videoDetails
-                                    const video =
-                                        item.videoDetails || item.video || item
-                                    if (!video._id) return null
 
-                                    return (
-                                        <div
-                                            key={video._id}
-                                            className="bg-[#1E2021] rounded-lg p-4 flex items-center gap-4 hover:bg-[#2A2D2E] transition-colors"
-                                        >
-                                            <div className="flex-shrink-0 w-32 h-20 bg-[#2A2D2E] rounded flex items-center justify-center">
-                                                <VideoIcon
-                                                    size={32}
-                                                    className="text-red-500"
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="text-white font-medium truncate mb-1">
-                                                    {video.title}
-                                                </h4>
-                                                <p className="text-gray-400 text-sm line-clamp-2 mb-2">
-                                                    {video.description}
-                                                </p>
-                                                <p className="text-gray-500 text-xs">
-                                                    {video.views?.toLocaleString() ||
-                                                        0}{" "}
-                                                    views
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        )}
-                    </div>
-                )}
+                            {likedVideos.length === 0 ? (
+                                <div className="p-6 md:p-12 text-center">
+                                    <Heart
+                                        className="mx-auto mb-4 text-gray-400"
+                                        size={48}
+                                    />
+                                    <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                        No liked videos yet
+                                    </h3>
+                                    <p className="text-gray-500">
+                                        Videos you like will appear here
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-4 p-6">
+                                    {likedVideos.map((item) => {
+                                        // Handle structure: backend returns video details inside videoDetails
+                                        const video =
+                                            item.videoDetails ||
+                                            item.video ||
+                                            item
+                                        if (!video._id) return null
 
-                {/* Liked Tweets Section */}
-                {activeTab === "likedTweets" && (
-                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
-                        <div className="p-6 border-b border-[#2A2D2E]">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <Heart size={28} className="text-red-500" />
-                                Liked Tweets
-                            </h2>
+                                        return (
+                                            <div
+                                                key={video._id}
+                                                className="bg-[#1E2021] rounded-lg p-4 flex items-center gap-4 hover:bg-[#2A2D2E] transition-colors"
+                                            >
+                                                <div className="flex-shrink-0 w-32 h-20 bg-[#2A2D2E] rounded flex items-center justify-center">
+                                                    <VideoIcon
+                                                        size={32}
+                                                        className="text-red-500"
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="text-white font-medium truncate mb-1">
+                                                        {video.title}
+                                                    </h4>
+                                                    <p className="text-gray-400 text-sm line-clamp-2 mb-2">
+                                                        {video.description}
+                                                    </p>
+                                                    <p className="text-gray-500 text-xs">
+                                                        {video.views?.toLocaleString() ||
+                                                            0}{" "}
+                                                        views
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
                         </div>
+                    )}
 
-                        {likedTweets.length === 0 ? (
-                            <div className="p-6 md:p-12 text-center">
-                                <Heart
-                                    className="mx-auto mb-4 text-gray-400"
-                                    size={48}
-                                />
-                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
-                                    No liked tweets yet
-                                </h3>
-                                <p className="text-gray-500">
-                                    Tweets you like will appear here
-                                </p>
+                    {/* Liked Tweets Section */}
+                    {activeTab === "likedTweets" && (
+                        <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                            <div className="p-6 border-b border-[#2A2D2E]">
+                                <h2 className="text-2xl font-bold flex items-center gap-2">
+                                    <Heart size={28} className="text-red-500" />
+                                    Liked Tweets
+                                </h2>
                             </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-                                {likedTweets.map((item) => {
-                                    const tweet =
-                                        item.tweetDetails || item.tweet || item
-                                    const owner =
-                                        item.ownerDetails || tweet.owner || {}
-                                    if (!tweet._id) return null
 
-                                    return (
-                                        <div
-                                            key={tweet._id}
-                                            className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors"
-                                        >
-                                            {tweet.image && (
-                                                <img
-                                                    src={tweet.image}
-                                                    alt="Tweet"
-                                                    className="w-full h-48 object-cover rounded-lg mb-3"
-                                                />
-                                            )}
-                                            <p className="text-white line-clamp-3 mb-3">
-                                                {tweet.content}
-                                            </p>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-sm text-gray-300">
-                                                    @{owner?.username}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-4 text-sm text-gray-400">
-                                                <span className="flex items-center gap-1">
-                                                    <Heart size={16} />
-                                                    {tweet.likes || 0}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        )}
-                    </div>
-                )}
+                            {likedTweets.length === 0 ? (
+                                <div className="p-6 md:p-12 text-center">
+                                    <Heart
+                                        className="mx-auto mb-4 text-gray-400"
+                                        size={48}
+                                    />
+                                    <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                        No liked tweets yet
+                                    </h3>
+                                    <p className="text-gray-500">
+                                        Tweets you like will appear here
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
+                                    {likedTweets.map((item) => {
+                                        const tweet =
+                                            item.tweetDetails ||
+                                            item.tweet ||
+                                            item
+                                        const owner =
+                                            item.ownerDetails ||
+                                            tweet.owner ||
+                                            {}
+                                        if (!tweet._id) return null
 
-                {/* My Comments Section */}
-                {activeTab === "myComments" && <MyCommentsTab />}
-
-                {/* Subscribers Section */}
-                {activeTab === "subscribers" && (
-                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
-                        <div className="p-6 border-b border-[#2A2D2E]">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <Users size={28} className="text-red-500" />
-                                Subscribers
-                            </h2>
-                        </div>
-
-                        {subscribers.length === 0 ? (
-                            <div className="p-12 text-center">
-                                <Users
-                                    className="mx-auto mb-4 text-gray-400"
-                                    size={48}
-                                />
-                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
-                                    No subscribers yet
-                                </h3>
-                                <p className="text-gray-500">
-                                    Users who subscribe to you will appear here
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="p-6 space-y-3">
-                                {subscribers.map((sub) => {
-                                    const userObj =
-                                        sub.subscriberDetails ||
-                                        sub.subscriber ||
-                                        sub
-                                    if (!userObj) return null
-
-                                    return (
-                                        <div
-                                            key={sub._id}
-                                            className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors flex items-center justify-between"
-                                        >
-                                            <div>
-                                                <h4 className="text-white font-semibold">
-                                                    {userObj.fullName}
-                                                </h4>
-                                                <p className="text-gray-400 text-sm">
-                                                    @{userObj.username}
+                                        return (
+                                            <div
+                                                key={tweet._id}
+                                                className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors"
+                                            >
+                                                {tweet.image && (
+                                                    <img
+                                                        src={tweet.image}
+                                                        alt="Tweet"
+                                                        className="w-full h-48 object-cover rounded-lg mb-3"
+                                                    />
+                                                )}
+                                                <p className="text-white line-clamp-3 mb-3">
+                                                    {tweet.content}
                                                 </p>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="text-sm text-gray-300">
+                                                        @{owner?.username}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-4 text-sm text-gray-400">
+                                                    <span className="flex items-center gap-1">
+                                                        <Heart size={16} />
+                                                        {tweet.likes || 0}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Subscribed To Section */}
-                {activeTab === "subscribedTo" && (
-                    <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
-                        <div className="p-6 border-b border-[#2A2D2E]">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <Users size={28} className="text-red-500" />
-                                Subscribed Channels
-                            </h2>
+                                        )
+                                    })}
+                                </div>
+                            )}
                         </div>
+                    )}
 
-                        {subscribedTo.length === 0 ? (
-                            <div className="p-12 text-center">
-                                <Users
-                                    className="mx-auto mb-4 text-gray-400"
-                                    size={48}
-                                />
-                                <h3 className="text-xl font-semibold text-gray-400 mb-2">
-                                    No subscriptions yet
-                                </h3>
-                                <p className="text-gray-500">
-                                    Channels you subscribe to will appear here
-                                </p>
+                    {/* My Comments Section */}
+                    {activeTab === "myComments" && <MyCommentsTab />}
+
+                    {/* Subscribers Section */}
+                    {activeTab === "subscribers" && (
+                        <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                            <div className="p-6 border-b border-[#2A2D2E]">
+                                <h2 className="text-2xl font-bold flex items-center gap-2">
+                                    <Users size={28} className="text-red-500" />
+                                    Subscribers
+                                </h2>
                             </div>
-                        ) : (
-                            <div className="p-6 space-y-3">
-                                {subscribedTo.map((sub) => {
-                                    const channelObj =
-                                        sub.subscribedChannelDetails ||
-                                        sub.channel ||
-                                        sub
-                                    if (!channelObj) return null
 
-                                    return (
-                                        <div
-                                            key={sub._id}
-                                            className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors flex items-center justify-between"
-                                        >
-                                            <div>
-                                                <h4 className="text-white font-semibold">
-                                                    {channelObj.fullName}
-                                                </h4>
-                                                <p className="text-gray-400 text-sm">
-                                                    @{channelObj.username}
-                                                </p>
+                            {subscribers.length === 0 ? (
+                                <div className="p-12 text-center">
+                                    <Users
+                                        className="mx-auto mb-4 text-gray-400"
+                                        size={48}
+                                    />
+                                    <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                        No subscribers yet
+                                    </h3>
+                                    <p className="text-gray-500">
+                                        Users who subscribe to you will appear
+                                        here
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="p-6 space-y-3">
+                                    {subscribers.map((sub) => {
+                                        const userObj =
+                                            sub.subscriberDetails ||
+                                            sub.subscriber ||
+                                            sub
+                                        if (!userObj) return null
+
+                                        return (
+                                            <div
+                                                key={sub._id}
+                                                className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors flex items-center justify-between"
+                                            >
+                                                <div>
+                                                    <h4 className="text-white font-semibold">
+                                                        {userObj.fullName}
+                                                    </h4>
+                                                    <p className="text-gray-400 text-sm">
+                                                        @{userObj.username}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Subscribed To Section */}
+                    {activeTab === "subscribedTo" && (
+                        <div className="bg-[#2A2D2E]/50 border border-[#2A2D2E] rounded-xl overflow-hidden">
+                            <div className="p-6 border-b border-[#2A2D2E]">
+                                <h2 className="text-2xl font-bold flex items-center gap-2">
+                                    <Users size={28} className="text-red-500" />
+                                    Subscribed Channels
+                                </h2>
                             </div>
-                        )}
-                    </div>
-                )}
+
+                            {subscribedTo.length === 0 ? (
+                                <div className="p-12 text-center">
+                                    <Users
+                                        className="mx-auto mb-4 text-gray-400"
+                                        size={48}
+                                    />
+                                    <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                                        No subscriptions yet
+                                    </h3>
+                                    <p className="text-gray-500">
+                                        Channels you subscribe to will appear
+                                        here
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="p-6 space-y-3">
+                                    {subscribedTo.map((sub) => {
+                                        const channelObj =
+                                            sub.subscribedChannelDetails ||
+                                            sub.channel ||
+                                            sub
+                                        if (!channelObj) return null
+
+                                        return (
+                                            <div
+                                                key={sub._id}
+                                                className="bg-[#1E2021] rounded-lg p-4 hover:bg-[#2A2D2E] transition-colors flex items-center justify-between"
+                                            >
+                                                <div>
+                                                    <h4 className="text-white font-semibold">
+                                                        {channelObj.fullName}
+                                                    </h4>
+                                                    <p className="text-gray-400 text-sm">
+                                                        @{channelObj.username}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </Tabs>
             </div>
+
+            {/* Delete Confirmation AlertDialog */}
+            <AlertDialog
+                open={!!pendingDelete}
+                onOpenChange={(open) => !open && setPendingDelete(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete your{" "}
+                            {pendingDelete?.type === "video"
+                                ? "video"
+                                : "tweet"}
+                            .
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* Edit Modal */}
             {editingItem && (

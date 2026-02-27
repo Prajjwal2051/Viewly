@@ -20,6 +20,8 @@ import {
     sanitizeUsername,
     sanitizeUserBio,
 } from "../utils/sanitize"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 /**
  * TAB CONFIGURATION
@@ -223,18 +225,16 @@ const ProfilePage = () => {
                     }`}
                 >
                     <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1.5 bg-[#121212]">
-                        {profileData?.avatar && !avatarError ? (
-                            <img
-                                src={profileData.avatar}
+                        <Avatar className="w-full h-full">
+                            <AvatarImage
+                                src={profileData?.avatar}
                                 alt={profileData?.username}
-                                onError={() => setAvatarError(true)}
-                                className="w-full h-full rounded-full object-cover"
+                                className="rounded-full object-cover"
                             />
-                        ) : (
-                            <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
+                            <AvatarFallback className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
                                 <User size={60} className="text-gray-400" />
-                            </div>
-                        )}
+                            </AvatarFallback>
+                        </Avatar>
                     </div>
                 </div>
 
@@ -335,48 +335,31 @@ const ProfilePage = () => {
                 )}
             </div>
 
-            {/* Navigation Tabs with Sliding Animation */}
-            <div className="relative flex items-center border-b border-[#2A2D2E] mb-8 overflow-x-auto">
-                {/* Animated Background Slider - Desktop Only */}
-                <div
-                    className={`hidden md:block absolute bottom-0 h-0.5 bg-red-600 rounded-t-full transition-all duration-300 ease-out`}
-                    style={{
-                        width: `${(100 / TABS.length) * 0.6}%`, // 60% of tab width for narrower slider
-                        left: `${TABS.findIndex((t) => t.id === activeTab) * (100 / TABS.length) + (100 / TABS.length) * 0.2}%`, // Centered within tab
-                    }}
-                />
+            {/* Navigation Tabs — shadcn Tabs */}
+            <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="mb-8"
+            >
+                <TabsList className="flex bg-transparent border-b border-border w-full justify-start rounded-none h-auto pb-0">
+                    {TABS.map((tab) => {
+                        const Icon = tab.icon
+                        return (
+                            <TabsTrigger
+                                key={tab.id}
+                                value={tab.id}
+                                className="flex items-center gap-2 px-8 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent flex-1"
+                            >
+                                <Icon size={18} />
+                                {tab.label}
+                            </TabsTrigger>
+                        )
+                    })}
+                </TabsList>
 
-                {TABS.map((tab) => {
-                    const Icon = tab.icon
-                    const isActive = activeTab === tab.id
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center justify-center gap-2 px-8 py-4 font-medium transition-all duration-300 relative whitespace-nowrap flex-1 ${
-                                isActive
-                                    ? "text-red-600"
-                                    : "text-gray-500 hover:text-white"
-                            }`}
-                        >
-                            <Icon
-                                size={18}
-                                className="transition-transform duration-300 hover:scale-110"
-                            />
-                            {tab.label}
-                            {/* Mobile: Individual bottom border */}
-                            {isActive && (
-                                <div className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-3/5 h-0.5 bg-red-600 rounded-t-full" />
-                            )}
-                        </button>
-                    )
-                })}
-            </div>
-
-            {/* Tab Content */}
-            <div className="min-h-[400px]">
-                {activeTab === "videos" &&
-                    (loading ? (
+                {/* Tab Content */}
+                <TabsContent value="videos" className="min-h-[400px] mt-6">
+                    {loading ? (
                         <div className="flex justify-center py-20">
                             <Loader2 className="w-12 h-12 animate-spin text-red-600" />
                         </div>
@@ -401,53 +384,52 @@ const ProfilePage = () => {
                             }
                             animated={true}
                         />
-                    ))}
+                    )}
+                </TabsContent>
 
-                {activeTab === "tweets" && (
-                    <div>
-                        {profileData?._id ? (
-                            <TweetList userId={profileData._id} />
-                        ) : (
-                            <div className="text-center py-20 text-gray-500">
-                                <MessageSquare
-                                    size={48}
-                                    className="mx-auto mb-4 opacity-20"
-                                />
-                                <h3 className="text-xl font-medium mb-2">
-                                    No tweets yet
-                                </h3>
-                                <p>
-                                    {isOwnProfile
-                                        ? "Tweets you post will appear here."
-                                        : "This user hasn't posted any tweets yet."}
-                                </p>
-                                {isOwnProfile && (
-                                    <button
-                                        onClick={() => navigate("/upload")}
-                                        className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full transition-colors"
-                                    >
-                                        Post Tweet
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
+                <TabsContent value="tweets" className="min-h-[400px] mt-6">
+                    {profileData?._id ? (
+                        <TweetList userId={profileData._id} />
+                    ) : (
+                        <div className="text-center py-20 text-muted-foreground">
+                            <MessageSquare
+                                size={48}
+                                className="mx-auto mb-4 opacity-20"
+                            />
+                            <h3 className="text-xl font-medium mb-2">
+                                No tweets yet
+                            </h3>
+                            <p>
+                                {isOwnProfile
+                                    ? "Tweets you post will appear here."
+                                    : "This user hasn't posted any tweets yet."}
+                            </p>
+                            {isOwnProfile && (
+                                <button
+                                    onClick={() => navigate("/upload")}
+                                    className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full transition-colors"
+                                >
+                                    Post Tweet
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </TabsContent>
 
-                {activeTab === "about" && (
-                    <div className="bg-[#1E2021] rounded-xl p-8 border border-gray-100">
-                        <h3 className="text-xl font-bold mb-4 text-white">
+                <TabsContent value="about" className="min-h-[400px] mt-6">
+                    <div className="bg-card rounded-xl p-8 border border-border">
+                        <h3 className="text-xl font-bold mb-4 text-foreground">
                             About
                         </h3>
-                        <p className="text-gray-400">
+                        <p className="text-muted-foreground">
                             Joined{" "}
                             {new Date(
                                 profileData?.createdAt || Date.now()
                             ).toLocaleDateString()}
                         </p>
                     </div>
-                )}
-            </div>
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }

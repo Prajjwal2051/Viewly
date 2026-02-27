@@ -4,29 +4,56 @@
    Dark theme with custom background color and elegant typography
 */
 
-/* Tailwind CSS - Import utilities */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom base styles */
-body {
-    /* Use Inter as primary font with system fallbacks */
-    font-family:
-        "Inter",
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        "Roboto",
-        "Oxygen",
-        "Ubuntu",
-        "Cantarell",
-        sans-serif;
-    /* Smoother font rendering across browsers */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background-color: #1e2021; /* Softer dark background */
-    @apply transition-colors duration-200 text-white;
+@layer base {
+    :root {
+        --background: 30 3% 12%;
+        --foreground: 0 0% 96%;
+        --card: 30 3% 15%;
+        --card-foreground: 0 0% 96%;
+        --popover: 30 3% 15%;
+        --popover-foreground: 0 0% 96%;
+        --primary: 0 72% 51%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 30 3% 18%;
+        --secondary-foreground: 0 0% 96%;
+        --muted: 30 3% 18%;
+        --muted-foreground: 0 0% 55%;
+        --accent: 30 3% 18%;
+        --accent-foreground: 0 0% 96%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 30 3% 22%;
+        --input: 30 3% 22%;
+        --ring: 0 72% 51%;
+        --radius: 0.75rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        /* Use Inter as primary font with system fallbacks */
+        font-family:
+            "Inter",
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            "Roboto",
+            "Oxygen",
+            "Ubuntu",
+            "Cantarell",
+            sans-serif;
+        /* Smoother font rendering across browsers */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        @apply bg-background text-foreground transition-colors duration-200;
+    }
 }
 
 /* Mobile-specific: Add bottom padding for fixed bottom nav */

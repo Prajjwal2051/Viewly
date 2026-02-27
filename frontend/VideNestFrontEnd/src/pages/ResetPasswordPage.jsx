@@ -9,17 +9,20 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { resetPassword } from "../api/authApi"
 import toast from "react-hot-toast"
 import { Lock, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import Input from "../components/layout/ui/Input"
+import Button from "../components/layout/ui/Button"
 
 /**
  * RESET PASSWORD PAGE COMPONENT
  * Final step of password recovery - user sets new password
- * 
+ *
  * Purpose:
  * - Allow users to create new password after email verification
  * - Validate new password meets requirements
  * - Confirm password matches before submission
  * - Provide secure password reset flow
- * 
+ *
  * Features:
  * - Password and confirm password fields
  * - Show/hide password toggles for better UX
@@ -27,24 +30,24 @@ import { Lock, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react"
  * - Token-based authentication (from URL)
  * - Success screen with auto-redirect to login
  * - Loading states during submission
- * 
+ *
  * User Flow:
  * 1. User clicks reset link from email (contains token)
  * 2. Token extracted from URL parameters
  * 3. User enters new password twice
  * 4. System validates and updates password
  * 5. Success screen shown, then redirect to login
- * 
+ *
  * URL Structure:
  * /reset-password/:token
  * Example: /reset-password/eyJhbGciOiJIUzI1NiIs...
- * 
+ *
  * State:
  * - formData: New password and confirmation
  * - showPassword: Toggle password visibility
  * - loading: Whether API request is in progress
  * - success: Whether password was successfully reset
- * 
+ *
  * @returns {JSX.Element} Reset password form or success screen
  */
 const ResetPasswordPage = () => {
@@ -54,8 +57,8 @@ const ResetPasswordPage = () => {
 
     // Form state
     const [formData, setFormData] = useState({
-        password: "",           // New password
-        confirmPassword: "",    // Password confirmation
+        password: "", // New password
+        confirmPassword: "", // Password confirmation
     })
 
     // UI state
@@ -127,55 +130,55 @@ const ResetPasswordPage = () => {
     if (success) {
         return (
             <div className="min-h-screen bg-[#1E2021] flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center">
+                <Card className="max-w-md w-full p-8 text-center">
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="w-8 h-8 text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h2 className="text-2xl font-bold text-foreground mb-2">
                         Password Reset Successful!
                     </h2>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-muted-foreground mb-6">
                         Your password has been updated. Redirecting to login...
                     </p>
-                </div>
+                </Card>
             </div>
         )
     }
 
     return (
         <div className="min-h-screen bg-[#1E2021] flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-2xl p-8">
+            <Card className="max-w-md w-full p-8">
                 <div className="text-center mb-8">
                     <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Lock className="w-6 h-6 text-red-600" />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    <h2 className="text-3xl font-bold text-foreground mb-2">
                         Reset Password
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-muted-foreground">
                         Enter your new password below
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                             New Password
                         </label>
                         <div className="relative">
-                            <input
+                            <Input
                                 type={showPassword ? "text" : "password"}
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                                 placeholder="Enter new password"
                                 disabled={loading}
+                                className="pr-12"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                             >
                                 {showPassword ? (
                                     <EyeOff className="w-5 h-5" />
@@ -187,25 +190,25 @@ const ResetPasswordPage = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                             Confirm Password
                         </label>
                         <div className="relative">
-                            <input
+                            <Input
                                 type={showConfirmPassword ? "text" : "password"}
                                 name="confirmPassword"
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                                 placeholder="Confirm new password"
                                 disabled={loading}
+                                className="pr-12"
                             />
                             <button
                                 type="button"
                                 onClick={() =>
                                     setShowConfirmPassword(!showConfirmPassword)
                                 }
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                             >
                                 {showConfirmPassword ? (
                                     <EyeOff className="w-5 h-5" />
@@ -216,31 +219,31 @@ const ResetPasswordPage = () => {
                         </div>
                     </div>
 
-                    <button
+                    <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-red-600 text-white py-3 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        className="w-full bg-red-600 hover:bg-red-700 text-white"
                     >
                         {loading ? (
                             <>
-                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />{" "}
                                 Resetting...
                             </>
                         ) : (
                             "Reset Password"
                         )}
-                    </button>
+                    </Button>
                 </form>
 
                 <div className="mt-6 text-center">
                     <Link
                         to="/login"
-                        className="text-sm text-gray-600 hover:text-gray-900"
+                        className="text-sm text-muted-foreground hover:text-foreground"
                     >
                         Back to Login
                     </Link>
                 </div>
-            </div>
+            </Card>
         </div>
     )
 }

@@ -5,7 +5,7 @@
 // Used in home feed, search results, and playlists.
 
 import { useNavigate, useLocation } from "react-router-dom"
-import { formatDistanceToNow } from "date-fns" // Time formatting library
+import { formatDistanceToNow } from "date-fns"
 import { Play, Share2, User, Heart } from "lucide-react"
 import toast from "react-hot-toast"
 import { useState, useEffect } from "react"
@@ -16,6 +16,8 @@ import {
     sanitizeDisplayName,
     sanitizeUsername,
 } from "../../utils/sanitize"
+import { Card } from "@/components/ui/card"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 /**
  * Props:
@@ -123,13 +125,13 @@ const VideoCard = ({ video }) => {
     }
 
     return (
-        <div
+        <Card
             onClick={() =>
                 navigate(`/video/${video._id}`, {
                     state: { background: location },
                 })
             }
-            className="group relative w-full mb-6 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer shadow-lg bg-[#2A2D2E] hover:-translate-y-1 hover:shadow-2xl hover:bg-[#2F3233] transition-all duration-300 border border-transparent hover:border-white/10 flex flex-col"
+            className="group relative w-full mb-6 break-inside-avoid overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 flex flex-col border-border/50 hover:border-white/10"
         >
             {/* TOP SECTION: VIDEO THUMBNAIL & OVERLAY */}
             <div className="relative w-full h-[250px] isolate overflow-hidden bg-[#1E2021]">
@@ -202,30 +204,23 @@ const VideoCard = ({ video }) => {
             </div>
 
             {/* BOTTOM SECTION: INFO */}
-            <div className="p-3 flex gap-3 bg-[#2A2D2E]">
-                {/* Avatar with Fallback */}
-                {video.owner?.avatar && !avatarError ? (
-                    <img
-                        src={video.owner.avatar}
+            <div className="p-3 flex gap-3 bg-card">
+                {/* Avatar */}
+                <Avatar
+                    className="h-9 w-9 mt-1 shrink-0 cursor-pointer border border-white/10 hover:border-red-500 transition-colors"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        navigate(`/channel/${video.owner?.username}`)
+                    }}
+                >
+                    <AvatarImage
+                        src={video.owner?.avatar}
                         alt={video.owner?.username}
-                        onError={() => setAvatarError(true)}
-                        className="h-9 w-9 rounded-full object-cover border border-white/10 shrink-0 mt-1 cursor-pointer hover:border-red-500 transition-colors"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            navigate(`/channel/${video.owner?.username}`)
-                        }}
                     />
-                ) : (
-                    <div
-                        className="h-9 w-9 rounded-full bg-gray-700 border border-white/10 shrink-0 mt-1 flex items-center justify-center cursor-pointer hover:border-red-500 transition-colors"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            navigate(`/channel/${video.owner?.username}`)
-                        }}
-                    >
-                        <User size={18} className="text-gray-400" />
-                    </div>
-                )}
+                    <AvatarFallback className="bg-gray-700">
+                        <User size={16} className="text-gray-400" />
+                    </AvatarFallback>
+                </Avatar>
 
                 <div className="flex flex-col min-w-0">
                     {/* Title - Increased Font Size */}
@@ -258,7 +253,7 @@ const VideoCard = ({ video }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </Card>
     )
 }
 

@@ -20,6 +20,7 @@ import authBgBright from "../assets/auth_bg_bright.png"
 import { Eye, EyeOff, Info, Github, Mail } from "lucide-react"
 import developerProfile from "../assets/developer_profile.jpg"
 import logo from "../assets/logo.png"
+import { Card } from "@/components/ui/card"
 
 const RegisterPage = () => {
     // Form state
@@ -80,10 +81,7 @@ const RegisterPage = () => {
             return
         }
 
-        if (!avatar) {
-            toast.error("📸 Please upload a profile picture")
-            return
-        }
+        // Avatar is now optional - backend will generate a default if not provided
 
         try {
             dispatch(loginStart())
@@ -92,7 +90,9 @@ const RegisterPage = () => {
             data.append("email", formData.email)
             data.append("fullName", formData.fullName)
             data.append("password", formData.password)
-            data.append("avatar", avatar)
+            if (avatar) {
+                data.append("avatar", avatar)
+            }
             if (coverImage) {
                 data.append("coverImage", coverImage)
             }
@@ -141,7 +141,7 @@ const RegisterPage = () => {
                 {/* Left Side: Slogan (Removed) */}
 
                 {/* Right Side: Form Card */}
-                <div className="w-full md:w-[480px] bg-white/95 backdrop-blur-xl rounded-[32px] shadow-2xl p-8 relative group/card border border-white/40">
+                <Card className="w-full md:w-[480px] bg-white/95 backdrop-blur-xl rounded-[32px] shadow-2xl p-8 relative group/card border border-white/40">
                     {/* Developer Info Icon */}
                     <div className="absolute top-6 right-6 z-20">
                         <div className="relative group/info">
@@ -314,19 +314,49 @@ const RegisterPage = () => {
                             </button>
                         </div>
 
-                        <div className="bg-gray-100 rounded-2xl p-2">
-                            <label className="block text-xs text-gray-600 px-2 mb-1">
-                                Avatar
+                        {/* Avatar Upload - Optional */}
+                        <div className="bg-gray-100 rounded-2xl p-3">
+                            <label className="block text-xs font-medium text-gray-500 px-1 mb-2">
+                                Profile Picture{" "}
+                                <span className="text-gray-400 font-normal">
+                                    (optional)
+                                </span>
                             </label>
-                            <input
-                                type="file"
-                                name="avatar"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                className="w-full text-sm text-gray-600 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer"
-                                required
-                                disabled={loading}
-                            />
+                            <div className="flex items-center gap-3">
+                                {/* Live preview */}
+                                <div className="flex-shrink-0">
+                                    <img
+                                        src={
+                                            avatar
+                                                ? URL.createObjectURL(avatar)
+                                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.fullName || "U")}&size=80&background=c0392b&color=ffffff&bold=true&format=png`
+                                        }
+                                        alt="Avatar preview"
+                                        className="w-14 h-14 rounded-full object-cover border-2 border-red-200 shadow-sm"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <input
+                                        type="file"
+                                        name="avatar"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer"
+                                        disabled={loading}
+                                    />
+                                    {!avatar && (
+                                        <p className="text-[11px] text-gray-400 mt-1 leading-tight">
+                                            A personalized avatar will be
+                                            auto-generated from your name
+                                        </p>
+                                    )}
+                                    {avatar && (
+                                        <p className="text-[11px] text-green-600 mt-1">
+                                            ✓ Custom avatar selected
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         <Button
@@ -358,7 +388,7 @@ const RegisterPage = () => {
                             </Link>
                         </p>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     )

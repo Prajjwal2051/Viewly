@@ -13,7 +13,8 @@ import {
     useNavigate,
 } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
-import toast, { Toaster } from "react-hot-toast"
+import toast from "react-hot-toast"
+import { Toaster } from "./components/ui/toaster"
 import { loginFailure, loginSuccess, logout } from "./store/slices/authSlice"
 import { getCurrentUser } from "./api/authApi"
 import { Loader2 } from "lucide-react"

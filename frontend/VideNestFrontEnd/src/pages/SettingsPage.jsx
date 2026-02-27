@@ -6,7 +6,7 @@
 
 import React, { useState } from "react"
 import { useSelector, useDispatch } from "react-redux"
-import { loginSuccess } from "../store/slices/authSlice" // To update user state in redux
+import { loginSuccess } from "../store/slices/authSlice"
 import {
     User,
     Lock,
@@ -22,6 +22,10 @@ import {
     updateUserCoverImage,
     changePassword,
 } from "../api/userApi"
+import { Card } from "@/components/ui/card"
+import Input from "../components/layout/ui/Input"
+import Button from "../components/layout/ui/Button"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 /**
  * SETTINGS PAGE COMPONENT
@@ -174,25 +178,31 @@ const SettingsPage = () => {
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-8 pb-20">
-            <h1 className="text-3xl font-bold mb-8 dark:text-white">
+            <h1 className="text-3xl font-bold mb-8 text-foreground">
                 Settings
             </h1>
-            <section className="bg-[#1E2021] dark:bg-[#2A2D2E] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
+
+            {/* SECTION 1: PROFILE IMAGES */}
+            <Card className="overflow-hidden mb-6">
                 <div className="p-6">
-                    <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 dark:text-white">
+                    <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 text-foreground">
                         <ImageIcon className="w-5 h-5 text-red-600" />
                         Profile Images
                     </h2>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Avatar Upload */}
                         <div className="flex flex-col items-center">
                             <div className="relative group mb-4">
-                                <img
-                                    src={user?.avatar}
-                                    alt="Avatar"
-                                    className="w-32 h-32 rounded-full object-cover border-4 border-[#1E2021] dark:border-[#2A2D2E] shadow-lg ring-2 ring-red-600/20"
-                                />
+                                <Avatar className="w-32 h-32 border-4 border-background shadow-lg ring-2 ring-red-600/20">
+                                    <AvatarImage
+                                        src={user?.avatar}
+                                        alt="Avatar"
+                                        className="object-cover"
+                                    />
+                                    <AvatarFallback>
+                                        {user?.fullName?.[0] || "U"}
+                                    </AvatarFallback>
+                                </Avatar>
                                 <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                                     {loading.avatar ? (
                                         <Loader2 className="w-8 h-8 text-white animate-spin" />
@@ -208,10 +218,10 @@ const SettingsPage = () => {
                                     />
                                 </label>
                             </div>
-                            <p className="text-sm font-medium dark:text-white">
+                            <p className="text-sm font-medium text-foreground">
                                 Profile Picture
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                                 Click to change
                             </p>
                         </div>
@@ -251,60 +261,56 @@ const SettingsPage = () => {
                                     />
                                 </label>
                             </div>
-                            <p className="text-sm font-medium dark:text-white">
+                            <p className="text-sm font-medium text-foreground">
                                 Cover Image
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                                 Click to change
                             </p>
                         </div>
                     </div>
                 </div>
-            </section>
+            </Card>
 
-            {/* SECTION 3: PERSONAL INFORMATION */}
-            <section className="bg-[#1E2021] dark:bg-[#2A2D2E] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
+            {/* SECTION 2: PERSONAL INFORMATION */}
+            <Card className="overflow-hidden mb-6">
                 <div className="p-6">
-                    <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 dark:text-white">
+                    <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 text-foreground">
                         <User className="w-5 h-5 text-red-600" />
                         Personal Information
                     </h2>
-
                     <form onSubmit={onSavePersonalInfo} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">
                                     Full Name
                                 </label>
-                                <input
+                                <Input
                                     type="text"
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleInfoChange}
-                                    className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1E2021] border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none dark:text-white"
                                     placeholder="John Doe"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">
                                     Email Address
                                 </label>
-                                <input
+                                <Input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInfoChange}
-                                    className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1E2021] border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none dark:text-white"
                                     placeholder="john@example.com"
                                 />
                             </div>
                         </div>
-
                         <div className="flex justify-end pt-2">
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={loading.profile}
-                                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
                             >
                                 {loading.profile ? (
                                     <Loader2
@@ -315,69 +321,65 @@ const SettingsPage = () => {
                                     <Save size={18} />
                                 )}
                                 Save Changes
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
-            </section>
+            </Card>
 
-            {/* SECTION 4: SECURITY (PASSWORD) */}
-            <section className="bg-[#1E2021] dark:bg-[#2A2D2E] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            {/* SECTION 3: SECURITY */}
+            <Card className="overflow-hidden">
                 <div className="p-6">
-                    <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 dark:text-white">
+                    <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 text-foreground">
                         <Lock className="w-5 h-5 text-red-600" />
                         Security
                     </h2>
-
                     <form
                         onSubmit={onChangePassword}
                         className="space-y-4 max-w-lg"
                     >
                         <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1">
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">
                                 Current Password
                             </label>
-                            <input
+                            <Input
                                 type="password"
                                 name="oldPassword"
                                 value={passwordData.oldPassword}
                                 onChange={handlePasswordChange}
-                                className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1E2021] border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none dark:text-white"
                                 placeholder="••••••••"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1">
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">
                                 New Password
                             </label>
-                            <input
+                            <Input
                                 type="password"
                                 name="newPassword"
                                 value={passwordData.newPassword}
                                 onChange={handlePasswordChange}
-                                className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1E2021] border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none dark:text-white"
                                 placeholder="••••••••"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1">
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">
                                 Confirm New Password
                             </label>
-                            <input
+                            <Input
                                 type="password"
                                 name="confirmPassword"
                                 value={passwordData.confirmPassword}
                                 onChange={handlePasswordChange}
-                                className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1E2021] border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none dark:text-white"
                                 placeholder="••••••••"
                             />
                         </div>
-
                         <div className="flex justify-start pt-2">
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={loading.password}
-                                className="px-6 py-2 bg-gray-800 hover:bg-black dark:bg-gray-700 dark:hover:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                variant="secondary"
+                                className="flex items-center gap-2"
                             >
                                 {loading.password ? (
                                     <Loader2
@@ -388,11 +390,11 @@ const SettingsPage = () => {
                                     <Lock size={18} />
                                 )}
                                 Change Password
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
-            </section>
+            </Card>
         </div>
     )
 }

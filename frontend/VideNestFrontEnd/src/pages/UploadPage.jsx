@@ -22,6 +22,8 @@ import { useNavigate } from "react-router-dom"
 import { uploadVideo } from "../api/videoApi"
 import { createTweet } from "../api/tweetApi"
 import Input from "../components/layout/ui/Input"
+import Button from "../components/layout/ui/Button"
+import { Card } from "@/components/ui/card"
 import {
     validateVideoFile,
     validateImageFile,
@@ -35,19 +37,19 @@ import {
 
 /**
  * UPLOAD PAGE COMPONENT
- * 
+ *
  * Purpose:
  * - Single page for uploading both videos and photo posts
  * - Tab-based UI to switch between video and tweet upload
  * - Real-time file validation and preview
- * 
+ *
  * Key Features:
  * - File size validation (50MB videos, 10MB images)
  * - Format validation (mp4/webm for videos, jpg/png for images)
  * - Live preview before upload
  * - Progress feedback during upload
  * - Form validation using react-hook-form
- * 
+ *
  * User Flow:
  * 1. Choose post type (Video or Tweet)
  * 2. Select file from device
@@ -187,19 +189,21 @@ const UploadPage = () => {
             <div className="relative flex bg-[#1E2021] rounded-xl p-1 mb-8">
                 {/* Animated Background Slider */}
                 <div
-                    className={`absolute top-1 bottom-1 w-[calc(50%-0.25rem)] bg-red-600 rounded-lg shadow-lg shadow-red-500/30 transition-transform duration-300 ease-out ${postType === "tweet"
+                    className={`absolute top-1 bottom-1 w-[calc(50%-0.25rem)] bg-red-600 rounded-lg shadow-lg shadow-red-500/30 transition-transform duration-300 ease-out ${
+                        postType === "tweet"
                             ? "translate-x-[calc(100%+0.5rem)]"
                             : "translate-x-0"
-                        }`}
+                    }`}
                 />
 
                 {/* Upload Video Button */}
                 <button
                     onClick={() => togglePostType("video")}
-                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${postType === "video"
+                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${
+                        postType === "video"
                             ? "text-white"
                             : "text-gray-400 hover:text-gray-300"
-                        }`}
+                    }`}
                 >
                     <Film size={20} />
                     <span className="font-semibold">Upload Video</span>
@@ -208,10 +212,11 @@ const UploadPage = () => {
                 {/* Create Tweet Button */}
                 <button
                     onClick={() => togglePostType("tweet")}
-                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${postType === "tweet"
+                    className={`relative z-10 flex-1 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-300 ${
+                        postType === "tweet"
                             ? "text-white"
                             : "text-gray-400 hover:text-gray-300"
-                        }`}
+                    }`}
                 >
                     <Type size={20} />
                     <span className="font-semibold">Create Tweet</span>
@@ -225,10 +230,11 @@ const UploadPage = () => {
                         <div className="space-y-6">
                             {/* Video Upload Area */}
                             <div
-                                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${errors.videoFile
+                                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                                    errors.videoFile
                                         ? "border-red-500 bg-red-50"
                                         : "border-gray-300 hover:border-red-500"
-                                    }`}
+                                }`}
                             >
                                 <input
                                     type="file"
@@ -309,10 +315,11 @@ const UploadPage = () => {
 
                             {/* Thumbnail Upload Area */}
                             <div
-                                className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${errors.thumbnail
+                                className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+                                    errors.thumbnail
                                         ? "border-red-500"
                                         : "border-gray-300 hover:border-red-500"
-                                    }`}
+                                }`}
                             >
                                 <input
                                     type="file"
@@ -380,7 +387,7 @@ const UploadPage = () => {
                         </div>
 
                         {/* Metadata inputs */}
-                        <div className="bg-[#1E2021] rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+                        <Card className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-1">
                                     Video Title
@@ -483,12 +490,12 @@ const UploadPage = () => {
                                     />
                                 </div>
                             </div>
-                        </div>
+                        </Card>
                     </div>
                 ) : (
                     // TWEET CREATION FORM
                     <div className="max-w-2xl mx-auto">
-                        <div className="bg-[#1E2021] rounded-2xl p-8 shadow-lg border border-gray-100 space-y-6">
+                        <Card className="p-8 space-y-6">
                             {/* Tweet Text Area */}
                             <div>
                                 <label className="block text-lg font-semibold text-white mb-3">
@@ -510,14 +517,15 @@ const UploadPage = () => {
                                 />
                                 <div className="flex justify-between items-center mt-2">
                                     <span
-                                        className={`text-sm font-medium ${(watch("content")?.length || 0) >
-                                                280
+                                        className={`text-sm font-medium ${
+                                            (watch("content")?.length || 0) >
+                                            280
                                                 ? "text-red-500"
                                                 : (watch("content")?.length ||
-                                                    0) > 250
-                                                    ? "text-yellow-500"
-                                                    : "text-gray-500"
-                                            }`}
+                                                        0) > 250
+                                                  ? "text-yellow-500"
+                                                  : "text-gray-500"
+                                        }`}
                                     >
                                         {watch("content")?.length || 0} / 280
                                     </span>
@@ -559,7 +567,7 @@ const UploadPage = () => {
                                                 Max{" "}
                                                 {Math.round(
                                                     MAX_TWEET_IMAGE_SIZE /
-                                                    (1024 * 1024)
+                                                        (1024 * 1024)
                                                 )}{" "}
                                                 MB · JPG, PNG, GIF
                                             </span>
@@ -595,14 +603,14 @@ const UploadPage = () => {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </Card>
                     </div>
                 )}
 
-                <button
+                <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full py-4 text-lg bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-red-500/30"
+                    className="w-full py-4 text-lg bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 flex items-center justify-center space-x-2"
                 >
                     {isLoading ? (
                         <>
@@ -619,7 +627,7 @@ const UploadPage = () => {
                             </span>
                         </>
                     )}
-                </button>
+                </Button>
             </form>
         </div>
     )
