@@ -18,6 +18,7 @@ import { Toaster } from "./components/ui/toaster"
 import { loginFailure, loginSuccess, logout } from "./store/slices/authSlice"
 import { getCurrentUser } from "./api/authApi"
 import { Loader2 } from "lucide-react"
+import { Analytics } from "@vercel/analytics/react"
 
 // Lazy load all page components for code splitting
 const HomePage = lazy(() => import("./pages/HomePage"))
@@ -189,6 +190,9 @@ function App() {
         <ThemeProvider>
             {/* Toast notifications - displays success/error messages globally */}
             <Toaster position="top-right" />
+
+            {/* Vercel Web Analytics */}
+            <Analytics />
 
             {/* Suspense wrapper for lazy-loaded routes */}
             <Suspense fallback={<LoadingSpinner />}>
