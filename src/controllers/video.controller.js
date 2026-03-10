@@ -11,6 +11,14 @@ import {
 } from "../utils/cloudnary.js"
 import { Video } from "../models/video.model.js"
 import mongoose from "mongoose"
+import {
+    getCache,
+    setCache,
+    deleteCache,
+    deleteCachePattern,
+    incrementCounter,
+    decrementCounter,
+} from "../db/redis.js"
 
 // ============================================
 // CONTROLLERS
@@ -310,6 +318,25 @@ const getAllVideos = asyncHandler(async (req, res) => {
         sortOrder = "desc",
     } = req.query
 
+    // Build cache key from all query parameters so different query combos get distinct cache entries
+    const cacheKey = `videos:list:page:${page}:limit:${limit}:sort:${sortBy}:${sortOrder}:category:${category || "all"}`
+
+    // now we will try from the cache first
+    const cacheVideos = await getCache(cacheKey)
+    if (cacheVideos) {
+        console.log(`Cache hit for the key: ${cacheKey}`)
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    cacheVideos,
+                    "Videos fetched sucessfully (cached)"
+                )
+            )
+    }
+    console.log("cache miss, getting data from the database...")
+
     console.log("\n[STEP 1]  Processing Query Parameters")
     console.log("   Page:", page)
     console.log("   Limit:", limit)
@@ -402,8 +429,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
     console.log(`    Videos on this page: ${videos.length}`)
     console.log(`    Total videos matching filters: ${totalVideos}`)
     console.log(`    Current page: ${pageNumber} of ${totalPages}`)
-    console.log(`   ➡️  Has next page: ${pageNumber < totalPages}`)
-    console.log(`   ⬅️  Has previous page: ${pageNumber > 1}`)
+    console.log(`    Has next page: ${pageNumber < totalPages}`)
+    console.log(`   ⬅Has previous page: ${pageNumber > 1}`)
     console.log("=".repeat(60) + "\n")
 
     // Build response with pagination metadata
@@ -418,6 +445,9 @@ const getAllVideos = asyncHandler(async (req, res) => {
             hasPrevPage: pageNumber > 1,
         },
     }
+
+    // Cache the full response object (videos + pagination) for 5 minutes (300 seconds)
+    await setCache(cacheKey, response, 300)
 
     // Return success response
     return res
@@ -461,6 +491,24 @@ const getVideoById = asyncHandler(async (req, res) => {
         console.log("   Video ID not provided in request")
         throw new ApiError(500, "Video Not found !!!")
     }
+    // first we will check int the redis
+    // first generate the cache key and try to get from the cache key
+    const cacheKey = `video:${videoId}`
+    // now try to get from the cache
+    const cacheVideo = await getCache(cacheKey)
+    if (cacheVideo) {
+        console.log(`cache hit for the video: ${videoId}`)
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    cacheVideo,
+                    "Video fetched sucessfully from Cache"
+                )
+            )
+    }
+    console.log("Cache MISS, Trying with DB...")
 
     // Validate if it's a valid MongoDB ObjectId format
     if (!mongoose.isValidObjectId(videoId)) {
@@ -503,6 +551,11 @@ const getVideoById = asyncHandler(async (req, res) => {
     console.log("   Access granted")
 
     console.log("\n[STEP 4]  Incrementing View Count")
+    // now updating in the redis
+    const counterKey = `video:views:${videoId}`
+    const newViewCount = await incrementCounter(counterKey)
+
+    // now updating in the db
     // Increment view count using $inc operator and return updated video
     const updatedVideo = await Video.findByIdAndUpdate(
         videoId,
@@ -523,6 +576,9 @@ const getVideoById = asyncHandler(async (req, res) => {
         `   ⏱️  Duration: ${Math.floor(updatedVideo.duration / 60)}:${String(Math.floor(updatedVideo.duration % 60)).padStart(2, "0")}`
     )
     console.log("=".repeat(60) + "\n")
+
+    // Cache the result for 5 minutes (300 seconds)
+    await setCache(cacheKey, updatedVideo, 300)
 
     // Send success response with video data
     return res
@@ -661,9 +717,19 @@ const updateVideo = asyncHandler(async (req, res) => {
         updateData.thumbNail = thumbNailUrlFromCloudinary
         console.log("   Thumbnail URL will be updated")
     }
-    console.log(
-        `   Total fields to update: ${Object.keys(updateData).length}`
-    )
+    console.log(`   Total fields to update: ${Object.keys(updateData).length}`)
+
+    // Invalidate all related caches before updating the DB so stale data is never served:
+    // 1. Single-video cache for this videoId
+    await deleteCache(`video:${videoId}`)
+    // 2. All paginated video-list caches (any page/filter combo may include this video)
+    await deleteCachePattern("videos:list:*")
+    // 3. Trending caches (category/title change could affect ranking)
+    await deleteCachePattern("videos:trending:*")
+    // 4. Owner-specific video list cache (foundVideo.owner holds the actual owner ID)
+    await deleteCachePattern(`videos:user:${foundVideo.owner}:*`)
+
+    console.log(`cache invalidated for video ${videoId}`)
 
     console.log("\n[STEP 8]  Saving Changes to Database")
     // Update video in database with new data
@@ -794,6 +860,18 @@ const deleteVideo = asyncHandler(async (req, res) => {
     } else {
         console.log("    Could not extract thumbnail public ID")
     }
+
+    // Invalidate all related caches before removing the DB document:
+    // 1. Single-video cache for this videoId
+    await deleteCache(`video:${videoId}`)
+    // 2. All paginated video-list caches
+    await deleteCachePattern(`videos:list:*`)
+    // 3. Trending caches
+    await deleteCachePattern("videos:trending:*")
+    // 4. Owner-specific video list cache (foundVideo.owner holds the actual owner ID)
+    await deleteCachePattern(`videos:user:${foundVideo.owner}:*`)
+    // 5. Dashboard stats cache for this channel owner
+    await deleteCachePattern(`dashboard:*:${foundVideo.owner}:*`)
 
     console.log("\n[STEP 6]  Deleting Video Document from Database")
     // Delete video document from MongoDB database

@@ -82,7 +82,7 @@ redisClient.on("reconnecting", () => {
  * @returns {any|null} Parsed JSON value, or null if key does not exist
  * @throws {ApiError} 500 if the Redis operation fails
  */
-const getCache = async (key) => {
+export const getCache = async (key) => {
     try {
         const data = await redisClient.get(key)
         console.log("cache retrieved successfully")
@@ -105,7 +105,7 @@ const getCache = async (key) => {
  * @param {number} ttlSeconds - Time-to-live in seconds (default: 300s / 5 min)
  * @throws {ApiError} 500 if the Redis operation fails
  */
-const setCache = async (key, value, ttlSeconds = 300) => {
+export const setCache = async (key, value, ttlSeconds = 300) => {
     try {
         const StringValue = JSON.stringify(value)
         if (ttlSeconds) {
@@ -135,7 +135,7 @@ const setCache = async (key, value, ttlSeconds = 300) => {
  * @returns {boolean} true on success
  * @throws {ApiError} 500 if the Redis operation fails
  */
-const deleteCache = async (keys) => {
+export const deleteCache = async (keys) => {
     try {
         const keysArray = Array.isArray(keys) ? keys : [keys]
         if (keysArray.length > 0) {
@@ -164,7 +164,7 @@ const deleteCache = async (keys) => {
  * @returns {number} Number of keys deleted
  * @throws {ApiError} 500 if the Redis operation fails
  */
-const deleteCachePattern = async (pattern) => {
+export const deleteCachePattern = async (pattern) => {
     try {
         const keys = await redisClient.keys(pattern)
         if (keys.length > 0) { // Fix: was `keys > 0` (array comparison), corrected to `keys.length > 0`
@@ -196,7 +196,7 @@ const deleteCachePattern = async (pattern) => {
  * @returns {number} New counter value after increment
  * @throws {ApiError} 500 if the Redis operation fails
  */
-const incrementCounter = async (key, amount = 1) => {
+export const incrementCounter = async (key, amount = 1) => {
     try {
         return await redisClient.incrby(key, amount)
     } catch (error) {
@@ -215,7 +215,7 @@ const incrementCounter = async (key, amount = 1) => {
  * @returns {number} New counter value after decrement
  * @throws {ApiError} 500 if the Redis operation fails
  */
-const decrementCounter = async (key, amount = 1) => {
+export const decrementCounter = async (key, amount = 1) => {
     try {
         return await redisClient.decrby(key, amount)
     } catch (error) {
@@ -254,7 +254,7 @@ export const getCounter = async (key) => {
  * @returns {number} 1 if the key exists, 0 otherwise
  * @throws {ApiError} 500 if the Redis operation fails
  */
-const exists = async (key) => {
+export const exists = async (key) => {
     try {
         return await redisClient.exists(key)
     } catch (error) {
@@ -271,7 +271,7 @@ const exists = async (key) => {
  * @returns {number} 1 if the timeout was set, 0 if the key does not exist
  * @throws {ApiError} 500 if the Redis operation fails
  */
-const setExpiry = async (key, ttlSeconds) => {
+export const setExpiry = async (key, ttlSeconds) => {
     try {
         return await redisClient.expire(key, ttlSeconds)
     } catch (error) {
@@ -305,6 +305,10 @@ export const closeRedis = async () => {
 // EXPORTS
 // ============================================
 
+// All cache helper functions are also exported as named exports above (export const …)
+// so consumers can use either:
+//   import { getCache, setCache } from "../db/redis.js"          ← named (preferred)
+//   import redisUtils from "../db/redis.js"; redisUtils.getCache  ← default
 export default {
     getCache,
     setCache,
