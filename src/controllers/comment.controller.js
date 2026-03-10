@@ -8,6 +8,7 @@ import { Comment } from "../models/comment.model.js"
 import { Video } from "../models/video.model.js"
 import { Tweet } from "../models/tweet.model.js"
 import mongoose, { mongo } from "mongoose"
+import { getCache, setCache, deleteCachePattern } from "../db/redis.js"
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -71,6 +72,13 @@ const addComment = asyncHandler(async (req, res) => {
         "username fullName avatar"
     )
 
+    // Invalidate comment list caches for the target video/tweet and this user
+    await Promise.all([
+        videoId ? deleteCachePattern(`comments:video:${videoId}:*`) : Promise.resolve(),
+        tweetId ? deleteCachePattern(`comments:tweet:${tweetId}:*`) : Promise.resolve(),
+        deleteCachePattern(`comments:user:${req.user._id}:*`),
+    ])
+
     return res
         .status(201)
         .json(
@@ -87,6 +95,13 @@ const getAllComment = asyncHandler(async (req, res) => {
 
     if (!videoId || !mongoose.isValidObjectId(videoId)) {
         throw new ApiError(400, "Valid Video ID required")
+    }
+
+    // Check cache before aggregation
+    const cacheKey = `comments:video:${videoId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "Comments fetched successfully"))
     }
 
     const aggregate = Comment.aggregate([
@@ -137,6 +152,8 @@ const getAllComment = asyncHandler(async (req, res) => {
 
     const comments = await Comment.aggregatePaginate(aggregate, options)
 
+    await setCache(cacheKey, comments, 120)
+
     return res
         .status(200)
         .json(new ApiResponse(200, comments, "Comments fetched successfully"))
@@ -148,6 +165,13 @@ const getTweetComments = asyncHandler(async (req, res) => {
 
     if (!tweetId || !mongoose.isValidObjectId(tweetId)) {
         throw new ApiError(400, "Valid Tweet ID required")
+    }
+
+    // Check cache before aggregation
+    const cacheKey = `comments:tweet:${tweetId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "Comments fetched successfully"))
     }
 
     const aggregate = Comment.aggregate([
@@ -198,6 +222,8 @@ const getTweetComments = asyncHandler(async (req, res) => {
 
     const comments = await Comment.aggregatePaginate(aggregate, options)
 
+    await setCache(cacheKey, comments, 120)
+
     return res
         .status(200)
         .json(new ApiResponse(200, comments, "Comments fetched successfully"))
@@ -243,6 +269,13 @@ const updateComment = asyncHandler(async (req, res) => {
         updatedComment._id
     ).populate("owner", "username fullName avatar")
 
+    // Invalidate caches for the video/tweet this comment belongs to and the user's comments
+    await Promise.all([
+        existingComment.video ? deleteCachePattern(`comments:video:${existingComment.video}:*`) : Promise.resolve(),
+        existingComment.tweet ? deleteCachePattern(`comments:tweet:${existingComment.tweet}:*`) : Promise.resolve(),
+        deleteCachePattern(`comments:user:${req.user._id}:*`),
+    ])
+
     return res
         .status(200)
         .json(
@@ -272,6 +305,13 @@ const deleteComment = asyncHandler(async (req, res) => {
 
     await Comment.findByIdAndDelete(commentId)
 
+    // Invalidate caches for the video/tweet this comment belongs to and the user's comments
+    await Promise.all([
+        existingComment.video ? deleteCachePattern(`comments:video:${existingComment.video}:*`) : Promise.resolve(),
+        existingComment.tweet ? deleteCachePattern(`comments:tweet:${existingComment.tweet}:*`) : Promise.resolve(),
+        deleteCachePattern(`comments:user:${existingComment.owner}:*`),
+    ])
+
     return res
         .status(200)
         .json(new ApiResponse(200, commentId, "Comment sucessfully deleted"))
@@ -293,6 +333,13 @@ const deleteComment = asyncHandler(async (req, res) => {
 const getUserComments = asyncHandler(async (req, res) => {
     const { page = 1, limit = 20 } = req.query
     const userId = req.user._id
+
+    // Check cache before aggregation
+    const cacheKey = `comments:user:${userId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "User comments fetched successfully"))
+    }
 
     const aggregate = Comment.aggregate([
         // Step 1: Match comments by user
@@ -376,6 +423,8 @@ const getUserComments = asyncHandler(async (req, res) => {
     }
 
     const result = await Comment.aggregatePaginate(aggregate, options)
+
+    await setCache(cacheKey, result, 120)
 
     return res
         .status(200)

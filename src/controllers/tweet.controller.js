@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { uploadOnCloudinary } from "../utils/cloudnary.js"
+import { getCache, setCache, deleteCache, deleteCachePattern } from "../db/redis.js"
 
 /**
  * CREATE TWEET / PHOTO POST CONTROLLER
@@ -72,6 +73,12 @@ const createTweet = asyncHandler(async (req, res) => {
     console.log("   Tweet Created ID:", tweet._id)
     console.log("=".repeat(60) + "\n")
 
+    // Invalidate feed and this user's tweets cache
+    await Promise.all([
+        deleteCache("tweets:feed"),
+        deleteCachePattern(`tweets:user:${req.user._id}*`),
+    ])
+
     return res
         .status(200)
         .json(new ApiResponse(200, tweet, "Tweet created successfully"))
@@ -98,6 +105,14 @@ const getUserTweets = asyncHandler(async (req, res) => {
 
     if (!isValidObjectId(userId)) {
         throw new ApiError(400, "Invalid user id")
+    }
+
+    // Check cache before aggregation
+    const cacheKey = `tweets:user:${userId}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        console.log("   Cache hit — returning cached user tweets")
+        return res.status(200).json(new ApiResponse(200, cached, "User tweets fetched successfully"))
     }
 
     console.log("\n[STEP 1]  Aggregating Tweets")
@@ -137,6 +152,8 @@ const getUserTweets = asyncHandler(async (req, res) => {
     console.log(`   Found ${tweets.length} tweets`)
     console.log("=".repeat(60) + "\n")
 
+    await setCache(cacheKey, tweets, 120)
+
     return res
         .status(200)
         .json(new ApiResponse(200, tweets, "User tweets fetched successfully"))
@@ -157,6 +174,14 @@ const getAllTweets = asyncHandler(async (req, res) => {
     console.log("\n" + "=".repeat(60))
     console.log(" GET ALL TWEETS (FEED) REQUEST")
     console.log("=".repeat(60))
+
+    // Cache the global feed with a short TTL since it changes frequently
+    const feedCacheKey = "tweets:feed"
+    const cachedFeed = await getCache(feedCacheKey)
+    if (cachedFeed) {
+        console.log("   Cache hit — returning cached tweet feed")
+        return res.status(200).json(new ApiResponse(200, cachedFeed, "All tweets fetched successfully"))
+    }
 
     const tweets = await Tweet.aggregate([
         {
@@ -187,6 +212,8 @@ const getAllTweets = asyncHandler(async (req, res) => {
     ])
 
     console.log(`   Fetched ${tweets.length} community posts`)
+
+    await setCache(feedCacheKey, tweets, 60)
 
     return res
         .status(200)
@@ -227,6 +254,13 @@ const updateTweet = asyncHandler(async (req, res) => {
         { new: true }
     )
 
+    // Invalidate this tweet's cache, the owner's tweets list, and the feed
+    await Promise.all([
+        deleteCache(`tweet:${tweetId}`),
+        deleteCachePattern(`tweets:user:${tweet.owner}*`),
+        deleteCache("tweets:feed"),
+    ])
+
     return res
         .status(200)
         .json(new ApiResponse(200, updatedTweet, "Tweet updated successfully"))
@@ -257,6 +291,13 @@ const deleteTweet = asyncHandler(async (req, res) => {
 
     await Tweet.findByIdAndDelete(tweetId)
 
+    // Invalidate this tweet's cache, the owner's tweets list, and the feed
+    await Promise.all([
+        deleteCache(`tweet:${tweetId}`),
+        deleteCachePattern(`tweets:user:${tweet.owner}*`),
+        deleteCache("tweets:feed"),
+    ])
+
     return res
         .status(200)
         .json(new ApiResponse(200, {}, "Tweet deleted successfully"))
@@ -274,6 +315,13 @@ const getTweetById = asyncHandler(async (req, res) => {
 
     if (!isValidObjectId(tweetId)) {
         throw new ApiError(400, "Invalid tweet id")
+    }
+
+    // Check cache before running aggregation
+    const tweetCacheKey = `tweet:${tweetId}`
+    const cachedTweet = await getCache(tweetCacheKey)
+    if (cachedTweet) {
+        return res.status(200).json(new ApiResponse(200, cachedTweet, "Tweet fetched successfully"))
     }
 
     const tweet = await Tweet.aggregate([
@@ -308,6 +356,8 @@ const getTweetById = asyncHandler(async (req, res) => {
     if (!tweet?.length) {
         throw new ApiError(404, "Tweet not found")
     }
+
+    await setCache(tweetCacheKey, tweet[0], 300)
 
     return res
         .status(200)

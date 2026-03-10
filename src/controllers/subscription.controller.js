@@ -7,6 +7,7 @@ import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose, { mongo } from "mongoose";
 import { subscription } from "../models/subscription.model.js";
+import { getCache, setCache, deleteCache, deleteCachePattern } from "../db/redis.js";
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -147,6 +148,13 @@ const toggleSubscription = asyncHandler(async (req, res) => {
             await session.commitTransaction()
             console.log("   Transaction committed successfully");
 
+            // Invalidate all related caches after successful unsubscribe
+            await Promise.all([
+                deleteCachePattern(`subscriptions:subscribers:${channelId}:*`),
+                deleteCachePattern(`subscriptions:channels:${userId}:*`),
+                deleteCache(`dashboard:stats:${channelId}`),
+            ])
+
             console.log("\n" + "=".repeat(60));
             console.log("UNSUBSCRIBED SUCCESSFULLY");
             console.log("=".repeat(60));
@@ -199,6 +207,13 @@ const toggleSubscription = asyncHandler(async (req, res) => {
             // Commit transaction: Both operations successful, make changes permanent
             await session.commitTransaction()
             console.log("   Transaction committed successfully");
+
+            // Invalidate all related caches after successful subscribe
+            await Promise.all([
+                deleteCachePattern(`subscriptions:subscribers:${channelId}:*`),
+                deleteCachePattern(`subscriptions:channels:${userId}:*`),
+                deleteCache(`dashboard:stats:${channelId}`),
+            ])
 
             console.log("\n" + "=".repeat(60));
             console.log("SUBSCRIBED SUCCESSFULLY");
@@ -304,6 +319,13 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Channel not found")
     }
 
+    // Check cache before running expensive aggregation
+    const cacheKey = `subscriptions:subscribers:${channelId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "Channel subscribers fetched successfully"))
+    }
+
     // STEP 6: Build MongoDB Aggregation Pipeline
     // WHY AGGREGATION?
     // We need to:
@@ -405,6 +427,8 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     // - hasNextPage, hasPrevPage: navigation helpers
     const result = await subscription.aggregatePaginate(aggregate, options)
 
+    await setCache(cacheKey, result, 120)
+
     // STEP 10: Send success response with subscriber data
     return res
         .status(200)
@@ -477,6 +501,13 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     // Ensures it's a valid MongoDB ObjectId (24-character hex string)
     if (!mongoose.isValidObjectId(userId)) {
         throw new ApiError(400, "Provide a valid UserId")
+    }
+
+    // Check cache before running expensive aggregation
+    const cacheKey = `subscriptions:channels:${userId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "Subscribed channels fetched successfully"))
     }
 
     // STEP 5: Build MongoDB Aggregation Pipeline
@@ -583,6 +614,8 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     //   prevPage: null                  // Previous page number (if exists)
     // }
     const result = await subscription.aggregatePaginate(aggregate, options)
+
+    await setCache(cacheKey, result, 120)
 
     // STEP 9: Send success response with subscribed channels data
     return res

@@ -9,6 +9,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken" // Fixed: jwt is a default export, not named export
 import mongoose from "mongoose"
 import crypto from "crypto" // For password reset token hashing
+import { getCache, setCache, deleteCache, deleteCachePattern } from "../db/redis.js"
 
 // ============================================
 // HELPER FUNCTIONS
@@ -333,6 +334,9 @@ const logoutUser = asyncHandler(async (req, res) => {
     )
     console.log("Refresh token cleared from database")
 
+    // Invalidate all Redis sessions for this user
+    await deleteCachePattern(`session:${req.user._id}:*`)
+
     // STEP 2: Configure cookie options for clearing
     const options = {
         httpOnly: true, // Prevent client-side JS access
@@ -622,6 +626,9 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
     console.log(`Account details updated for @${req.user?.username}`)
 
+    // Invalidate this user's channel profile cache (all viewer variants)
+    await deleteCachePattern(`user:channel:${req.user.username}:*`)
+
     // STEP 4: Send success response with updated user data
     return res
         .status(200)
@@ -699,6 +706,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
     console.log(`Avatar updated successfully for @${req.user?.username}`)
 
+    // Invalidate this user's channel profile cache (all viewer variants)
+    await deleteCachePattern(`user:channel:${req.user.username}:*`)
+
     return res
         .status(200)
         .json(new ApiResponse(200, user, "Avatar updated successfully"))
@@ -757,6 +767,9 @@ const updateUserCoverImg = asyncHandler(async (req, res) => {
 
     console.log(`Cover image updated successfully for @${req.user?.username}`)
 
+    // Invalidate this user's channel profile cache (all viewer variants)
+    await deleteCachePattern(`user:channel:${req.user.username}:*`)
+
     return res
         .status(200)
         .json(new ApiResponse(200, user, "Cover image updated successfully"))
@@ -800,6 +813,16 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     if (!username?.trim()) {
         console.log("Username missing in request")
         throw new ApiError(400, "Username is missing")
+    }
+
+    // Check cache before running expensive aggregation pipeline
+    // Key is viewer-scoped because isSubscribed field is user-specific
+    const viewerId = req.user?._id?.toString() || "anon"
+    const channelCacheKey = `user:channel:${username.toLowerCase()}:viewer:${viewerId}`
+    const cachedChannel = await getCache(channelCacheKey)
+    if (cachedChannel) {
+        console.log(" Cache hit — returning cached channel profile")
+        return res.status(200).json(new ApiResponse(200, cachedChannel, "User channel fetched successfully"))
     }
 
     console.log(" Running aggregation pipeline...")
@@ -888,6 +911,9 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         `Channel @${username} profile fetched (${channel[0].subscribersCount} subscribers)`
     )
 
+    // Cache the channel profile for 5 minutes
+    await setCache(channelCacheKey, channel[0], 300)
+
     // STEP 5: Send channel profile data
     // channel[0] because aggregation returns array
     return res
@@ -935,6 +961,16 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 const getWatchHistory = asyncHandler(async (req, res) => {
     console.log(" [GET WATCH HISTORY] Request received")
     console.log(` User: @${req.user?.username}`)
+
+    // Check cache before running expensive nested aggregation
+    const userId = req.user._id
+    const historyCacheKey = `user:watchhistory:${userId}`
+    const cachedHistory = await getCache(historyCacheKey)
+    if (cachedHistory) {
+        console.log(" Cache hit — returning cached watch history")
+        return res.status(200).json(new ApiResponse(200, cachedHistory, "Watch history fetched successfully"))
+    }
+
     console.log(" Running nested aggregation pipeline...")
 
     // STEP 1: MongoDB Aggregation Pipeline with nested lookups
@@ -999,6 +1035,9 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     console.log(
         `Watch history fetched (${user[0]?.watchHistory?.length || 0} videos)`
     )
+
+    // Cache watch history for 2 minutes
+    await setCache(historyCacheKey, user[0].watchHistory, 120)
 
     // STEP 2: Send watch history data
     // user[0] because aggregation returns array with single user document

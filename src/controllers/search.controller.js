@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { Video } from "../models/video.model.js"
+import { getCache, setCache } from "../db/redis.js"
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -201,23 +202,34 @@ const searchVideos = asyncHandler(async (req, res) => {
         limit: parseInt(limit)
     }
 
-    // STEP 10: Execute aggregation with pagination
+    // STEP 10: Check Redis cache before running expensive aggregation
+    const cacheKey = `search:${encodeURIComponent(query)}:${category || "all"}:${startDate || ""}:${endDate || ""}:${minDuration || ""}:${maxDuration || ""}:${sortBy}:${page}:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        console.log("   Cache hit — returning cached search results")
+        return res.status(200).json(
+            new ApiResponse(200, cached, "Videos fetched successfully")
+        )
+    }
+
+    // STEP 11: Execute aggregation with pagination
     const videos = await Video.aggregatePaginate(aggregateQuery, options)
 
-    // STEP 11: Send successful response with paginated results and metadata
+    const responseData = {
+        videos: videos.docs,
+        totalResults: videos.totalDocs,
+        totalPages: videos.totalPages,
+        currentPage: videos.page,
+        hasNextPage: videos.hasNextPage,
+        hasPrevPage: videos.hasPrevPage
+    }
+
+    // Cache results for 5 minutes — search results change infrequently
+    await setCache(cacheKey, responseData, 300)
+
+    // STEP 12: Send successful response with paginated results and metadata
     return res.status(200).json(
-        new ApiResponse(
-            200,
-            {
-                videos: videos.docs,
-                totalResults: videos.totalDocs,
-                totalPages: videos.totalPages,
-                currentPage: videos.page,
-                hasNextPage: videos.hasNextPage,
-                hasPrevPage: videos.hasPrevPage
-            },
-            "Videos fetched successfully"
-        )
+        new ApiResponse(200, responseData, "Videos fetched successfully")
     )
 
 })

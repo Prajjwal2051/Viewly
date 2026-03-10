@@ -9,6 +9,7 @@ import { Comment } from "../models/comment.model.js"
 import { like } from "../models/like.model.js"
 import { Tweet } from "../models/tweet.model.js"
 import mongoose from "mongoose"
+import { getCache, setCache, deleteCache, deleteCachePattern } from "../db/redis.js"
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -97,9 +98,14 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
         console.log("   Removing existing like...")
         // User already liked - remove the like (unlike)
         await like.deleteOne({ _id: existingLike._id })
-
         // Decrement likes count in Video model
         await Video.findByIdAndUpdate(videoId, { $inc: { likes: -1 } })
+
+        // Invalidate liked-videos list and this video's like status cache
+        await Promise.all([
+            deleteCachePattern(`likes:videos:${userId}:*`),
+            deleteCache(`likes:status:video:${videoId}:${userId}`),
+        ])
 
         console.log("   Like removed successfully")
 
@@ -130,6 +136,12 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
 
         // Increment likes count in Video model
         await Video.findByIdAndUpdate(videoId, { $inc: { likes: 1 } })
+
+        // Invalidate liked-videos list and this video's like status cache
+        await Promise.all([
+            deleteCachePattern(`likes:videos:${userId}:*`),
+            deleteCache(`likes:status:video:${videoId}:${userId}`),
+        ])
 
         console.log("   Like created successfully")
 
@@ -240,6 +252,9 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         // Decrement likes count in Comment model
         await Comment.findByIdAndUpdate(commentId, { $inc: { likes: -1 } })
 
+        // Invalidate liked-comments list cache for this user
+        await deleteCachePattern(`likes:comments:${userId}:*`)
+
         return res
             .status(200)
             .json(
@@ -255,6 +270,9 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
         // Increment likes count in Comment model
         await Comment.findByIdAndUpdate(commentId, { $inc: { likes: 1 } })
+
+        // Invalidate liked-comments list cache for this user
+        await deleteCachePattern(`likes:comments:${userId}:*`)
 
         return res
             .status(200)
@@ -313,6 +331,14 @@ const getLikedVideos = asyncHandler(async (req, res) => {
 
     // STEP 3: Build MongoDB aggregation pipeline for efficient data retrieval
     // This pipeline joins multiple collections and transforms data in a single database call
+
+    // Check cache before running expensive aggregation
+    const cacheKey = `likes:videos:${userId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "Liked videos fetched successfully"))
+    }
+
     const aggregationPipeline = [
         // STAGE 1: Match (Filter) - Get only this user's video likes
         // This is the entry point - filters the likes collection
@@ -405,6 +431,8 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     // aggregatePaginate runs the pipeline and handles skip/limit automatically
     const result = await like.aggregatePaginate(aggregate, options)
 
+    await setCache(cacheKey, result, 120)
+
     // STEP 7: Send success response with paginated liked videos
     return res
         .status(200)
@@ -455,6 +483,14 @@ const getLikedComments = asyncHandler(async (req, res) => {
 
     // STEP 3: Build MongoDB aggregation pipeline for efficient data retrieval
     // Similar to getLikedVideos but for comments instead
+
+    // Check cache before running expensive aggregation
+    const cacheKey = `likes:comments:${userId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "Liked comments fetched successfully"))
+    }
+
     const aggregationPipeline = [
         // STAGE 1: Match (Filter) - Get only this user's comment likes
         // This is the entry point - filters the likes collection
@@ -544,6 +580,8 @@ const getLikedComments = asyncHandler(async (req, res) => {
     // aggregatePaginate runs the pipeline and handles skip/limit automatically
     const result = await like.aggregatePaginate(aggregate, options)
 
+    await setCache(cacheKey, result, 120)
+
     // STEP 7: Send success response with paginated liked comments
     return res
         .status(200)
@@ -570,17 +608,27 @@ const getIsVideoLiked = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid video ID")
     }
 
+    // Cache the like status briefly — it's cheap to compute but called frequently
+    const statusCacheKey = `likes:status:video:${videoId}:${userId}`
+    const cachedStatus = await getCache(statusCacheKey)
+    if (cachedStatus !== null) {
+        return res.status(200).json(new ApiResponse(200, cachedStatus, "Like status fetched successfully"))
+    }
+
     const existingLike = await like.findOne({
         video: videoId,
         likedBy: userId,
     })
+
+    const statusData = { isLiked: !!existingLike }
+    await setCache(statusCacheKey, statusData, 60)
 
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                { isLiked: !!existingLike },
+                statusData,
                 "Like status fetched successfully"
             )
         )
@@ -607,6 +655,12 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     if (existingLike) {
         await like.deleteOne({ _id: existingLike._id })
         await Tweet.findByIdAndUpdate(tweetId, { $inc: { likes: -1 } })
+
+        // Invalidate liked-tweets list and this tweet's like status cache
+        await Promise.all([
+            deleteCachePattern(`likes:tweets:${userId}:*`),
+            deleteCache(`likes:status:tweet:${tweetId}:${userId}`),
+        ])
         return res
             .status(200)
             .json(
@@ -619,6 +673,12 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     } else {
         await like.create({ tweet: tweetId, likedBy: userId })
         await Tweet.findByIdAndUpdate(tweetId, { $inc: { likes: 1 } })
+
+        // Invalidate liked-tweets list and this tweet's like status cache
+        await Promise.all([
+            deleteCachePattern(`likes:tweets:${userId}:*`),
+            deleteCache(`likes:status:tweet:${tweetId}:${userId}`),
+        ])
         return res
             .status(200)
             .json(
@@ -649,17 +709,27 @@ const getIsTweetLiked = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid tweet ID")
     }
 
+    // Cache the tweet like status briefly
+    const statusCacheKey = `likes:status:tweet:${tweetId}:${userId}`
+    const cachedStatus = await getCache(statusCacheKey)
+    if (cachedStatus !== null) {
+        return res.status(200).json(new ApiResponse(200, cachedStatus, "Like status fetched successfully"))
+    }
+
     const existingLike = await like.findOne({
         tweet: tweetId,
         likedBy: userId,
     })
+
+    const statusData = { isLiked: !!existingLike }
+    await setCache(statusCacheKey, statusData, 60)
 
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                { isLiked: !!existingLike },
+                statusData,
                 "Like status fetched successfully"
             )
         )
@@ -678,6 +748,13 @@ const getIsTweetLiked = asyncHandler(async (req, res) => {
 const getLikedTweets = asyncHandler(async (req, res) => {
     const userId = req.user._id
     const { page = 1, limit = 10 } = req.query
+
+    // Check cache before running expensive aggregation
+    const cacheKey = `likes:tweets:${userId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "Liked tweets fetched successfully"))
+    }
 
     const aggregationPipeline = [
         {
@@ -730,6 +807,8 @@ const getLikedTweets = asyncHandler(async (req, res) => {
     }
 
     const result = await like.aggregatePaginate(aggregate, options)
+
+    await setCache(`likes:tweets:${userId}:page:${page}:limit:${limit}`, result, 120)
 
     return res
         .status(200)

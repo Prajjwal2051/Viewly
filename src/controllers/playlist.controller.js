@@ -8,6 +8,7 @@ import { User } from "../models/user.model.js"
 import { Playlist } from "../models/playlist.model.js"
 import { Video } from "../models/video.model.js"
 import mongoose, { mongo } from "mongoose"
+import { getCache, setCache, deleteCache, deleteCachePattern } from "../db/redis.js"
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -140,6 +141,9 @@ const createPlayList = asyncHandler(async (req, res) => {
         "username fullName avatar"
     )
 
+    // Invalidate this user's playlist list cache
+    await deleteCachePattern(`playlists:user:${userId}:*`)
+
     // STEP 9: Send success response with playlist data
     return res
         .status(201)
@@ -216,6 +220,13 @@ const getUserPlaylist = asyncHandler(async (req, res) => {
     const existsUser = await User.findById(userId)
     if (!existsUser) {
         throw new ApiError(404, "User not found")
+    }
+
+    // Check cache before running expensive aggregation
+    const cacheKey = `playlists:user:${userId}:page:${page}:limit:${limit}`
+    const cached = await getCache(cacheKey)
+    if (cached) {
+        return res.status(200).json(new ApiResponse(200, cached, "User playlists fetched successfully"))
     }
 
     // STEP 6: Build MongoDB Aggregation Pipeline
@@ -333,6 +344,8 @@ const getUserPlaylist = asyncHandler(async (req, res) => {
         options
     )
 
+    await setCache(cacheKey, result, 300)
+
     // STEP 9: Send success response with playlist data
     return res
         .status(200)
@@ -405,6 +418,13 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid Playlist ID provided")
     }
 
+    // Check cache for public playlists before DB query
+    const playlistCacheKey = `playlist:${playlistId}`
+    const cachedPlaylist = await getCache(playlistCacheKey)
+    if (cachedPlaylist) {
+        return res.status(200).json(new ApiResponse(200, cachedPlaylist, "Playlist fetched successfully"))
+    }
+
     // STEP 5: Fetch playlist from database with nested population
     // WHY NESTED POPULATE?
     // We need complete information for displaying the playlist:
@@ -461,6 +481,11 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     const playlistWithCount = {
         ...existsPlaylist.toObject(),
         videoCount: existsPlaylist.videos.length, // Add video count field
+    }
+
+    // Cache only public playlists to avoid leaking private data
+    if (existsPlaylist.isPublic) {
+        await setCache(playlistCacheKey, playlistWithCount, 300)
     }
 
     // STEP 9: Send success response with complete playlist data
@@ -570,6 +595,12 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
         .populate("videos") // Populate video details
         .populate("owner", "username fullName avatar") // Populate owner details
 
+    // Invalidate this playlist's cache and the owner's playlist list
+    await Promise.all([
+        deleteCache(`playlist:${playlistId}`),
+        deleteCachePattern(`playlists:user:${existsPlaylist.owner}:*`),
+    ])
+
     // STEP 10: Send success response
     return res
         .status(200)
@@ -652,6 +683,12 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     )
         .populate("videos")
         .populate("owner", "username fullName avatar")
+
+    // Invalidate this playlist's cache and the owner's playlist list
+    await Promise.all([
+        deleteCache(`playlist:${playlistId}`),
+        deleteCachePattern(`playlists:user:${existsPlaylist.owner}:*`),
+    ])
 
     // STEP 8: Send success response
     return res
@@ -757,6 +794,12 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         { new: true, runValidators: true } // Return updated doc and run validators
     ).populate("owner", "username fullName avatar")
 
+    // Invalidate this playlist's cache and the owner's playlist list
+    await Promise.all([
+        deleteCache(`playlist:${playlistId}`),
+        deleteCachePattern(`playlists:user:${existsPlaylist.owner}:*`),
+    ])
+
     // STEP 10: Send success response
     return res
         .status(200)
@@ -818,6 +861,12 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 
     // STEP 5: Delete playlist from database
     await Playlist.findByIdAndDelete(playlistId)
+
+    // Invalidate this playlist's cache and owner's playlist list
+    await Promise.all([
+        deleteCache(`playlist:${playlistId}`),
+        deleteCachePattern(`playlists:user:${existsPlaylist.owner}:*`),
+    ])
 
     // STEP 6: Send success response
     return res
