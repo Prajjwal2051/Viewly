@@ -11,9 +11,14 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit"
  * Prevents general API abuse
  */
 export const generalLimiter = rateLimit({
+    store: new RedisStore({
+        client: redisClient,
+        prefix: "ratelimit:general:", // Redis key prefix
+    }),
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 3000, // Limit each IP to 3000 requests per windowMs
+    max: 1000, // Limit each IP to 3000 requests per windowMs
     message: {
+        statusCode: 429,
         success: false,
         message: "Too many requests from this IP, please try again later.",
     },
@@ -29,9 +34,14 @@ export const generalLimiter = rateLimit({
  * Prevents brute force attacks
  */
 export const authLimiter = rateLimit({
+    store: new RedisStore({
+        client: redisClient,
+        prefix: "ratelimit:auth:",
+    }),
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
     message: {
+        statusCode: 429,
         success: false,
         message:
             "Too many authentication attempts from this IP, please try again after 15 minutes.",
@@ -47,9 +57,14 @@ export const authLimiter = rateLimit({
  * Prevents spam content
  */
 export const uploadLimiter = rateLimit({
+    store: new RedisStore({
+        client: redisClient,
+        prefix: "ratelimit:upload:",
+    }),
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 1000, // Limit each user to 1000 uploads per hour
     message: {
+        statusCode: 429,
         success: false,
         message: "Upload limit reached. Please try again later.",
     },
@@ -67,9 +82,14 @@ export const uploadLimiter = rateLimit({
  * Prevents comment spam
  */
 export const commentLimiter = rateLimit({
+    store: new RedisStore({
+        client: redisClient,
+        prefix: "ratelimit:interaction:",
+    }),
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 1000, // Limit each user to 1000 comments per hour
     message: {
+        statusCode: 429,
         success: false,
         message: "Comment limit reached. Please try again later.",
     },
@@ -86,9 +106,15 @@ export const commentLimiter = rateLimit({
  * Prevents like manipulation
  */
 export const likeLimiter = rateLimit({
+    store: new RedisStore({
+        client: redisClient,
+        prefix: "ratelimit:interaction:",
+    }),
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 2000, // Limit each user to 2000 likes per hour
     message: {
+        statusCode: 429,
+
         success: false,
         message: "Like limit reached. Please try again later.",
     },

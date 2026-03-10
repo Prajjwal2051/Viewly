@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken" // Fixed: Should be default import, not named imp
 import { ApiError } from "../utils/ApiError.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { User } from "../models/user.model.js"
+import { getCache, setCache, deleteCache } from "../db/redis.js"
 
 // ============================================
 // AUTHENTICATION MIDDLEWARE
@@ -48,6 +49,19 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         // This checks if token is valid, not expired, and signed with our secret
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
 
+        // first we will verify session from the redis
+        const sessionKey = `session:${decodedToken._id}:${token}`
+        // now i will try to get user frok redis session
+        let RedisUser = await getCache(sessionKey)
+        if (RedisUser) {
+            console.log(
+                `Session Cache Hit for User: ${decodedToken._id}:${token}`
+            )
+            req.user = RedisUser
+            return next()
+        }
+        console.log(`Session cache MISS for user ${decodedToken._id}`)
+
         // STEP 4: Fetch user from database using decoded user ID
         // Exclude sensitive fields (password, refreshToken) from the result
         const user = await User.findById(decodedToken?._id).select(
@@ -59,6 +73,9 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
             throw new ApiError(401, "Invalid access token - User not found")
         }
 
+        // making a user session (ttl= 1day= 86400 seconds)
+        await setCache(sessionKey, user, 86400)
+
         // STEP 6: Attach user object to request for use in protected routes
         // Now route handlers can access authenticated user via req.user
         req.user = user
@@ -69,4 +86,58 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         // Handle JWT verification errors (expired, malformed, invalid signature, etc.)
         throw new ApiError(401, error?.message || "Invalid access token")
     }
+})
+
+/**
+ * LOGOUT WITH SESSION INVALIDATION
+ * Clears Redis session cache on logout
+ */
+export const logout = asyncHandler(async (req, res) => {
+    const userId = req.user._id
+    const token = req.cookies?.accessToken
+
+    // Delete session from Redis
+    if (token) {
+        const sessionKey = `session:${userId}:${token}`
+        await deleteCache(sessionKey)
+        console.log(`Session invalidated for user ${userId}`)
+    }
+
+    // Clear refresh token from database
+    await User.findByIdAndUpdate(userId, {
+        $unset: { refreshToken: 1 },
+    })
+
+    // Clear cookies
+    const options = {
+        httpOnly: true,
+        secure: true,
+    }
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User logged out successfully"))
+})
+
+/**
+ * LOGOUT ALL DEVICES
+ * Invalidates all sessions for a user
+ */
+export const logoutAllDevices = asyncHandler(async (req, res) => {
+    const userId = req.user._id
+
+    // Delete all session keys for this user
+    await deleteCachePattern(`session:${userId}:*`)
+    console.log(`All sessions invalidated for user ${userId}`)
+
+    // Clear refresh token from database
+    await User.findByIdAndUpdate(userId, {
+        $unset: { refreshToken: 1 },
+    })
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Logged out from all devices"))
 })
