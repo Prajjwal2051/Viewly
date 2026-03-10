@@ -3,7 +3,11 @@
 // ============================================
 // Prevents spam and abuse by limiting request rates
 
-import rateLimit, { ipKeyGenerator } from "express-rate-limit"
+import rateLimit from "express-rate-limit"
+// RedisStore from rate-limit-redis v4 — uses sendCommand API (not the v3 `client` option)
+import { RedisStore } from "rate-limit-redis"
+// Shared ioredis client from the redis module
+import redisClient from "../db/redis.js"
 
 /**
  * GENERAL API RATE LIMITER
@@ -11,12 +15,13 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit"
  * Prevents general API abuse
  */
 export const generalLimiter = rateLimit({
+    // rate-limit-redis v4: pass sendCommand so the store speaks to ioredis correctly
     store: new RedisStore({
-        client: redisClient,
+        sendCommand: (...args) => redisClient.client.call(...args),
         prefix: "ratelimit:general:", // Redis key prefix
     }),
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Limit each IP to 3000 requests per windowMs
+    max: 1000, // Limit each IP to 1000 requests per windowMs
     message: {
         statusCode: 429,
         success: false,
@@ -35,7 +40,7 @@ export const generalLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
     store: new RedisStore({
-        client: redisClient,
+        sendCommand: (...args) => redisClient.client.call(...args),
         prefix: "ratelimit:auth:",
     }),
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -58,7 +63,7 @@ export const authLimiter = rateLimit({
  */
 export const uploadLimiter = rateLimit({
     store: new RedisStore({
-        client: redisClient,
+        sendCommand: (...args) => redisClient.client.call(...args),
         prefix: "ratelimit:upload:",
     }),
     windowMs: 60 * 60 * 1000, // 1 hour
@@ -70,9 +75,9 @@ export const uploadLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Use user ID instead of IP for authenticated routes
+    // Use authenticated user ID as key so limits are per-user, not per-IP
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || ipKeyGenerator(req)
+        return req.user?._id?.toString() || req.ip
     },
 })
 
@@ -83,7 +88,7 @@ export const uploadLimiter = rateLimit({
  */
 export const commentLimiter = rateLimit({
     store: new RedisStore({
-        client: redisClient,
+        sendCommand: (...args) => redisClient.client.call(...args),
         prefix: "ratelimit:interaction:",
     }),
     windowMs: 60 * 60 * 1000, // 1 hour
@@ -96,7 +101,7 @@ export const commentLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || ipKeyGenerator(req)
+        return req.user?._id?.toString() || req.ip
     },
 })
 
@@ -107,21 +112,20 @@ export const commentLimiter = rateLimit({
  */
 export const likeLimiter = rateLimit({
     store: new RedisStore({
-        client: redisClient,
+        sendCommand: (...args) => redisClient.client.call(...args),
         prefix: "ratelimit:interaction:",
     }),
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 2000, // Limit each user to 2000 likes per hour
     message: {
         statusCode: 429,
-
         success: false,
         message: "Like limit reached. Please try again later.",
     },
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || ipKeyGenerator(req)
+        return req.user?._id?.toString() || req.ip
     },
 })
 

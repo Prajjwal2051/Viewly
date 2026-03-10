@@ -3,9 +3,10 @@
 // ============================================
 import jwt from "jsonwebtoken" // Fixed: Should be default import, not named import
 import { ApiError } from "../utils/ApiError.js"
+import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { User } from "../models/user.model.js"
-import { getCache, setCache, deleteCache } from "../db/redis.js"
+import { getCache, setCache, deleteCache, deleteCachePattern } from "../db/redis.js"
 
 // ============================================
 // AUTHENTICATION MIDDLEWARE

@@ -7,6 +7,11 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { Notification } from "../models/notofication.model.js"
 import mongoose from "mongoose"
 import { User } from "../models/user.model.js"
+import {
+    getCache,
+    setCache,
+    deleteCachePattern,
+} from "../db/redis.js"
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -98,6 +103,28 @@ const getNotifications = asyncHandler(async (req, res) => {
     const filter = {
         recepient: userId,
     }
+
+    // Build a cache key that encodes every query dimension so different
+    // filter/pagination combos never share the same cached result
+    const isReadFilter = req.query.isRead !== undefined ? req.query.isRead : "all"
+    const cacheKey = `notifications:${userId}:page:${page}:limit:${limit}:isRead:${isReadFilter}`
+
+    // Try the cache first — notifications list is cached for 60 seconds
+    // (short TTL because notifications are time-sensitive)
+    const cachedNotifications = await getCache(cacheKey)
+    if (cachedNotifications) {
+        console.log(`   Cache hit for ${cacheKey}`)
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    cachedNotifications,
+                    "Notifications fetched successfully (cached)"
+                )
+            )
+    }
+    console.log("   Cache miss — fetching from database...")
     console.log("   Base filter: recipient =", userId);
 
     // STEP 7: Add read/unread filter if provided
@@ -132,22 +159,32 @@ const getNotifications = asyncHandler(async (req, res) => {
     // STEP 11: Calculate total pages
     const totalPages = Math.ceil(totalNotifications / limit)
 
+    // Build the full response payload before caching so both the cache hit
+    // and cache miss paths return identical shapes
+    const responseData = {
+        notifications,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            totalNotifications,
+            limit,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+        },
+        unreadCount,
+    }
+
+    // Cache for 60 s — short TTL because notifications change frequently.
+    // Pattern `notifications:${userId}:*` is invalidated whenever the user
+    // reads or deletes a notification.
+    await setCache(cacheKey, responseData, 60)
+    console.log(`   Response cached under ${cacheKey} (60 s TTL)`)
+
     // STEP 12: Send success response with notifications and metadata
     return res.status(200).json(
         new ApiResponse(
             200,
-            {
-                notifications,
-                pagination: {
-                    currentPage: page,
-                    totalPages,
-                    totalNotifications,
-                    limit,
-                    hasNextPage: page < totalPages,
-                    hasPrevPage: page > 1,
-                },
-                unreadCount,
-            },
+            responseData,
             "Notifications fetched successfully"
         )
     )
@@ -236,6 +273,11 @@ const markAsRead = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Failed to mark notification as read")
     }
 
+    // Invalidate all cached notification lists for this user so the next
+    // getNotifications call reflects the updated read status
+    await deleteCachePattern(`notifications:${userId}:*`)
+    console.log(`   Cache invalidated for notifications:${userId}:*`)
+
     // STEP 11: Send success response
     return res
         .status(200)
@@ -309,6 +351,11 @@ const markAllAsRead = asyncHandler(async (req, res) => {
         throw new ApiError(404, "No unread notifications found")
     }
 
+    // Invalidate all cached notification pages for this user so the
+    // unread badge count reflects the bulk update immediately
+    await deleteCachePattern(`notifications:${userId}:*`)
+    console.log(`   Cache invalidated for notifications:${userId}:*`)
+
     // STEP 8: Build response with update statistics
     const updateStats = {
         matchedCount: result.matchedCount, // Number of notifications found
@@ -376,6 +423,11 @@ const deleteNotification = asyncHandler(async (req, res) => {
 
     // STEP 6: Delete the notification from database
     await Notification.findByIdAndDelete(notificationId)
+
+    // Invalidate the cached notification list for this user so the deleted
+    // entry no longer appears on subsequent reads
+    await deleteCachePattern(`notifications:${userId}:*`)
+    console.log(`   Cache invalidated for notifications:${userId}:*`)
 
     // STEP 7: Send success response
     return res

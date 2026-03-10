@@ -728,6 +728,8 @@ const updateVideo = asyncHandler(async (req, res) => {
     await deleteCachePattern("videos:trending:*")
     // 4. Owner-specific video list cache (foundVideo.owner holds the actual owner ID)
     await deleteCachePattern(`videos:user:${foundVideo.owner}:*`)
+    // 5. Dashboard stats + video-list caches for this channel owner
+    await deleteCachePattern(`dashboard:*:${foundVideo.owner}*`)
 
     console.log(`cache invalidated for video ${videoId}`)
 
@@ -870,8 +872,10 @@ const deleteVideo = asyncHandler(async (req, res) => {
     await deleteCachePattern("videos:trending:*")
     // 4. Owner-specific video list cache (foundVideo.owner holds the actual owner ID)
     await deleteCachePattern(`videos:user:${foundVideo.owner}:*`)
-    // 5. Dashboard stats cache for this channel owner
-    await deleteCachePattern(`dashboard:*:${foundVideo.owner}:*`)
+    // 5. Dashboard stats + video-list caches for this channel owner.
+    //    Pattern `dashboard:*:${ownerId}*` (no trailing colon) matches both
+    //    `dashboard:stats:${ownerId}` and `dashboard:videos:${ownerId}:page:…`
+    await deleteCachePattern(`dashboard:*:${foundVideo.owner}*`)
 
     console.log("\n[STEP 6]  Deleting Video Document from Database")
     // Delete video document from MongoDB database

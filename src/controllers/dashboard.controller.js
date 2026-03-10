@@ -10,6 +10,7 @@ import { Video } from "../models/video.model.js"
 import { Comment } from "../models/comment.model.js"
 import mongoose from "mongoose"
 import { subscription } from "../models/subscription.model.js"
+import { getCache, setCache } from "../db/redis.js"
 
 // ============================================
 // CONTROLLER FUNCTIONS
@@ -96,6 +97,26 @@ const getChannelStats = asyncHandler(async (req, res) => {
         )
     }
     console.log("   User authorized to view channel statistics")
+
+    // Check Redis cache before running the heavy aggregation pipeline.
+    // Key is scoped to the channelId so each channel has its own entry.
+    // TTL is 300 s (5 min): stats don't change second-to-second, but we
+    // don't want data to be stale for too long on active channels.
+    const statsCacheKey = `dashboard:stats:${channelId}`
+    const cachedStats = await getCache(statsCacheKey)
+    if (cachedStats) {
+        console.log(`   Cache hit for ${statsCacheKey}`)
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    cachedStats,
+                    "Channel statistics fetched successfully (cached)"
+                )
+            )
+    }
+    console.log("   Cache miss — running aggregation pipeline...")
 
     console.log("\n[STEP 5]  Calculating Channel Statistics...")
 
@@ -243,8 +264,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
     const viewsGrowthPercentage =
         previousPeriodViews > 0
             ? ((currentPeriodViews - previousPeriodViews) /
-                  previousPeriodViews) *
-              100
+                previousPeriodViews) *
+            100
             : 0
 
     // STEP 15: Calculate subscribers growth by month
@@ -285,8 +306,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
     const subscriberGrowthPercentage =
         newSubscribersPrevious30Days > 0
             ? ((newSubscribersLast30Days - newSubscribersPrevious30Days) /
-                  newSubscribersPrevious30Days) *
-              100
+                newSubscribersPrevious30Days) *
+            100
             : 0
 
     // ============================================
@@ -386,35 +407,44 @@ const getChannelStats = asyncHandler(async (req, res) => {
 
     const mostPopularVideo = mostPopularVideoResult[0] || null
 
+    // Build the full stats payload once so it can be both cached and returned
+    const statsData = {
+        channelStats: {
+            totalVideos,
+            totalViews,
+            totalLikes,
+            totalSubscribers,
+            totalComments,
+        },
+        growthMetrics: {
+            viewsGrowth,
+            subscribersGrowth,
+            last30Days: {
+                views: currentPeriodViews,
+                viewsGrowthPercentage: viewsGrowthPercentage.toFixed(2),
+                newSubscribers: newSubscribersLast30Days,
+                subscriberGrowthPercentage:
+                    subscriberGrowthPercentage.toFixed(2),
+            },
+        },
+        additionalMetrics: {
+            averageViewsPerVideo: averageViewsPerVideo.toFixed(2),
+            engagementRate: engagementRate.toFixed(2) + "%",
+            mostPopularVideo,
+        },
+    }
+
+    // Cache the computed stats for 300 s (5 min).
+    // Note: video.controller.js invalidates `dashboard:*:${foundVideo.owner}:*`
+    // on video update/delete, keeping this cache consistent.
+    await setCache(statsCacheKey, statsData, 300)
+    console.log(`   Stats cached under ${statsCacheKey} (300 s TTL)`)
+
     // STEP 23: Send comprehensive statistics response
     return res.status(200).json(
         new ApiResponse(
             200,
-            {
-                channelStats: {
-                    totalVideos,
-                    totalViews,
-                    totalLikes,
-                    totalSubscribers,
-                    totalComments,
-                },
-                growthMetrics: {
-                    viewsGrowth,
-                    subscribersGrowth,
-                    last30Days: {
-                        views: currentPeriodViews,
-                        viewsGrowthPercentage: viewsGrowthPercentage.toFixed(2),
-                        newSubscribers: newSubscribersLast30Days,
-                        subscriberGrowthPercentage:
-                            subscriberGrowthPercentage.toFixed(2),
-                    },
-                },
-                additionalMetrics: {
-                    averageViewsPerVideo: averageViewsPerVideo.toFixed(2),
-                    engagementRate: engagementRate.toFixed(2) + "%",
-                    mostPopularVideo,
-                },
-            },
+            statsData,
             "Channel statistics fetched successfully"
         )
     )
@@ -497,6 +527,25 @@ const getChannelVideos = asyncHandler(async (req, res) => {
         filter.isPublished = true
     }
 
+    // Cache channel video lists for 120 s (2 min).
+    // Key encodes all pagination/sort params plus ownership so an owner's
+    // private-video view never leaks into a public viewer's cached response.
+    const videosCacheKey = `dashboard:videos:${channelId}:page:${page}:limit:${limit}:sort:${sortBy}:${sortOrder}:owner:${isOwnChannel ? "self" : "public"}`
+    const cachedVideos = await getCache(videosCacheKey)
+    if (cachedVideos) {
+        console.log(`   Cache hit for ${videosCacheKey}`)
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    cachedVideos,
+                    "Channel videos fetched successfully (cached)"
+                )
+            )
+    }
+    console.log("   Cache miss — fetching from database...")
+
     // STEP 10: Create sort object dynamically
     const sortOptions = {}
     sortOptions[sortBy] = sortOrder
@@ -515,21 +564,29 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     const totalVideos = await Video.countDocuments(filter)
     const totalPages = Math.ceil(totalVideos / limit)
 
+    const videosData = {
+        videos,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            totalVideos,
+            limit,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+        },
+    }
+
+    // Cache the result for 120 s (2 min).
+    // video.controller.js invalidates `dashboard:*:${ownerId}:*` on
+    // video update/delete, so this stays consistent with video changes.
+    await setCache(videosCacheKey, videosData, 120)
+    console.log(`   Videos cached under ${videosCacheKey} (120 s TTL)`)
+
     // STEP 13: Send success response with videos and pagination
     return res.status(200).json(
         new ApiResponse(
             200,
-            {
-                videos,
-                pagination: {
-                    currentPage: page,
-                    totalPages,
-                    totalVideos,
-                    limit,
-                    hasNextPage: page < totalPages,
-                    hasPrevPage: page > 1,
-                },
-            },
+            videosData,
             "Channel videos fetched successfully"
         )
     )
