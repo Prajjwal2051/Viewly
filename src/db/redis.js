@@ -36,12 +36,12 @@ const sharedConfig = {
 const redisClient = process.env.REDIS_URL
     ? new Redis(process.env.REDIS_URL, sharedConfig)
     : new Redis({
-          host: process.env.REDIS_HOST || "localhost",
-          port: process.env.REDIS_PORT || 6379,
-          password: process.env.REDIS_PASSWORD || undefined,
-          db: 0,
-          ...sharedConfig,
-      })
+        host: process.env.REDIS_HOST || "localhost",
+        port: process.env.REDIS_PORT || 6379,
+        password: process.env.REDIS_PASSWORD || undefined,
+        db: 0,
+        ...sharedConfig,
+    })
 
 // ============================================
 // EVENT HANDLERS
