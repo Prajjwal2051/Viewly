@@ -10,23 +10,15 @@ import { ApiError } from "../utils/ApiError.js"
 
 /**
  * Redis client configuration object.
- * Values are read from environment variables with sensible defaults.
- * The retry strategy uses exponential backoff capped at 2000ms.
+ * In production, set REDIS_URL (e.g. from Render Redis or Upstash).
+ * Locally, falls back to REDIS_HOST/REDIS_PORT or localhost:6379.
  */
-const redisConfig = {
-    host: process.env.REDIS_HOST || "localhost",
-    port: process.env.REDIS_PORT || 6379, // Fix: corrected default Redis port from 6739 to 6379
-    password: process.env.REDIS_PASSWORD || undefined,
-
-    db: 0, // default database index for caching
-
+const sharedConfig = {
     // Retry strategy: exponential backoff, capped at 2000ms per attempt
     retryStrategy: (times) => {
         const delay = Math.min(times * 50, 2000)
         return delay
     },
-    // here we are defining some globals for our redis
-    // this tells how much retries i can give for each request
     maxRetriesPerRequest: null, // null = never throw MaxRetriesPerRequestError; queued commands simply wait for the connection to recover
     enableReadyCheck: false, // skip the INFO check on connect so an offline Redis doesn't block startup
     lazyConnect: false, // connect immediately on startup; commands are queued (enableOfflineQueue defaults to true) until the connection is ready
@@ -38,9 +30,18 @@ const redisConfig = {
 
 /**
  * Singleton ioredis client instance.
- * All cache operations use this shared connection.
+ * If REDIS_URL is set (production), ioredis parses it automatically (supports rediss:// for TLS).
+ * Otherwise falls back to host/port/password env vars for local development.
  */
-const redisClient = new Redis(redisConfig)
+const redisClient = process.env.REDIS_URL
+    ? new Redis(process.env.REDIS_URL, sharedConfig)
+    : new Redis({
+          host: process.env.REDIS_HOST || "localhost",
+          port: process.env.REDIS_PORT || 6379,
+          password: process.env.REDIS_PASSWORD || undefined,
+          db: 0,
+          ...sharedConfig,
+      })
 
 // ============================================
 // EVENT HANDLERS
