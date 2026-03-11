@@ -3,7 +3,7 @@
 // ============================================
 // Prevents spam and abuse by limiting request rates
 
-import rateLimit from "express-rate-limit"
+import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 // RedisStore from rate-limit-redis v4 — uses sendCommand API (not the v3 `client` option)
 import { RedisStore } from "rate-limit-redis"
 // Shared ioredis client from the redis module
@@ -75,9 +75,9 @@ export const uploadLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Use authenticated user ID as key so limits are per-user, not per-IP
+    // Use authenticated user ID as key so limits are per-user; fall back to IP (IPv6-safe)
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || req.ip
+        return req.user?._id?.toString() || ipKeyGenerator(req)
     },
 })
 
@@ -101,7 +101,7 @@ export const commentLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || req.ip
+        return req.user?._id?.toString() || ipKeyGenerator(req)
     },
 })
 
@@ -125,7 +125,7 @@ export const likeLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => {
-        return req.user?._id?.toString() || req.ip
+        return req.user?._id?.toString() || ipKeyGenerator(req)
     },
 })
 

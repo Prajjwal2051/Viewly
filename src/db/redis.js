@@ -27,9 +27,9 @@ const redisConfig = {
     },
     // here we are defining some globals for our redis
     // this tells how much retries i can give for each request
-    maxRetriesPerRequest: 3,
-    enableReadyCheck: true, // When a connection is established, ioredis sends the INFO command to check if the server is ready to accept commands (e.g., not loading data from disk).
-    lazyConnect: false, // The client tries to connect to the Redis server immediately upon instantiation. If the server is down, an error will be thrown immediately during initialization.
+    maxRetriesPerRequest: null, // null = never throw MaxRetriesPerRequestError; queued commands simply wait for the connection to recover
+    enableReadyCheck: false, // skip the INFO check on connect so an offline Redis doesn't block startup
+    lazyConnect: false, // connect immediately on startup; commands are queued (enableOfflineQueue defaults to true) until the connection is ready
 }
 
 // ============================================
@@ -88,12 +88,9 @@ export const getCache = async (key) => {
         console.log("cache retrieved successfully")
         return data ? JSON.parse(data) : null
     } catch (error) {
-        console.log(error)
-        throw new ApiError(
-            500,
-            "Something went wrong with getting the cache",
-            error
-        )
+        // Redis failure is non-fatal — the request will proceed without a cache hit
+        console.log("[Redis] getCache failed:", error.message)
+        return null
     }
 }
 
@@ -117,12 +114,8 @@ export const setCache = async (key, value, ttlSeconds = 300) => {
         }
         console.log("cache set successfully")
     } catch (error) {
-        console.log(error)
-        throw new ApiError(
-            500,
-            "Something went wrong with setting the cache",
-            error
-        )
+        // Redis failure is non-fatal — the response is still returned correctly
+        console.log("[Redis] setCache failed:", error.message)
     }
 }
 /**
@@ -145,12 +138,8 @@ export const deleteCache = async (keys) => {
 
         return true
     } catch (error) {
-        console.log(error)
-        throw new ApiError(
-            500,
-            "Something went wrong with deleting the cache",
-            error
-        )
+        console.log("[Redis] deleteCache failed:", error.message)
+        return false
     }
 }
 
@@ -173,12 +162,8 @@ export const deleteCachePattern = async (pattern) => {
         }
         return keys.length
     } catch (error) {
-        console.log(error)
-        throw new ApiError(
-            500,
-            "Something went wrong with deleting the cache pattern",
-            error
-        )
+        console.log("[Redis] deleteCachePattern failed:", error.message)
+        return 0
     }
 }
 
@@ -200,8 +185,8 @@ export const incrementCounter = async (key, amount = 1) => {
     try {
         return await redisClient.incrby(key, amount)
     } catch (error) {
-        console.log(`error in incrementing ${key}: `, error)
-        throw new ApiError(500, `error in incrementing ${key}`, error)
+        console.log(`[Redis] incrementCounter failed for ${key}:`, error.message)
+        return null
     }
 }
 
@@ -219,8 +204,8 @@ export const decrementCounter = async (key, amount = 1) => {
     try {
         return await redisClient.decrby(key, amount)
     } catch (error) {
-        console.log(`error in decrementing ${key}: `, error)
-        throw new ApiError(500, `error in decrementing ${key}`, error)
+        console.log(`[Redis] decrementCounter failed for ${key}:`, error.message)
+        return null
     }
 }
 
@@ -238,8 +223,8 @@ export const getCounter = async (key) => {
         const value = await redisClient.get(key)
         return value ? parseInt(value, 10) : 0
     } catch (error) {
-        console.error(`Error getting counter ${key}:`, error)
-        throw new ApiError(500, `error in getting the counter of ${key}`, error)
+        console.log(`[Redis] getCounter failed for ${key}:`, error.message)
+        return 0
     }
 }
 
