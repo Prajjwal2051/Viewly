@@ -6,11 +6,12 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-5.1.0-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.19.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Redis](https://img.shields.io/badge/Redis-ioredis_5.10-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 
 ### 🚀 A Production-Grade Video Sharing Platform Built with MERN Stack
 
-*Upload, Stream, Engage, and Build Your Community*
+_Upload, Stream, Engage, and Build Your Community_
 
 [Features](#-features) • [Tech Stack](#-tech-stack) • [Architecture](#-system-architecture) • [Getting Started](#-getting-started) • [API Docs](#-api-documentation)
 
@@ -50,6 +51,7 @@
 ## ✨ Features
 
 ### 🎬 **Video Management**
+
 - Multi-file upload with Multer middleware
 - Cloud storage via Cloudinary CDN
 - Responsive video player with React Player
@@ -58,6 +60,7 @@
 - Video management dashboard with analytics
 
 ### 👤 **User Authentication & Authorization**
+
 - JWT-based token authentication (access + refresh tokens)
 - HTTP-only secure cookies for token storage
 - Bcrypt password hashing
@@ -65,6 +68,7 @@
 - Customizable user profiles and channel pages
 
 ### 📱 **Social Features**
+
 - Comment system on videos and tweets
 - Like/unlike videos, tweets, and comments
 - Subscribe/unsubscribe to channels
@@ -72,32 +76,47 @@
 - User activity feed
 
 ### 📢 **Notifications System**
+
 - Real-time notifications for likes, comments, and subscriptions
 - Unread notification badge counter
 - Mark as read/delete functionality
 - Notification history with pagination
 
 ### 🎭 **Photo Posts (Tweets)**
+
 - Upload photos with captions
 - Like and comment on tweets
 - User tweet feed and detail pages
 
 ### 📚 **Playlist Management**
+
 - Create and manage custom playlists
 - Add/remove videos from playlists
 - Public/private playlist settings
 
 ### 📊 **Creator Dashboard**
+
 - Channel analytics and statistics
 - Video and content management
 - Comment management
 
 ### 🔍 **Advanced Search**
+
 - Full-text search across videos
 - Filter and sort options
 - Optimized MongoDB text indexes
 
+### ⚡ **Performance & Caching (Redis)**
+
+- Redis-backed response caching across all major endpoints
+- Cache-first JWT session validation — eliminates the MongoDB round trip on every authenticated request
+- Cached resources: channel profiles (5 min), watch history (2 min), search results (5 min), dashboard stats (10 min), playlists, tweets, comments, subscriptions, and like statuses
+- Smart cache invalidation — keys are automatically purged on any write/update operation
+- Atomic Redis counters for real-time view and like counts
+- Distributed rate limiting via Redis (persists across server restarts and scales horizontally)
+
 ### 🎨 **User Interface**
+
 - Responsive design with Tailwind CSS
 - Dark theme interface
 - Toast notifications
@@ -119,27 +138,35 @@
              │
 ┌────────────▼────────────────────────────────────────────────┐
 │                   API GATEWAY LAYER                         │
-│  Express.js + CORS + Rate Limiting + Cookie Parser          │
+│  Express.js + CORS + Redis Rate Limiting + Cookie Parser    │
 └────────────┬────────────────────────────────────────────────┘
              │
      ┌───────┴───────┐
      │               │
-┌────▼─────┐  ┌─────▼──────┐
+┌────▼─────┐  ┌──────▼─────┐
 │  Auth    │  │ Business   │
 │  Layer   │  │  Logic     │
-│  JWT     │  │ Controllers│
+│  JWT +   │  │ Controllers│
+│  Redis   │  │  + Cache   │
+│  Session │  │  (Redis)   │
 └────┬─────┘  └─────┬──────┘
      │               │
      └───────┬───────┘
              │
-┌────────────▼────────────────────────────────────────────────┐
-│                    DATA ACCESS LAYER                        │
-│  Mongoose ODM + MongoDB Aggregation Pipelines               │
-└────────────┬────────────────────────────────────────────────┘
+     ┌───────┴────────┐
+     │                │
+┌────▼─────┐  ┌───────▼─────┐
+│  Redis   │  │ Data Access │
+│  Cache   │  │ Layer       │
+│  Layer   │  │ Mongoose +  │
+└────┬─────┘  │ Aggregation │
+     │        └──────┬──────┘
+     │               │
+     └───────┬───────┘
              │
      ┌───────┴────────┬─────────────┐
      │                │             │
-┌────▼─────┐  ┌──────▼──────┐ ┌───▼─────┐
+┌────▼─────┐  ┌──────▼──────┐ ┌─────▼───┐
 │ MongoDB  │  │ Cloudinary  │ │ Email   │
 │ Database │  │ CDN Storage │ │ Service │
 └──────────┘  └─────────────┘ └─────────┘
@@ -151,34 +178,36 @@
 
 ### **Frontend Technologies**
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **React** | 19.2.0 | Core UI library |
-| **Vite** | 7.2.4 | Build tool and dev server |
-| **Redux Toolkit** | 2.11.0 | State management |
-| **React Router** | 7.10.0 | Client-side routing |
-| **Axios** | 1.13.2 | HTTP client |
-| **Tailwind CSS** | 3.4.17 | CSS framework |
-| **Lucide React** | 0.556.0 | Icon library |
-| **React Hot Toast** | 2.6.0 | Toast notifications |
-| **React Hook Form** | 7.68.0 | Form validation |
-| **React Player** | 3.4.0 | Video player |
-| **Recharts** | 3.6.0 | Data visualization |
+| Technology          | Version | Purpose                   |
+| ------------------- | ------- | ------------------------- |
+| **React**           | 19.2.0  | Core UI library           |
+| **Vite**            | 7.2.4   | Build tool and dev server |
+| **Redux Toolkit**   | 2.11.0  | State management          |
+| **React Router**    | 7.10.0  | Client-side routing       |
+| **Axios**           | 1.13.2  | HTTP client               |
+| **Tailwind CSS**    | 3.4.17  | CSS framework             |
+| **Lucide React**    | 0.556.0 | Icon library              |
+| **React Hot Toast** | 2.6.0   | Toast notifications       |
+| **React Hook Form** | 7.68.0  | Form validation           |
+| **React Player**    | 3.4.0   | Video player              |
+| **Recharts**        | 3.6.0   | Data visualization        |
 
 ### **Backend Technologies**
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Node.js** | 18+ | JavaScript runtime |
-| **Express.js** | 5.1.0 | Web framework |
-| **MongoDB** | 8.19.0 | NoSQL database |
-| **Mongoose** | 8.19.0 | MongoDB ODM |
-| **JWT** | 9.0.2 | Authentication |
-| **Bcrypt** | 6.0.0 | Password hashing |
-| **Multer** | 2.0.2 | File upload handling |
-| **Cloudinary** | 2.7.0 | Cloud media storage |
-| **Nodemailer** | 7.0.12 | Email service |
-| **CORS** | 2.8.5 | Cross-Origin Resource Sharing |
+| Technology           | Version | Purpose                       |
+| -------------------- | ------- | ----------------------------- |
+| **Node.js**          | 18+     | JavaScript runtime            |
+| **Express.js**       | 5.1.0   | Web framework                 |
+| **MongoDB**          | 8.19.0  | NoSQL database                |
+| **Mongoose**         | 8.19.0  | MongoDB ODM                   |
+| **Redis (ioredis)**  | 5.10.0  | Caching & session store       |
+| **rate-limit-redis** | 4.3.1   | Distributed rate limiting     |
+| **JWT**              | 9.0.2   | Authentication                |
+| **Bcrypt**           | 6.0.0   | Password hashing              |
+| **Multer**           | 2.0.2   | File upload handling          |
+| **Cloudinary**       | 2.7.0   | Cloud media storage           |
+| **Nodemailer**       | 7.0.12  | Email service                 |
+| **CORS**             | 2.8.5   | Cross-Origin Resource Sharing |
 
 ---
 
@@ -188,6 +217,7 @@
 
 - **Node.js** (v18.0.0 or higher)
 - **MongoDB** (v6.0+) - Local or MongoDB Atlas
+- **Redis** (v6.0+) - Local, [Render Redis](https://render.com/docs/redis), or [Upstash](https://upstash.com/)
 - **Git**
 - **Cloudinary Account** (free tier)
 - **Gmail Account** (for email service)
@@ -216,6 +246,7 @@ cp .env.example .env
 ```env
 # Server Configuration
 PORT=8000
+NODE_ENV=development
 
 # Database Configuration
 MONGODB_URI=mongodb://localhost:27017/VidNest
@@ -240,6 +271,14 @@ EMAIL_PORT=587
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASSWORD=your-gmail-app-password
 EMAIL_FROM=noreply@vidnest.com
+
+# Redis Configuration
+# Option A — Local Redis (development)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+# Option B — Managed Redis (production): set REDIS_URL to override host/port
+# REDIS_URL=rediss://:your_password@your-host:6380
 ```
 
 **Generate Secure Secrets:**
@@ -261,11 +300,15 @@ echo 'VITE_API_BASE_URL=http://localhost:8000/api/v1' > .env
 #### **Step 4: Start the Application**
 
 ```bash
-# Terminal 1: Start Backend (from project root)
+# Terminal 1: Start Redis (required before backend)
+redis-server
+# Redis runs on localhost:6379 by default
+
+# Terminal 2: Start Backend (from project root)
 npm run dev
 # Backend runs on http://localhost:8000
 
-# Terminal 2: Start Frontend (from frontend/VideNestFrontEnd)
+# Terminal 3: Start Frontend (from frontend/VideNestFrontEnd)
 cd frontend/VideNestFrontEnd
 npm run dev
 # Frontend runs on http://localhost:5173
@@ -289,8 +332,12 @@ VidNest/
 │   ├── 📂 models/                   # MongoDB Schemas
 │   ├── 📂 routes/                   # API route definitions
 │   ├── 📂 middlewares/              # Custom middleware
+│   │   ├── auth.middleware.js       # JWT auth with Redis session cache
+│   │   └── rate-limiter.middleware.js  # Redis-backed distributed rate limiting
 │   ├── 📂 utils/                    # Helper functions
-│   ├── 📂 db/                       # Database connection
+│   ├── 📂 db/                       # Database connections
+│   │   ├── db_connection.js         # MongoDB connection
+│   │   └── redis.js                 # Redis client & cache helpers
 │   ├── app.js                       # Express app configuration
 │   ├── index.js                     # Server entry point
 │   └── constants.js                 # App constants
@@ -309,6 +356,7 @@ VidNest/
 ├── 📂 public/                       # Static files
 ├── .env.example                     # Environment template
 ├── package.json                     # Backend dependencies
+├── REDIS_README.md                  # Redis implementation details
 └── README.md                        # Documentation
 ```
 
@@ -332,29 +380,37 @@ VidNest/
 - **JWT Authentication**: Access + refresh token pattern
 - **HTTP-Only Cookies**: Protection against XSS attacks
 - **CORS Protection**: Strict origin validation
-- **Rate Limiting**: Prevent API abuse
+- **Distributed Rate Limiting**: Redis-backed limits per IP / user — persists across restarts and scales across instances (general: 1000 req/15 min, auth: 100 req/15 min, upload: 1000 req/hr)
 - **Input Validation**: MongoDB injection prevention
 - **File Upload Security**: Type and size validation
 
 ### **Protected Route Middleware**
 
 ```javascript
-// verifyJWT middleware
+// verifyJWT middleware — Redis session cache first, MongoDB fallback
 export const verifyJWT = asyncHandler(async (req, res, next) => {
-    const token = req.cookies?.accessToken || 
-                  req.header("Authorization")?.replace("Bearer ", "")
-    
+    const token =
+        req.cookies?.accessToken ||
+        req.header("Authorization")?.replace("Bearer ", "")
+
     if (!token) {
         throw new ApiError(401, "Unauthorized request")
     }
-    
+
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-    const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
-    
+
+    // Cache-first: check Redis before hitting MongoDB
+    const sessionKey = `session:${decodedToken._id}:${token}`
+    let user = await getCache(sessionKey)
+
     if (!user) {
-        throw new ApiError(401, "Invalid access token")
+        user = await User.findById(decodedToken?._id).select(
+            "-password -refreshToken"
+        )
+        if (!user) throw new ApiError(401, "Invalid access token")
+        await setCache(sessionKey, user, 86400) // cache for 1 day
     }
-    
+
     req.user = user
     next()
 })
@@ -482,6 +538,7 @@ GET /api/v1/search?query=keyword     # Search videos
 ### **Standard Response Format**
 
 **Success Response:**
+
 ```json
 {
   "statusCode": 200,
@@ -492,13 +549,14 @@ GET /api/v1/search?query=keyword     # Search videos
 ```
 
 **Error Response:**
+
 ```json
 {
-  "statusCode": 400,
-  "data": null,
-  "message": "Error message",
-  "success": false,
-  "errors": []
+    "statusCode": 400,
+    "data": null,
+    "message": "Error message",
+    "success": false,
+    "errors": []
 }
 ```
 
@@ -550,8 +608,8 @@ If you discover a security vulnerability, email the author directly.
 
 ---
 
-**Built with ❤️ by Prajjwal using React, Node.js, Express, and MongoDB**
+**Built with ❤️ by Prajjwal using React, Node.js, Express, MongoDB, and Redis**
 
-*Last Updated: January 2026*
+_Last Updated: March 2026_
 
 </div>
