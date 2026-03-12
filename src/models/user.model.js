@@ -1,3 +1,10 @@
+// ============================================================
+// Copyright (c) 2026 Prajjwal (github.com/Prajjwal2051)
+// Project : VidNest — Video Sharing Platform
+// License : Proprietary — All Rights Reserved
+// Unauthorized copying, modification, or distribution of this
+// file, via any medium, is strictly prohibited.
+// ============================================================
 // Import necessary packages for database operations, JWT tokens, and password hashing
 import mongoose, { mongo, Schema } from "mongoose"
 import jwt from "jsonwebtoken" // For generating JSON Web Tokens for authentication

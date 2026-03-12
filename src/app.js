@@ -1,3 +1,10 @@
+// ============================================================
+// Copyright (c) 2026 Prajjwal (github.com/Prajjwal2051)
+// Project : VidNest — Video Sharing Platform
+// License : Proprietary — All Rights Reserved
+// Unauthorized copying, modification, or distribution of this
+// file, via any medium, is strictly prohibited.
+// ============================================================
 // ============================================
 // EXPRESS APP CONFIGURATION
 // ============================================
@@ -125,6 +132,16 @@ app.use(express.static("public"))
  * - Automatically sent with every request by the browser
  */
 app.use(cookieParser())
+
+// ============================================
+// AUTHOR SIGNATURE HEADER
+// Attaches authorship metadata to every API response.
+// ============================================
+app.use((_req, res, next) => {
+    res.setHeader("X-Author", "Prajjwal (github.com/Prajjwal2051)")
+    res.setHeader("X-Project", "VidNest")
+    next()
+})
 
 // ============================================
 // RATE LIMITING

@@ -1,3 +1,10 @@
+// ============================================================
+// Copyright (c) 2026 Prajjwal (github.com/Prajjwal2051)
+// Project : VidNest — Video Sharing Platform
+// License : Proprietary — All Rights Reserved
+// Unauthorized copying, modification, or distribution of this
+// file, via any medium, is strictly prohibited.
+// ============================================================
 // Import Cloudinary SDK v2 for cloud storage operations
 import { v2 as cloudinary } from "cloudinary"
 // Import file system module to handle local file operations
