@@ -13,7 +13,7 @@
 
 _Upload, Stream, Engage, and Build Your Community_
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Architecture](#-system-architecture) • [Getting Started](#-getting-started) • [API Docs](#-api-documentation)
+[Architecture & Engineering Docs](docs/README.md) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Architecture](#-system-architecture) • [Getting Started](#-getting-started) • [API Docs](#-api-documentation)
 
 ---
 
